@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../Claimer/.idea/Claimer.iml" filepath="$PROJECT_DIR$/../Claimer/.idea/Claimer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../File_Searcher/.idea/File_Searcher.iml" filepath="$PROJECT_DIR$/../File_Searcher/.idea/File_Searcher.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/MooseBot.iml" filepath="$PROJECT_DIR$/.idea/MooseBot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../SelfBot/.idea/SelfBot.iml" filepath="$PROJECT_DIR$/../SelfBot/.idea/SelfBot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../SnakeBNB/.idea/SnakeBNB.iml" filepath="$PROJECT_DIR$/../SnakeBNB/.idea/SnakeBNB.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../WizardBattle/.idea/WizardBattle.iml" filepath="$PROJECT_DIR$/../WizardBattle/.idea/WizardBattle.iml" />
+    </modules>
+  </component>
+</project>
