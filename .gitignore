@@ -1,4 +1,9 @@
 __pycache__
+database/attachments
+database/avatar
+database/economy
+database/experience
+database/token.txt
 # Compiled files
 pip-log.txt
 *.py[cod]
