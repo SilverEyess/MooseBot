@@ -102,6 +102,7 @@ def save(self, list, path):
     with open(path, 'w') as write_file:
         json.dump(list, write_file, indent=4)
 
+
 def load(self, path):
     firstline = dict()
     if os.path.exists(path):
@@ -249,7 +250,8 @@ async def purge(ctx, where=None, limit=None):
     limit = limit or None
     where = where or None
     if where is None:
-        await ctx.send("You've got to give me something to work with here. Tell me where to delete(server/channel) then how many messages.")
+        await ctx.send(
+            "You've got to give me something to work with here. Tell me where to delete(server/channel) then how many messages.")
     if limit is None:
         limit = 2
     else:
@@ -275,7 +277,7 @@ class Fun:
     def __init__(self, bot):
         self.client = bot
 
-    @commands.command(help="Clap👏to👏your👏text.")
+    @commands.command(help="Clap👏to👏your👏text. \n`>clap text`")
     async def clap(self, ctx, *args):
         clapped = '👏'.join(args)
         await ctx.send(clapped)
@@ -292,7 +294,7 @@ class Fun:
 
     @commands.command(aliases=['trans', 'gt'], help="This command will translate text. Provide a language as the first "
                                                     "argument to translate **TO** that language. Otherwise just enter "
-                                                    "your text and it will translate to English.")
+                                                    "your text and it will translate to English. \n`>gt foreign text` \n`gt language text to translate to that language`")
     async def translate(self, ctx, arg1, *, arg2=None):
         google_languages = LANGUAGES
         google_languages_reverse = {v: k for k, v in google_languages.items()}
@@ -343,7 +345,8 @@ class Fun:
                 value=f"{translated_text.text}")
             await ctx.send(embed=embed)
 
-    @commands.command(help="Enter phrases/words separated by commas(,) and I will choose one at random.")
+    @commands.command(
+        help="Enter phrases/words separated by commas(,) and I will choose one at random. \n`>choose option1, option 2, option3`")
     async def choose(self, ctx, *choices: str):
         choices = ' '.join(choices)
         choices = choices.split(',')
@@ -364,7 +367,7 @@ class Fun:
                    "o - o", "ಠ▃ಠ", "ಠ╭╮ಠ", "ಥ_ಥ", "ಥ◡ಥ", "ಥ﹏ಥ", "ಥдಥ", ">﹏>", ">﹏<", "<﹏<", "༼ つ  >﹏<༽つ")
         await ctx.send(random.choice(choices))
 
-    @commands.command(help="Enter a phrase/word to be γρεεκiφiεδ.")
+    @commands.command(help="Enter a phrase/word to be γρεεκiφiεδ. \n`>greek text`")
     async def greek(self, ctx, *, arg=None):
         arg = arg or None
         if arg is None:
@@ -406,7 +409,7 @@ class Fun:
             greekified = ''.join(newtext)
             await ctx.send(greekified)
 
-    @commands.command(help="Enter a phrase/word to be 丅卄工匚匚工下工乇刀.")
+    @commands.command(help="Enter a phrase/word to be 丅卄工匚匚工下工乇刀. \n`>thicc text`")
     async def thicc(self, ctx, *, arg=None):
         arg = arg or None
         if arg is None:
@@ -450,7 +453,7 @@ class Fun:
             await ctx.send(thiccified)
 
     @commands.command(
-        help="Returns :regional_indicator_l: :regional_indicator_e: :regional_indicator_t: :regional_indicator_t: :regional_indicator_i: :regional_indicator_f: :regional_indicator_i: :regional_indicator_e: :regional_indicator_d: text.")
+        help="Returns :regional_indicator_l: :regional_indicator_e: :regional_indicator_t: :regional_indicator_t: :regional_indicator_i: :regional_indicator_f: :regional_indicator_i: :regional_indicator_e: :regional_indicator_d: text. \n`>letters text`")
     async def letters(self, ctx, *, arg=None):
         arg = arg or None
         if arg is None:
@@ -515,13 +518,13 @@ class Fun:
         choices = ('Heads!', 'Tails!')
         await ctx.send(random.choice(choices))
 
-    @commands.command(help="Returns your message reversed.")
+    @commands.command(help="Returns your message reversed. \n`>reverse text`")
     async def reverse(self, ctx, *, message):
         message = message.split()
         await ctx.send(' '.join(reversed(message)))
 
     @commands.command(help="Rolls 1, 6 sided dice if given no arguments. Otherwise provide an amount of die, then how "
-                           "many sides each one should have for the bot to roll that and sum the rolls.")
+                           "many sides each one should have for the bot to roll that and sum the rolls. \n`>roll amount sides`")
     async def roll(self, ctx, *choices: int):
         die_rolls = []
 
@@ -735,9 +738,9 @@ async def dar(message):
         await message.add_reaction(radical)
 
 
-@client.command(help="Enter an amount of messages to purge from the chat.")
+@client.command(help="Enter an amount of messages to purge from the chat. \n`>clear amount`")
 @commands.check(is_mod)
-async def clear(ctx, amount: int= None):
+async def clear(ctx, amount: int = None):
     amount = amount or None
     if amount is None:
         amount = 1
@@ -935,7 +938,7 @@ class PartialMember(commands.Converter):
                         return argument
 
 
-@client.command(help="Get's a users avatar.")
+@client.command(help="Get's a users avatar. \n`>avatar user`")
 async def avatar(ctx, *, member: FullMember = None):
     member = member or ctx.author
     if member is not None:
@@ -971,7 +974,7 @@ class Info:
         self.bot = bot
 
     @commands.command()
-    async def roles(self, ctx, user: FullMember= None):
+    async def roles(self, ctx, user: FullMember = None):
         user = user or ctx.author
         roles = '\n'.join([x.name for x in user.roles][1:])
         embed = discord.Embed(title=f"{user.display_name}'s roles.", description=roles, colour=0xb18dff)
@@ -979,7 +982,7 @@ class Info:
 
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["fb"], description="Send feedback to the bot author.")
+    @commands.command(aliases=["fb"], help="Send feedback to the bot author. \n`>feedback what you want to send here`")
     async def feedback(self, ctx, *, arg):
         user = client.get_user(192519529417408512)
         embed = discord.Embed(
@@ -988,7 +991,7 @@ class Info:
         await user.send(embed=embed)
         await ctx.send("Feedback sent! Thank you!")
 
-    @commands.command(help="Give a role name to get a list of users in that role.")
+    @commands.command(help="Give a role name to get a list of users in that role. \n`>inrole rolename`")
     async def inrole(self, ctx, *, role: RolesConverter):
         users = [x.display_name for x in role.members]
         embed = discord.Embed(
@@ -1001,8 +1004,8 @@ class Info:
     async def inrole_error(self, ctx, error):
         await ctx.send(error)
 
-    @commands.command(aliases=['user', 'ui'], help="Provides information about a user.")
-    async def userinfo(self, ctx, *, member: FullMember= None):
+    @commands.command(aliases=['user', 'ui'], help="Provides information about a user. \n`>ui user`")
+    async def userinfo(self, ctx, *, member: FullMember = None):
         member = member or ctx.author
         member_date = datetime.date(member.created_at.year, member.created_at.month, member.created_at.day)
         age = datetime.date.today() - member_date
@@ -1065,37 +1068,105 @@ class Experience:
     @commands.command(aliases=['lb'], help='See who has a life the least on your server.')
     async def leaderboard(self, ctx):
         xp_list = sorted(self.load(self.xpPath + f'{ctx.guild.id}.json').items(), key=lambda kv: kv[1], reverse=True)
-        level_list = sorted(self.load(self.lvlPath + f'{ctx.guild.id}.json').items(), key=lambda kv: kv[1], reverse=True)
+        level_list = sorted(self.load(self.lvlPath + f'{ctx.guild.id}.json').items(), key=lambda kv: kv[1],
+                            reverse=True)
         order = 1
-        format = ""
+        eligable = []
         for i in level_list:
             user = i[0]
+            if [str(x[1]) for x in xp_list if x[0] == user][0] == 0:
+                continue
+            else:
+                try:
+                    client.get_user(int(i[0]))
+                    eligable.append(
+                        f'▫{order}. **{client.get_user(int(i[0])).display_name}**: {str(i[1])} `({[str(x[1]) for x in xp_list if x[0] == user][0]} exp)` \n')
+                    order += 1
+                except AttributeError:
+                    continue
+        pagesamount = int(len(eligable) / 10)
+        leftover = int(len(eligable) % 10)
+        page = 0
+        pages = []
+        amount1 = 0
+        amount2 = 10
+        while page < pagesamount:
+            pages.append(eligable[amount1:amount2])
+            amount1 += 10
+            amount2 += 10
+            page += 1
+        pages.append(eligable[-leftover:])
+        curpage = 0
+        foot_page = 1
+        embed = discord.Embed(title="Experience Leaderboard.", description=''.join(pages[curpage]), colour=0xb18dff)
+        embed.set_footer(text=f'Page({curpage+1}/{pagesamount+1})')
+        msg = await ctx.send(embed=embed)
+        await msg.add_reaction('◀')
+        await msg.add_reaction('▶')
+
+        def check(reaction, user):
+            return str(reaction.emoji) == '◀' or str(reaction.emoji) == '▶' and user == ctx.author
+
+        while True:
             try:
-                client.get_user(int(i[0]))
-                format += f'▫{order}. **{client.get_user(int(i[0])).display_name}**: {str(i[1])} `({[str(x[1]) for x in xp_list if x[0] == user][0]} exp)` \n'
-                order += 1
-            except AttributeError:
-                # format += f'▫{order}. **<@{i[0]}>**: {str(i[1])} `({[str(x[1]) for x in xp_list if x[0] == user][0]} exp)` \n'
-                order -= 1
-
-
-        embed = discord.Embed(title="Experience leaderboard", description=format, colour=0xb18dff)
-        await ctx.send(embed=embed)
+                reaction, user = await client.wait_for('reaction_add', timeout=10, check=check)
+            except asyncio.TimeoutError:
+                await msg.clear_reactions()
+                return
+            else:
+                if str(reaction.emoji) == '◀' and user == ctx.author:
+                    if curpage == 0:
+                        await msg.remove_reaction(emoji='◀', member=ctx.author)
+                        continue
+                    else:
+                        curpage -= 1
+                        embed = discord.Embed(title='Experience Leaderboard.', description=''.join(pages[curpage]),
+                                              colour=0xb18dff)
+                        embed.set_footer(text=f'Page ({curpage+1}/{pagesamount+1})')
+                        await msg.edit(embed=embed)
+                    await msg.remove_reaction(emoji='◀', member=ctx.author)
+                elif str(reaction.emoji) == '▶' and user == ctx.author:
+                    if curpage == pagesamount:
+                        await msg.remove_reaction(emoji='▶', member=ctx.author)
+                        continue
+                    else:
+                        curpage += 1
+                        embed = discord.Embed(title='Experience Leaderboard.', description=''.join(pages[curpage]),
+                                              colour=0xb18dff)
+                        embed.set_footer(text=f'Page ({curpage+1}/{pagesamount+1})')
+                        await msg.edit(embed=embed)
+                    await msg.remove_reaction(emoji='▶', member=ctx.author)
 
     @commands.command(aliases=['lvl', 'rank'], help='Check your current xp and level standings.')
-    async def level(self, ctx):
+    async def level(self, ctx, member: FullMember=None):
         xp_list = self.load(self.xpPath + f'{ctx.guild.id}.json')
-        level_list = sorted(self.load(self.lvlPath + f'{ctx.guild.id}.json').items(), key=lambda kv: kv[1], reverse=True)
-        for i in level_list:
-            if int(i[0]) == ctx.author.id:
-                user = i
-        embed = discord.Embed(title=f"{ctx.author.display_name}'s level details",
-                              description=f"**Rank:** {level_list.index(user) + 1} \n**Level:** {user[1]}\n**Experience:** {str(xp_list[str(ctx.author.id)])}", colour=0xb18dff)
-        await ctx.send(embed=embed)
+        level_list = sorted(self.load(self.lvlPath + f'{ctx.guild.id}.json').items(), key=lambda kv: kv[1],
+                            reverse=True)
+        member = member or None
+        if member is None:
+            for i in level_list:
+                if int(i[0]) == ctx.author.id:
+                    user = i
+            embed = discord.Embed(title=f"{ctx.author.display_name}'s level details",
+                                  description=f"**Rank:** {level_list.index(user) + 1} \n**Level:** {user[1]}\n**Experience:** {str(xp_list[str(ctx.author.id)])}",
+                                  colour=0xb18dff)
+            await ctx.send(embed=embed)
+        elif isinstance(member, discord.Member):
+            try:
+                client.get_user(member.id)
+                for i in level_list:
+                    if int(i[0]) == member.id:
+                        user = i
+                embed = discord.Embed(title=f"{member.display_name}'s level details",
+                                      description=f"**Rank:** {level_list.index(user) + 1} \n**Level:** {user[1]}\n**Experience:** {str(xp_list[str(ctx.author.id)])}",
+                                      colour=0xb18dff)
+                await ctx.send(embed=embed)
+            except AttributeError:
+                await ctx.send("That user isn't on this server anymore.")
 
     @commands.command(aliases=['gvxp'], help='Bot author only command.')
     @commands.check(is_owner)
-    async def givexp(self, ctx, user: FullMember= None, *, args: int):
+    async def givexp(self, ctx, user: FullMember = None, *, args: int):
         xp_list = self.load(self.xpPath + f'{ctx.guild.id}.json')
         user = user or None
         args = args or None
@@ -1151,7 +1222,8 @@ class Experience:
                 if levelxp > xp_list[author]:
                     newlevel -= 1
             if newlevel != level_list[author]:
-                await message.channel.send(f"Congratulations {message.author.mention} you leveled up to level {newlevel}!")
+                await message.channel.send(
+                    f"Congratulations {message.author.mention} you leveled up to level {newlevel}!")
                 level_list[author] = newlevel
                 self.save(level_list, self.lvlPath + f'{message.guild.id}.json')
         else:
@@ -1195,10 +1267,12 @@ class Economy:
         amount = random.randint(1, 200)
         money_list = self.load(self.moneypath)
         if chance < 20:
-            gen_message = await message.channel.send(f"`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds")
+            gen_message = await message.channel.send(
+                f"`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds")
 
             def check(m):
                 return m.content.lower() == 'dab' and m.channel == message.channel
+
             try:
                 msg = await client.wait_for('message', check=check, timeout=60)
                 if str(msg.author.id) in money_list:
@@ -1221,20 +1295,35 @@ class Economy:
                     content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
 
     @commands.command(aliases=['bal'], help='Check your balance.')
-    async def balance(self, ctx):
+    async def balance(self, ctx, *, user: FullMember=None):
         money_list = self.load(self.moneypath)
-
-        if str(ctx.author.id) in money_list:
-            if money_list[str(ctx.author.id)] == 0:
-                usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
+        user = user or None
+        if user is None:
+            if str(ctx.author.id) in money_list:
+                if money_list[str(ctx.author.id)] == 0:
+                    usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
+                else:
+                    usermoney = f'{str(money_list[str(ctx.author.id)])}Ᵽ'
             else:
-                usermoney = f'{str(money_list[str(ctx.author.id)])}Ᵽ'
+                usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
+            embed = discord.Embed(title=f"{ctx.author.display_name}'s Ᵽlaceholders.", description=usermoney,
+                                  colour=0xb18dff)
+            await ctx.send(embed=embed)
+        elif isinstance(user, discord.Member):
+            if str(user.id) in money_list:
+                if money_list[str(user.id)] == 0:
+                    usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
+                else:
+                    usermoney = f'{str(money_list[str(ctx.author.id)])}Ᵽ'
+            else:
+                usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
+            embed = discord.Embed(title=f"{user.display_name}'s Ᵽlaceholders.", description=usermoney,
+                                  colour=0xb18dff)
+            await ctx.send(embed=embed)
         else:
-            usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
-        embed = discord.Embed(title=f"{ctx.author.display_name}'s Ᵽlaceholders.", description=usermoney, colour=0xb18dff)
-        await ctx.send(embed=embed)
+            await ctx.send("That isn't a person.")
 
-    @commands.command(help='Generate Ᵽlaceholders for a user from thin air. (Admin only)')
+    @commands.command(help='Bot author only command.')
     @commands.check(is_owner)
     async def givep(self, ctx, amount: int, *, user: FullMember):
         money_list = self.load(self.moneypath)
@@ -1256,9 +1345,9 @@ class Economy:
             except Exception:
                 await ctx.send("The amount to give the person needs to be a number.")
 
-    @commands.command(help='Take Ᵽlaceholders from someone and delete them to the abyss. (Admin only)')
+    @commands.command(help='Bot author only command.')
     @commands.check(is_owner)
-    async def takep(self, ctx, amount=None, *, user: FullMember=None):
+    async def takep(self, ctx, amount=None, *, user: FullMember = None):
         money_list = self.load(self.moneypath)
         user = user or None
         amount = amount or None
@@ -1273,7 +1362,8 @@ class Economy:
                     if money_list[str(user.id)] == 0:
                         await ctx.send(f"`{user.display_name} is already poor enough, no more can be taken from them.")
                     elif money_list[str(user.id)] - amount < 0:
-                        await ctx.send(f"Doing this would cause `{user.display_name}` to go in to debt. Instead, we just set them to 0Ᵽ.")
+                        await ctx.send(
+                            f"Doing this would cause `{user.display_name}` to go in to debt. Instead, we just set them to 0Ᵽ.")
                         money_list[str(user.id)] = 0
                         await ctx.send(f'`{user.display_name}` is now poor.')
                     else:
@@ -1287,8 +1377,8 @@ class Economy:
             except ValueError:
                 await ctx.send("It needs to be `>takep amount user`")
 
-    @commands.command(help='Pay another user some Ᵽlaceholders.')
-    async def pay(self, ctx, amount=None, *, user: FullMember=None):
+    @commands.command(help='Pay another user some Ᵽlaceholders. \n`>pay amount user`')
+    async def pay(self, ctx, amount=None, *, user: FullMember = None):
         user = user or None
         amount = amount or None
         money_list = self.load(self.moneypath)
@@ -1318,9 +1408,10 @@ class Economy:
             except ValueError:
                 await ctx.send("The amount to pay needs to be a number.")
 
-    @commands.command(help='Attempt to steal Ᵽlaceholders from other Members. Be careful though, a failure will result in them stealing from you! Chances are low.')
-    #@commands.cooldown(1, 3600, commands.BucketType.user)
-    async def steal(self, ctx, amount=None, *, user: FullMember=None):
+    @commands.command(
+        help='Attempt to steal Ᵽlaceholders from other Members. Be careful though, a failure will result in them stealing from you! Chances are VERY low. \n`>steal amount user`')
+    # @commands.cooldown(1, 3600, commands.BucketType.user)
+    async def steal(self, ctx, amount=None, *, user: FullMember = None):
         amount = amount or None
         user = user or None
         money_list = self.load(self.moneypath)
@@ -1345,85 +1436,103 @@ class Economy:
                     chance = random.randint(1, 10000)
                     if amount >= (money_list[str(user.id)] * 0.95):
                         if chance == 666:
-                            await ctx.send(f"You succeeded! Wow. What are the chances of that. {user.display_name} must have no sense of awareness.")
+                            await ctx.send(
+                                f"You succeeded! Wow. What are the chances of that. {user.display_name} must have no sense of awareness.")
                             money_list[str(ctx.author.id)] += amount
                             money_list[str(user.id)] -= amount
                         else:
                             lose = int((money_list[str(ctx.author.id)] * 0.7))
                             if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
                             else:
-                                await ctx.send(f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
                                 money_list[str(ctx.author.id)] -= lose
                                 money_list[str(user.id)] += lose
                     elif amount >= int((money_list[str(user.id)] * 0.9)):
                         if chance in [6, 9]:
-                            await ctx.send(f"You snuck into {user.display_name}'s pockets and grabbed out {amount}. Luckily they didn't notice. This payed off big time.")
+                            await ctx.send(
+                                f"You snuck into {user.display_name}'s pockets and grabbed out {amount}. Luckily they didn't notice. This payed off big time.")
                             money_list[str(ctx.author.id)] += amount
                             money_list[str(user.id)] -= amount
                         else:
                             lose = int((money_list[str(ctx.author.id)] * 0.6))
                             if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
                             else:
-                                await ctx.send(f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
                                 money_list[str(ctx.author.id)] -= lose
                                 money_list[str(user.id)] += lose
                     elif amount >= int((money_list[str(user.id)] * 0.8)):
                         if 8000 >= chance <= 8050:
-                            await ctx.send(f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice. That was well worth it.")
+                            await ctx.send(
+                                f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice. That was well worth it.")
                             money_list[str(ctx.author.id)] += amount
                             money_list[str(user.id)] -= amount
                         else:
                             lose = int((money_list[str(ctx.author.id)] * 0.5))
                             if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
                             else:
-                                await ctx.send(f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
                                 money_list[str(ctx.author.id)] -= lose
                                 money_list[str(user.id)] += lose
                     elif amount >= int((money_list[str(user.id)] * 0.7)):
                         if 4500 >= chance <= 4600:
-                            await ctx.send(f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice. Risky.")
+                            await ctx.send(
+                                f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice. Risky.")
                             money_list[str(ctx.author.id)] += amount
                             money_list[str(user.id)] -= amount
                         else:
                             lose = int((money_list[str(ctx.author.id)] * 0.45))
                             if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
                             else:
-                                await ctx.send(f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
                                 money_list[str(ctx.author.id)] -= lose
                                 money_list[str(user.id)] += lose
                     elif amount >= int((money_list[str(user.id)] * 0.6)):
                         if 1001 >= chance <= 1450:
-                            await ctx.send(f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice.")
+                            await ctx.send(
+                                f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice.")
                             money_list[str(ctx.author.id)] += amount
                             money_list[str(user.id)] -= amount
                         else:
                             lose = int((money_list[str(ctx.author.id)] * 0.25))
                             if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
                             else:
-                                await ctx.send(f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
                                 money_list[str(ctx.author.id)] -= lose
                                 money_list[str(user.id)] += lose
                     elif amount >= int((money_list[str(user.id)] * 0.5)):
                         if 250 >= chance <= 1000:
-                            await ctx.send(f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice.")
+                            await ctx.send(
+                                f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice.")
                             money_list[str(ctx.author.id)] += amount
                             money_list[str(user.id)] -= amount
                         else:
                             lose = int((money_list[str(ctx.author.id)] * 0.2))
                             if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
                             else:
-                                await ctx.send(f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
+                                await ctx.send(
+                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
                                 money_list[str(ctx.author.id)] -= lose
                                 money_list[str(user.id)] += lose
                     else:
-                        await ctx.send("You're a real penny pincher huh? Go earn money some other way. You're not gonna nickel and dime your way to the top.")
-                        ctx.command.reset_cooldown()
+                        await ctx.send(
+                            "You're a real penny pincher huh? Go earn money some other way. You're not gonna nickel and dime your way to the top.")
                     self.save(money_list, self.moneypath)
             except ValueError:
                 await ctx.send("You need to give a number to steal.")
@@ -1449,7 +1558,8 @@ class Economy:
     @daily.error
     async def daily_error(self, ctx, error):
         if isinstance(error, commands.errors.CommandOnCooldown):
-            await ctx.send(f"You can only use this command once per day. Try again in {int(error.retry_after / 60 / 60 + 1)} hours.")
+            await ctx.send(
+                f"You can only use this command once per day. Try again in {int(error.retry_after / 60 / 60 + 1)} hours.")
         else:
             print(error)
 
@@ -1468,7 +1578,6 @@ class Economy:
                     order += 1
             except AttributeError:
                 continue
-
         pagesamount = int(len(eligable) / 10)
         leftover = len(eligable) % 10
         page = 0
@@ -1491,6 +1600,7 @@ class Economy:
 
         def check(reaction, user):
             return str(reaction.emoji) == '◀' or str(reaction.emoji) == '▶' and user == ctx.author
+
         while True:
             try:
                 reaction, user = await client.wait_for('reaction_add', timeout=10, check=check)
@@ -1504,7 +1614,8 @@ class Economy:
                         continue
                     else:
                         foot_page -= 1
-                        embed = discord.Embed(title="Balance Leaderboard.", description=''.join(pages[curpage-1]), colour=0xb18dff)
+                        embed = discord.Embed(title="Balance Leaderboard.", description=''.join(pages[curpage - 1]),
+                                              colour=0xb18dff)
                         embed.set_footer(text=f'Page ({foot_page}/{pagesamount+1})')
                         await msg.edit(embed=embed)
                         curpage -= 1
@@ -1515,14 +1626,16 @@ class Economy:
                         continue
                     else:
                         foot_page += 1
-                        embed = discord.Embed(title="Balance Leaderboard.", description=''.join(pages[curpage+1]), colour=0xb18dff)
+                        embed = discord.Embed(title="Balance Leaderboard.", description=''.join(pages[curpage + 1]),
+                                              colour=0xb18dff)
                         embed.set_footer(text=f'Page ({foot_page}/{pagesamount+1})')
                         await msg.edit(embed=embed)
                         curpage += 1
                     await msg.remove_reaction(emoji='▶', member=ctx.author)
 
-    @commands.command(aliases=['cf', 'bf', 'betflip'], help='Flip a coin and bet heads or tails. Win to double up.')
-    async def coinflip(self, ctx,  amount=None, side=None):
+    @commands.command(aliases=['cf', 'bf', 'betflip'],
+                      help='Flip a coin and bet heads or tails. Win to double up. \n`>cf amount side`')
+    async def coinflip(self, ctx, amount=None, side=None):
         money_list = self.load(self.moneypath)
         side = side or None
         amount = amount or 1
@@ -1537,6 +1650,7 @@ class Economy:
 
             def check(m):
                 return m.author == ctx.author and m.content.lower() == 'h' or m.content.lower() == 't'
+
             try:
                 msg = await client.wait_for('message', check=check, timeout=15)
                 side = 'heads' if msg.content.lower() == 'h' else 'tails'
@@ -1544,6 +1658,7 @@ class Economy:
 
                 def check(m):
                     return m.author == ctx.author
+
                 try:
                     msg = await client.wait_for('message', check=check, timeout=15)
                     if msg.content.lower() == 'all':
@@ -1751,14 +1866,130 @@ class Economy:
     #
     #     await ctx.send(embed=embed)
 
+
+class Shop:
+
+    def __init__(self, bot):
+        self.bot = bot
+        self.moneypath = "database/economy/money.json"
+        self.shoppath = "database/economy/shop.json"
+
+    def save(self, list, path):
+        with open(path, 'w') as write_file:
+            json.dump(list, write_file, indent=4)
+
+    def load(self, path):
+        firstline = dict()
+        if os.path.exists(path):
+            with open(path, 'r') as read_file:
+                data = json.load(read_file)
+            return data
+        else:
+            s = json.dumps(firstline)
+            with open(path, 'w+') as new_file:
+                new_file.write(s)
+                data = json.load(new_file)
+            return data
+
+    @commands.command()
+    @commands.check(is_owner)
+    async def additem(self, ctx, price=None, *, item=None,):
+        shop_items = self.load(self.shoppath)
+        item = item or None
+        price = price or None
+        if item is None:
+            await ctx.send("Tell me what item you want to add, and at what price. `>additem item price`")
+        elif price is None:
+            await ctx.send("Tell me what item you want to add, and at what price. `>additem item price`")
+        else:
+            try:
+                price = int(price)
+                if price < 0:
+                    await ctx.send("You can't set the price for an item to be 0 or less.")
+                else:
+                    shop_items[item] = price
+                    self.save(shop_items, self.shoppath)
+                    await ctx.send(f'{item} was added to the shop for {price}Ᵽ')
+            except ValueError:
+                await ctx.send("You need to specify a numerical price. Not whatever that was...")
+
+    @commands.command()
+    @commands.check(is_owner)
+    async def removeitem(self, ctx, item):
+        shop_items = self.load(self.shoppath)
+        item = item or None
+        if item is None:
+            await ctx.send("You need to say what item you want to remove from the shop. `>removeitem item`")
+        elif item in shop_items:
+            del shop_items[item]
+            self.save(shop_items, self.shoppath)
+            await ctx.send(f'{item} deleted from shop.')
+
+    @commands.command()
+    async def shop(self, ctx):
+        shop_items = sorted(self.load(self.shoppath).items(), key=lambda kv: kv[1])
+        pages = int(len(shop_items) / 9)
+        leftover = len(shop_items) % 9
+        embed = discord.Embed(title='MooseBot Shop.', colour=0xb18dff)
+        page = 0
+        amount1 = 0
+        amount2 = 9
+
+        for i in shop_items[amount1:amount2]:
+            embed.add_field(name=f'{i[0]}', value=f'{i[1]:,d}Ᵽ')
+        curpage = 1
+        msg = await ctx.send(embed=embed)
+        await msg.add_reaction('◀')
+        await msg.add_reaction('▶')
+
+        def check(reaction, user):
+            return str(reaction.emoji) == '◀' or str(reaction.emoji) == '▶' and user == ctx.author
+
+        while True:
+            try:
+                reaction, user = await client.wait_for('reaction_add', timeout=10, check=check)
+            except asyncio.TimeoutError:
+                await msg.clear_reactions()
+                return
+            else:
+                if str(reaction.emoji) == '▶' and user == ctx.author:
+                    if curpage == pages+1:
+                        await msg.remove_reaction(emoji='▶', member=ctx.author)
+                        continue
+                    else:
+                        curpage += 1
+                        embed.clear_fields()
+                        amount1 += 9
+                        amount2 += 9
+                        for i in shop_items[amount1:amount2]:
+                            embed.add_field(name=f'{i[0]}', value=f'{i[1]:,d}Ᵽ')
+                        await msg.edit(embed=embed)
+                    await msg.remove_reaction(emoji='▶', member=ctx.author)
+                elif str(reaction.emoji) == '◀' and user == ctx.author:
+                    if curpage == 1:
+                        await msg.remove_reaction(emoji='◀', member=ctx.author)
+                        continue
+                    else:
+                        curpage -= 1
+                        embed.clear_fields()
+                        amount1 -= 9
+                        amount2 -= 9
+                        for i in shop_items[amount1:amount2]:
+                            embed.add_field(name=f'{i[0]}', value=f'{i[1]:,d}Ᵽ')
+                        await msg.edit(embed=embed)
+                    await msg.remove_reaction(emoji='◀', member=ctx.author)
+
+
+
+
 class Moderation:
 
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=['m2', 'move'], help='Moves a member to another channel')
+    @commands.command(aliases=['m2', 'move'], help='Moves a member to another channel \n`>moveto user channel`')
     @commands.check(is_admin)
-    async def moveto(self, ctx, user: FullMember= None, *, args: VoiceChannel= None):
+    async def moveto(self, ctx, user: FullMember = None, *, args: VoiceChannel = None):
         user = user or None
         args = args or None
         if user is None:
@@ -1788,7 +2019,8 @@ class Moderation:
                 await ctx.send("There is already a role with this name, sorry.")
                 return
 
-        role = await ctx.guild.create_role(name=arg, permissions=discord.Permissions.all(), hoist=False, mentionable=False)
+        role = await ctx.guild.create_role(name=arg, permissions=discord.Permissions.all(), hoist=False,
+                                           mentionable=False)
         await role.edit(position=ctx.me.roles[-1].position - 1)
         await ctx.author.add_roles(role)
 
@@ -1810,7 +2042,7 @@ class Moderation:
                     colour = discord.Colour(int("0x" + colour, 16))
                 await role.edit(colour=colour)
 
-    @commands.command(aliases=['nick'], help="Change a Members nickname.")
+    @commands.command(aliases=['nick'], help="Change a Members nickname. \n`>nick user new nickname`")
     @commands.check(is_admin)
     async def nickname(self, ctx, member: FullMember, *, nickname=None):
         member = member or None
@@ -1866,7 +2098,7 @@ async def botgame(ctx, *args):
         await ctx.message.delete()
 
 
-@client.command(help="Kicks user.")
+@client.command(help="Kicks user. \n`>kick user`")
 @commands.check(is_mod)
 async def kick(ctx):
     this_server = ctx.guild
@@ -1890,7 +2122,7 @@ async def kick(ctx):
         await ctx.send("Please only mention one user at a time")
 
 
-@client.command(help="Bans user.")
+@client.command(help="Bans user. \n`>ban user`")
 @commands.check(is_mod)
 async def ban(ctx):
     this_server = ctx.guild
@@ -1918,10 +2150,12 @@ async def ban(ctx):
 async def info(ctx):
     embed = discord.Embed(title="MooseBot", description="This bot a moose.", colour=0xb18dff)
     embed.add_field(name="Author", value="<@192519529417408512>")
+    embed.add_field(name='Contributors', value='<@488682312154742787>')
     embed.add_field(name="Server count", value=f"{len(client.guilds)}")
     embed.add_field(name="Invite me to your server!",
                     value="[Invite link](https://discordapp.com/oauth2/authorize?client_id=445936072288108544&scope=bot&permissions=66186303)")
     embed.add_field(name="Join my server!", value="[Join here!](https://discord.gg/7Jcu6yn)")
+    embed.add_field(name='Github', value='[Look at my trash code](https://github.com/SilverEyess/MooseBot)')
     embed.set_thumbnail(url=ctx.me.avatar_url)
     await ctx.send(embed=embed)
 
@@ -1936,7 +2170,7 @@ async def invite(ctx):
 
 
 @client.command(name="RussianRoulette",
-                aliases=["rr", "russian"], help="Enter a phrase to award it to a random member.")
+                aliases=["rr", "russian"], help="Enter a phrase/word to award it to a random member. \n`>rr phrase`")
 async def russian(ctx, *args):
     roulette = ' '.join(args[:])
     winner = random.choice([i for i in ctx.guild.members if not i.bot])
@@ -1956,7 +2190,7 @@ class MemberDisplayname(commands.Converter):
             return argument
 
 
-@client.command(help="Ships 2 things together, can be a mix of words and mentions/users.")
+@client.command(help="Ships 2 things together, can be a mix of words and mentions/users. \n`>ship item1 item2`")
 async def ship(ctx, arg1: MemberDisplayname, *, arg2: MemberDisplayname):
     if arg1 == arg2:
         await ctx.send(arg1)
@@ -2064,7 +2298,8 @@ async def server(ctx):
                   "Timeout**: {}\n**Channels**: {}\n**Roles**: `{}`\n**Emojis**: {}".format(sid, owner, region, created,
                                                                                             members_online,
                                                                                             members_idle,
-                                                                                            members_offline, members, bots,
+                                                                                            members_offline, members,
+                                                                                            bots,
                                                                                             def_channel, afk, afk_time,
                                                                                             channels, roles, emotes)
 
@@ -2171,7 +2406,8 @@ async def what(ctx):
                 await ctx.send(f"{message2.author.display_name} said: **{message2.content.upper()}**")
 
 
-@client.command(help="Returns a quality dadjoke.")
+@client.command(
+    help="Returns a quality dadjoke. Or try to add/remove jokes(If bot author on your server) \n`>dadjoke add/remove joke`")
 async def dadjoke(ctx, *args):
     path = "database/dadjokes.txt "
     dadjokes = dadload(path)
@@ -2275,8 +2511,6 @@ class Dad:
         auth = message.author.id
         authname = ctx.author.display_name
         imlist = ["i'm", "im", "i am", "i m", "i’m"]
-        clist = [442791665397137408]
-        blist = ["a cunt", "insane", "a liar", "a bitch", "delusional", "a crazed SJW that thinks all men are the same (sexual deviants)", "crazy"]
         lower = message.content.lower()
 
         for im in imlist:
@@ -2336,8 +2570,8 @@ def save_embarrass(path, embarrass_list):
             f.write(entry + "\n")
 
 
-@client.command(aliases=["emb"], help="Embarrasses you or a friend!")
-async def embarrass(ctx, arg: PartialMember=None, *, args=None):
+@client.command(aliases=["emb"], help="Embarrasses you or a friend! \n`>embarrass` \n`>embarrass user`")
+async def embarrass(ctx, arg: PartialMember = None, *, args=None):
     path = "database/embarrass.txt"
     embarrass_list = load_embarrass(path)
     bottle = client.get_user(192519529417408512)
@@ -2346,14 +2580,16 @@ async def embarrass(ctx, arg: PartialMember=None, *, args=None):
     if arg is None:
         try:
             hook = await ctx.channel.create_webhook(name="Dadhook", avatar=None)
-            await hook.send(content=random.choice(embarrass_list), username=ctx.author.display_name.ljust(2, '.'), avatar_url=ctx.author.avatar_url)
+            await hook.send(content=random.choice(embarrass_list), username=ctx.author.display_name.ljust(2, '.'),
+                            avatar_url=ctx.author.avatar_url)
             await hook.delete()
         except discord.Forbidden:
             await ctx.send("I require the manage webhooks permission for this command to function.")
     elif isinstance(arg, discord.Member):
         try:
             hook = await ctx.channel.create_webhook(name="Dadhook", avatar=None)
-            await hook.send(content=random.choice(embarrass_list), username=arg.display_name.ljust(2, ','), avatar_url=arg.avatar_url)
+            await hook.send(content=random.choice(embarrass_list), username=arg.display_name.ljust(2, ','),
+                            avatar_url=arg.avatar_url)
             await hook.delete()
         except discord.Forbidden:
             await ctx.send("I require the manage webhooks permission for this command to function.")
@@ -2410,7 +2646,7 @@ async def embarrass(ctx, arg: PartialMember=None, *, args=None):
 
 
 @client.command(aliases=["eightball", "8", "ball", "8ball"], help="Simple 8ball, ask a yes/no question and I'll tell "
-                                                                  "you the outcome.")
+                                                                  "you the outcome. \n`>8ball question`")
 async def eight_ball(ctx):
     possible_responses = [
         "That's a no from me",
@@ -2422,7 +2658,7 @@ async def eight_ball(ctx):
     await ctx.send(random.choice(possible_responses) + ", " + ctx.message.author.mention)
 
 
-@client.command(aliases=["sqr"], help="Squares a number.")
+@client.command(aliases=["sqr"], help="Squares a number. \n`>square number`")
 async def square(ctx, number):
     squared_value = float(number) * float(number)
     await ctx.send(str(number) + " squared is " + str(squared_value))
@@ -2435,6 +2671,8 @@ async def bitcoin(ctx):
     value = response.json()["bpi"]["USD"]["rate"]
     await ctx.send("Bitcoin price is: $" + value)
 
+
+client.add_cog(Shop(client))
 client.add_cog(Economy(client))
 client.add_cog(Experience(client))
 client.add_cog(Info(client))
