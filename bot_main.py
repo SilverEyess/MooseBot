@@ -15,8 +15,11 @@ from googletrans import LANGUAGES
 import praw
 import json
 
+with open('database/token.txt') as f:
+    content = f.readlines()
+
 BOT_PREFIX = ">"
-TOKEN = 'OMITTED'
+TOKEN = content[0]
 client = Bot(command_prefix=BOT_PREFIX)
 admins = ["192519529417408512", "345484068886020108"]
 phone_server_list = []
