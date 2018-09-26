@@ -1,0 +1,6 @@
+__pycache__
+# Compiled files
+pip-log.txt
+*.py[cod]
+.idea
+venv
