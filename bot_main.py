@@ -1163,6 +1163,8 @@ class Experience:
                 await ctx.send(embed=embed)
             except AttributeError:
                 await ctx.send("That user isn't on this server anymore.")
+        else:
+            await ctx.send("That isn't a person.")
 
     @commands.command(aliases=['gvxp'], help='Bot author only command.')
     @commands.check(is_owner)
@@ -1314,7 +1316,7 @@ class Economy:
                 if money_list[str(user.id)] == 0:
                     usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
                 else:
-                    usermoney = f'{str(money_list[str(ctx.author.id)])}Ᵽ'
+                    usermoney = f'{str(money_list[str(user.id)])}Ᵽ'
             else:
                 usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
             embed = discord.Embed(title=f"{user.display_name}'s Ᵽlaceholders.", description=usermoney,
