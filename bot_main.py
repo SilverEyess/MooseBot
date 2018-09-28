@@ -113,8 +113,12 @@ def load(self, path):
         s = json.dumps(firstline)
         with open(path, 'w+') as new_file:
             new_file.write(s)
-            data = json.load(new_file)
-        return data
+            try:
+                data = json.load(new_file)
+
+            except json.JSONDecodeError:
+                data = dict()
+            return data
 
 
 @client.event
@@ -1053,8 +1057,12 @@ class Experience:
             s = json.dumps(firstline)
             with open(path, 'w+') as new_file:
                 new_file.write(s)
-                data = json.load(new_file)
-            return data
+                try:
+                    data = json.load(new_file)
+
+                except json.JSONDecodeError:
+                    data = dict()
+                return data
 
     async def on_message(self, message):
         if message.guild is None:
@@ -1254,8 +1262,12 @@ class Economy:
             s = json.dumps(firstline)
             with open(path, 'w+') as new_file:
                 new_file.write(s)
-                data = json.load(new_file)
-            return data
+                try:
+                    data = json.load(new_file)
+
+                except json.JSONDecodeError:
+                    data = dict()
+                return data
 
     async def on_message(self, message):
         if message.guild is None:
@@ -1267,7 +1279,7 @@ class Economy:
 
     async def pickchance(self, message):
         chance = random.randint(1, 1000)
-        amount = random.randint(1, 200)
+        amount = random.randint(50, 250)
         money_list = self.load(self.moneypath)
         if chance < 20:
             gen_message = await message.channel.send(
@@ -1280,9 +1292,10 @@ class Economy:
                 msg = await client.wait_for('message', check=check, timeout=60)
                 invpath = f'{self.inventorypath}{msg.author.id}.json'
                 inventory = self.load(invpath)
-                if inventory['Dab Multiplier'] == 'yes':
-                    amount2 = amount * 2
-                    grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. They had a Dab Multiplier so they got double Ᵽ. `{amount2}Ᵽ` awarded to them."
+                if 'Dab Multiplier' in inventory:
+                    if inventory['Dab Multiplier'] == 'yes':
+                        amount2 = amount * 2
+                        grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. They had a Dab Multiplier so they got double Ᵽ. `{amount2}Ᵽ` awarded to them."
                 else:
                     grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
                 if str(msg.author.id) in money_list:
