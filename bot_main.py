@@ -1238,6 +1238,7 @@ class Economy:
     def __init__(self, bot):
         self.bot = bot
         self.moneypath = "database/economy/money.json"
+        self.inventorypath = 'database/economy/inventories/'
 
     def save(self, list, path):
         with open(path, 'w') as write_file:
@@ -1277,18 +1278,21 @@ class Economy:
 
             try:
                 msg = await client.wait_for('message', check=check, timeout=60)
+                invpath = f'{self.inventorypath}{msg.author.id}.json'
+                inventory = self.load(invpath)
+                if inventory['Dab Multiplier'] == 'yes':
+                    amount2 = amount * 2
+                    grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. They had a Dab Multiplier so they got double Ᵽ. `{amount2}Ᵽ` awarded to them."
+                else:
+                    grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
                 if str(msg.author.id) in money_list:
                     money_list[str(msg.author.id)] += amount
-                    await message.channel.send(
-                        f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them.")
-                    await gen_message.edit(
-                        content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                    await message.channel.send(grant)
+                    await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
                 else:
                     money_list[str(msg.author.id)] = amount
-                    await message.channel.send(
-                        f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them.")
-                    await gen_message.edit(
-                        content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                    await message.channel.send(grant)
+                    await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
                 self.save(money_list, self.moneypath)
 
             except asyncio.TimeoutError:
@@ -1875,6 +1879,7 @@ class Shop:
         self.bot = bot
         self.moneypath = "database/economy/money.json"
         self.shoppath = "database/economy/shop.json"
+        self.inventorypath = 'database/economy/inventories/'
 
     def save(self, list, path):
         with open(path, 'w') as write_file:
@@ -1890,8 +1895,12 @@ class Shop:
             s = json.dumps(firstline)
             with open(path, 'w+') as new_file:
                 new_file.write(s)
-                data = json.load(new_file)
-            return data
+                try:
+                    data = json.load(new_file)
+
+                except json.JSONDecodeError:
+                    data = dict()
+                return data
 
     @commands.command()
     @commands.check(is_owner)
@@ -1917,15 +1926,19 @@ class Shop:
 
     @commands.command()
     @commands.check(is_owner)
-    async def removeitem(self, ctx, item):
+    async def removeitem(self, ctx, *, item):
         shop_items = self.load(self.shoppath)
         item = item or None
         if item is None:
             await ctx.send("You need to say what item you want to remove from the shop. `>removeitem item`")
-        elif item in shop_items:
-            del shop_items[item]
-            self.save(shop_items, self.shoppath)
-            await ctx.send(f'{item} deleted from shop.')
+        else:
+            match = next(iter(x for x in shop_items if x.lower() == item.lower()), None)
+            if match is not None:
+                del shop_items[match]
+                self.save(shop_items, self.shoppath)
+                await ctx.send(f'{item} deleted from shop.')
+            else:
+                await ctx.send(f'Could not find {item} in the shop list.')
 
     @commands.command()
     async def shop(self, ctx):
@@ -1933,12 +1946,10 @@ class Shop:
         pages = int(len(shop_items) / 9)
         leftover = len(shop_items) % 9
         embed = discord.Embed(title='MooseBot Shop.', colour=0xb18dff)
-        page = 0
         amount1 = 0
         amount2 = 9
-
         for i in shop_items[amount1:amount2]:
-            embed.add_field(name=f'{i[0]}', value=f'{i[1]:,d}Ᵽ')
+            embed.add_field(name=f'#{shop_items.index(i) + 1}: {i[0]}', value=f'{i[1]:,d}Ᵽ')
         curpage = 1
         msg = await ctx.send(embed=embed)
         await msg.add_reaction('◀')
@@ -1964,7 +1975,7 @@ class Shop:
                         amount1 += 9
                         amount2 += 9
                         for i in shop_items[amount1:amount2]:
-                            embed.add_field(name=f'{i[0]}', value=f'{i[1]:,d}Ᵽ')
+                            embed.add_field(name=f'#{shop_items.index(i) + 1}: {i[0]}', value=f'{i[1]:,d}Ᵽ')
                         await msg.edit(embed=embed)
                     await msg.remove_reaction(emoji='▶', member=ctx.author)
                 elif str(reaction.emoji) == '◀' and user == ctx.author:
@@ -1977,11 +1988,46 @@ class Shop:
                         amount1 -= 9
                         amount2 -= 9
                         for i in shop_items[amount1:amount2]:
-                            embed.add_field(name=f'{i[0]}', value=f'{i[1]:,d}Ᵽ')
+                            embed.add_field(name=f'#{shop_items.index(i) + 1}: {i[0]}', value=f'{i[1]:,d}Ᵽ')
                         await msg.edit(embed=embed)
                     await msg.remove_reaction(emoji='◀', member=ctx.author)
 
+    @commands.command()
+    async def buy(self, ctx, *, item=None):
+        invpath = f'{self.inventorypath}{ctx.author.id}.json'
+        shop_items = sorted(self.load(self.shoppath).items(), key=lambda kv: kv[1])
+        money_list = self.load(self.moneypath)
+        inventory = self.load(invpath)
+        user = str(ctx.author.id)
+        item = item or None
+        if item is None:
+            await ctx.send("Please specify which item you want to buy, either by its name or number in the store. `>buy item`")
+        else:
+            try:
+                item = int(item) - 1
+                try:
+                    item = shop_items[item]
+                except Exception:
+                    await ctx.send(f"There is no item #{item} on the store.")
 
+            except ValueError:
+                match = next(iter(i for i in shop_items if i[0].lower() == item.lower()), None)
+                if match is None:
+                    await ctx.send("That item does not exist on the store. For ease of use, use the item number.")
+                else:
+                    item = match
+        if money_list[user] < item[1]:
+            await ctx.send("You do not have enough Ᵽlaceholders to purchase that item.")
+        else:
+            match = next(iter(i for i in inventory if i.lower() == item[0].lower()), None)
+            if match is not None:
+                await ctx.send("You already own this item.")
+            else:
+                inventory[item[0]] = 'yes'
+                money_list[user] -= item[1]
+                self.save(inventory, invpath)
+                self.save(money_list, self.moneypath)
+                await ctx.send(f"Congratulations on your new purchase of {item[0]}! `{item[1]}Ᵽ` has been deducted from your account.")
 
 
 class Moderation:
