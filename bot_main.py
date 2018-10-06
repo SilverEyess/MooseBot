@@ -14,6 +14,14 @@ from googletrans import Translator
 from googletrans import LANGUAGES
 import praw
 import json
+from threading import Lock
+from pymongo import MongoClient
+import pymongo
+import decimal
+xplock = Lock()
+mongo = MongoClient()
+db = mongo.MooseBot
+import re
 
 with open('database/token.txt') as f:
     content = f.readlines()
@@ -49,7 +57,6 @@ async def is_mod(ctx):
     else:
         return False
 
-
 @client.event
 async def on_ready():
     print("Logged in as {}({})".format(client.user.name, client.user.id))
@@ -76,6 +83,8 @@ async def on_guild_join(guild):
     embed.add_field(name="Join my server!", value="[Join here!](https://discord.gg/7Jcu6yn)")
     embed.set_thumbnail(url=guild.me.avatar_url_as(format='png'))
     await channel.send(embed=embed)
+    db.lvl.insert_one({'serverid': str(guild.id)})
+    db.xp.insert_one({'serverid': str(guild.id)})
 
 
 @client.event
@@ -98,12 +107,12 @@ async def on_member_update(before, after):
 #     if isinstance(error, commands.CommandNotFound):
 #         print("{} is retarded and '{}' isn't a command.".format(ctx.author.display_name, ctx.message.content))
 
-def save(self, list, path):
+def save(list, path):
     with open(path, 'w') as write_file:
         json.dump(list, write_file, indent=4)
 
 
-def load(self, path):
+def load(path):
     firstline = dict()
     if os.path.exists(path):
         with open(path, 'r') as read_file:
@@ -275,6 +284,21 @@ async def purge(ctx, where=None, limit=None):
             async for i in ctx.channel.history(limit=where):
                 if i.author == ctx.author:
                     await i.delete()
+
+
+@client.command()
+async def calc(ctx, *, args):
+    dec = decimal.Context()
+    dec.prec = 40
+
+    def convert(f):
+        d1 = dec.create_decimal(repr(f))
+        return format(d1, 'f')
+
+    args = args.split(',')
+    args = ''.join(args)
+    e = int(float(convert(eval(args))))
+    await ctx.send(f'{e:,d}')
 
 
 class Fun:
@@ -625,7 +649,9 @@ class GuessGame:
         await play()
 
     @commands.command(help="Rock paper scissors game.")
-    async def rps(self, ctx):
+    async def rps(self, ctx, amount=1):
+        amount = amount or 1
+
         async def play():
             await ctx.send("Let's play rock, paper, scissors. Select your weapon:")
             choices = ('rock', 'paper', 'scissors')
@@ -647,14 +673,15 @@ class GuessGame:
 
             if computer and player in choices:
                 if computer == player:
-                    await ctx.send(f"**Tie!** You both chose {computer.title()}.")
+                    await ctx.send(f"**Tie!** You both chose {computer.title()}. You lose no Ᵽlaceholders.")
                     await self.gameover(ctx, play)
                 elif player in beats[computer]:
-                    await ctx.send(f"**You win!** Moosebot chose: {computer.title()}, and you chose: {player.title()}.")
+                    await ctx.send(f"**You win!** Moosebot chose: {computer.title()}, and you chose: {player.title()}.You won {amount}Ᵽ.")
+                    db.money.update({'userid': str(ctx.author.id)}, {'$inc': {'balance': amount}})
                     await self.gameover(ctx, play)
                 else:
-                    await ctx.send(
-                        f"**You lose!** Moosebot chose: {computer.title()}, and you chose: {player.title()}.")
+                    await ctx.send(f"**You lose!** Moosebot chose: {computer.title()}, and you chose: {player.title()}.You lost {amount}Ᵽ.")
+                    db.money.update({'userid': str(ctx.author.id)}, {'$inc': {'balance': -amount}})
                     await self.gameover(ctx, play)
             else:
                 await play()
@@ -1040,29 +1067,6 @@ class Experience:
 
     def __init__(self, bot):
         self.bot = bot
-        self.xpPath = 'database/experience/experience_'
-        self.lvlPath = 'database/experience/levels_'
-
-    def save(self, list, path):
-        with open(path, 'w') as write_file:
-            json.dump(list, write_file, indent=4)
-
-    def load(self, path):
-        firstline = dict()
-        if os.path.exists(path):
-            with open(path, 'r') as read_file:
-                data = json.load(read_file)
-            return data
-        else:
-            s = json.dumps(firstline)
-            with open(path, 'w+') as new_file:
-                new_file.write(s)
-                try:
-                    data = json.load(new_file)
-
-                except json.JSONDecodeError:
-                    data = dict()
-                return data
 
     async def on_message(self, message):
         if message.guild is None:
@@ -1075,25 +1079,23 @@ class Experience:
 
     @commands.command(aliases=['lb'], help='See who has a life the least on your server.')
     async def leaderboard(self, ctx):
-        xp_list = sorted(self.load(self.xpPath + f'{ctx.guild.id}.json').items(), key=lambda kv: kv[1], reverse=True)
-        level_list = sorted(self.load(self.lvlPath + f'{ctx.guild.id}.json').items(), key=lambda kv: kv[1],
-                            reverse=True)
+        server = str(ctx.guild.id)
         order = 1
-        eligable = []
-        for i in level_list:
-            user = i[0]
-            if [str(x[1]) for x in xp_list if x[0] == user][0] == 0:
+
+        lvls = {}
+        for i in db.xp.find_one({'serverid': server}):
+            try:
+                user = client.get_user(int(i))
+                lvls[user.id] = db.xp.find_one({'serverid': server})[i]
+            except Exception:
                 continue
-            else:
-                try:
-                    client.get_user(int(i[0]))
-                    eligable.append(
-                        f'▫{order}. **{client.get_user(int(i[0])).display_name}**: {str(i[1])} `({[str(x[1]) for x in xp_list if x[0] == user][0]} exp)` \n')
-                    order += 1
-                except AttributeError:
-                    continue
+        lvls = sorted(lvls.items(), key=lambda kv: kv[1], reverse=True)
+        eligable = []
+        for i in lvls:
+            eligable.append(f'▫{order}. **{client.get_user(i[0]).display_name}**: {db.lvl.find_one({"serverid": server})[str(i[0])]} `({str(i[1])} exp)` \n')
+            order += 1
         pagesamount = int(len(eligable) / 10)
-        leftover = int(len(eligable) % 10)
+        leftover = len(eligable) % 10
         page = 0
         pages = []
         amount1 = 0
@@ -1103,11 +1105,13 @@ class Experience:
             amount1 += 10
             amount2 += 10
             page += 1
-        pages.append(eligable[-leftover:])
+        if leftover != 0:
+            pages.append(eligable[-leftover:])
+            pagesamount += 1
         curpage = 0
         foot_page = 1
         embed = discord.Embed(title="Experience Leaderboard.", description=''.join(pages[curpage]), colour=0xb18dff)
-        embed.set_footer(text=f'Page({curpage+1}/{pagesamount+1})')
+        embed.set_footer(text=f'Page({foot_page}/{pagesamount})')
         msg = await ctx.send(embed=embed)
         await msg.add_reaction('◀')
         await msg.add_reaction('▶')
@@ -1127,57 +1131,67 @@ class Experience:
                         await msg.remove_reaction(emoji='◀', member=ctx.author)
                         continue
                     else:
-                        curpage -= 1
-                        embed = discord.Embed(title='Experience Leaderboard.', description=''.join(pages[curpage]),
+                        foot_page -= 1
+                        embed = discord.Embed(title='Experience Leaderboard.', description=''.join(pages[curpage - 1]),
                                               colour=0xb18dff)
-                        embed.set_footer(text=f'Page ({curpage+1}/{pagesamount+1})')
+                        embed.set_footer(text=f'Page ({foot_page}/{pagesamount})')
                         await msg.edit(embed=embed)
+                        curpage -= 1
                     await msg.remove_reaction(emoji='◀', member=ctx.author)
                 elif str(reaction.emoji) == '▶' and user == ctx.author:
-                    if curpage == pagesamount:
+                    if curpage == pagesamount -1:
                         await msg.remove_reaction(emoji='▶', member=ctx.author)
                         continue
                     else:
-                        curpage += 1
-                        embed = discord.Embed(title='Experience Leaderboard.', description=''.join(pages[curpage]),
+                        foot_page += 1
+                        embed = discord.Embed(title='Experience Leaderboard.', description=''.join(pages[curpage + 1]),
                                               colour=0xb18dff)
-                        embed.set_footer(text=f'Page ({curpage+1}/{pagesamount+1})')
+                        embed.set_footer(text=f'Page ({foot_page}/{pagesamount})')
                         await msg.edit(embed=embed)
+                        curpage += 1
                     await msg.remove_reaction(emoji='▶', member=ctx.author)
 
     @commands.command(aliases=['lvl', 'rank'], help='Check your current xp and level standings.')
     async def level(self, ctx, member: FullMember=None):
-        xp_list = self.load(self.xpPath + f'{ctx.guild.id}.json')
-        level_list = sorted(self.load(self.lvlPath + f'{ctx.guild.id}.json').items(), key=lambda kv: kv[1],
-                            reverse=True)
+        server = str(ctx.guild.id)
+        eligable = {}
+        for i in db.lvl.find_one({'serverid': server}):
+            try:
+                if i == '_id' or i == 'serverid':
+                    continue
+                else:
+                    client.get_user(int(i))
+                    eligable[i] = db.lvl.find_one({'serverid': server})[i]
+            except AttributeError:
+                continue
+        level_list2 = sorted(eligable.items(), key=lambda kv: kv[1], reverse=True)
         member = member or None
         if member is None:
-            for i in level_list:
-                if int(i[0]) == ctx.author.id:
-                    user = i
-            embed = discord.Embed(title=f"{ctx.author.display_name}'s level details",
-                                  description=f"**Rank:** {level_list.index(user) + 1} \n**Level:** {user[1]}\n**Experience:** {str(xp_list[str(ctx.author.id)])}",
-                                  colour=0xb18dff)
-            await ctx.send(embed=embed)
+            user = str(ctx.author.id)
+            member = ctx.author
         elif isinstance(member, discord.Member):
             try:
                 client.get_user(member.id)
-                for i in level_list:
-                    if int(i[0]) == member.id:
-                        user = i
-                embed = discord.Embed(title=f"{member.display_name}'s level details",
-                                      description=f"**Rank:** {level_list.index(user) + 1} \n**Level:** {user[1]}\n**Experience:** {str(xp_list[str(ctx.author.id)])}",
-                                      colour=0xb18dff)
-                await ctx.send(embed=embed)
+                user = str(member.id)
+
             except AttributeError:
                 await ctx.send("That user isn't on this server anymore.")
         else:
             await ctx.send("That isn't a person.")
+        rank = [i for i in level_list2 if i[0] == user]
+        nextlvl = f'{user}_nextlevel'
+        try:
+            xp = f"{db.xp.find_one({'serverid': server})[user]}/{db.xp.find_one({'serverid': server})[nextlvl]}"
+        except KeyError:
+            xp = db.xp.find_one({'serverid': server})[user]
+        embed = discord.Embed(title=f"{member.display_name}'s level details",
+                              description=f"**Rank:** {level_list2.index(rank[0]) + 1} \n**Level:** {db.lvl.find_one({'serverid': server})[user]}\n**Experience:** {xp}",
+                              colour=0xb18dff)
+        await ctx.send(embed=embed)
 
     @commands.command(aliases=['gvxp'], help='Bot author only command.')
     @commands.check(is_owner)
     async def givexp(self, ctx, user: FullMember = None, *, args: int):
-        xp_list = self.load(self.xpPath + f'{ctx.guild.id}.json')
         user = user or None
         args = args or None
         if user is None:
@@ -1185,14 +1199,12 @@ class Experience:
         elif args is None:
             await ctx.send(f"Please tell me how much xp to give to `{user.display_name}`.")
         else:
-            xp_list[str(user.id)] += args
-            self.save(xp_list, self.xpPath + f'{ctx.guild.id}.json')
+            db.xp.update({'serverid': str(ctx.guild.id)}, {'$inc': {str(user.id): args}})
             await ctx.send(f"{args} xp successfully given to {user.display_name}.")
 
     @commands.command(aliases=['rmvxp'], help='Bot author only command.')
     @commands.check(is_owner)
     async def removexp(self, ctx, user: FullMember = None, *, args):
-        xp_list = self.load(self.xpPath + f'{ctx.guild.id}.json')
         user = user or None
         args = args or None
         if user is None:
@@ -1201,73 +1213,58 @@ class Experience:
             await ctx.send(f"Please tell me how much xp to take from `{user.display_name}`.")
         else:
             if args == 'all' or args == '*':
-                beforexp = xp_list[str(user.id)]
-                xp_list[str(user.id)] = 0
-                await ctx.send(f"{beforexp} xp successfully taken from {user.display_name}.")
+                beforexp = db.money.find_one({'userid': str(user.id)})
+                if beforexp is None:
+                    await ctx.send("This user had no xp to take...")
+                else:
+                    db.money.update({'userid': str(user.id)}, {'$set': {'experience': 0}})
+                    await ctx.send(f"{beforexp} xp successfully taken from {user.display_name}.")
             else:
-                xp_list[str(user.id)] -= int(args)
+                db.money.update({'userid': str(user.id)}, {'$inc': {'experience': -args}})
                 await ctx.send(f"{args} xp successfully taken from {user.display_name}.")
-            self.save(xp_list, self.xpPath + f'{ctx.guild.id}.json')
+
+
+    @commands.command()
+    async def test2(self, ctx):
+        for i in client.guilds:
+            if i.id == 497565873570316289:
+                for x in i.members():
+                    db.money.update({'userid': str(x.id)}, {'$inc': {'balance': 500}}, True)
 
     async def grantxp(self, message):
-        author = str(message.author.id)
-        xp_list = self.load(self.xpPath + f'{message.guild.id}.json')
-        level_list = self.load(self.lvlPath + f'{message.guild.id}.json')
-
-        if author in xp_list:
-            xp_list[author] += random.randint(1, 10)
-            self.save(xp_list, self.xpPath + f'{message.guild.id}.json')
-        else:
-            xp_list[author] = random.randint(1, 10)
-            self.save(xp_list, self.xpPath + f'{message.guild.id}.json')
-        if author in level_list:
-            level_amount = 100
-            newlevel = 0
-            userxp = xp_list[author]
-            levelxp = 0
-            while levelxp < userxp:
-                levelxp += int(level_amount)
-                level_amount = (level_amount * 0.04) + level_amount
-                newlevel += 1
-                if levelxp > xp_list[author]:
-                    newlevel -= 1
-            if newlevel != level_list[author]:
-                await message.channel.send(
-                    f"Congratulations {message.author.mention} you leveled up to level {newlevel}!")
-                level_list[author] = newlevel
-                self.save(level_list, self.lvlPath + f'{message.guild.id}.json')
-        else:
-            level_list[author] = int(xp_list[author] / 100)
-            self.save(level_list, self.lvlPath + f'{message.guild.id}.json')
+        xplock.acquire()
+        xpamount = random.randint(1, 10)
+        try:
+            author = str(message.author.id)
+            db.xp.update({'serverid': str(message.guild.id)}, {'$inc': {author: xpamount}}, True)
+            userxp = db.xp.find_one({'serverid': str(message.guild.id)})[author]
+            if userxp is not None:
+                level_amount = 100
+                newlevel = 0
+                levelxp = 0
+                while levelxp < userxp:
+                    if newlevel < 50:
+                        level_amount = int(level_amount * 0.04) + level_amount
+                    else:
+                        level_amount = level_amount
+                    levelxp += int(level_amount)
+                    newlevel += 1
+                    if levelxp > db.xp.find_one({'serverid': str(message.guild.id)})[author]:
+                        newlevel -= 1
+                db.xp.update({'serverid': str(message.guild.id)}, {'$set': {f'{author}_nextlevel': levelxp + (int((level_amount * 0.04) + level_amount))}}, True)
+                if author not in db.lvl.find_one({'serverid': str(message.guild.id)}):
+                    db.lvl.update({'serverid': str(message.guild.id)}, {'$set': {author: newlevel}}, True)
+                elif newlevel != db.lvl.find_one({'serverid': str(message.guild.id)})[author]:
+                    await message.channel.send(f"Congratulations {message.author.mention} you leveled up to level {newlevel}!")
+                    db.lvl.update({'serverid': str(message.guild.id)}, {'$set': {author: newlevel}}, True)
+        finally:
+            xplock.release()
 
 
 class Economy:
 
     def __init__(self, bot):
         self.bot = bot
-        self.moneypath = "database/economy/money.json"
-        self.inventorypath = 'database/economy/inventories/'
-
-    def save(self, list, path):
-        with open(path, 'w') as write_file:
-            json.dump(list, write_file, indent=4)
-
-    def load(self, path):
-        firstline = dict()
-        if os.path.exists(path):
-            with open(path, 'r') as read_file:
-                data = json.load(read_file)
-            return data
-        else:
-            s = json.dumps(firstline)
-            with open(path, 'w+') as new_file:
-                new_file.write(s)
-                try:
-                    data = json.load(new_file)
-
-                except json.JSONDecodeError:
-                    data = dict()
-                return data
 
     async def on_message(self, message):
         if message.guild is None:
@@ -1280,8 +1277,7 @@ class Economy:
     async def pickchance(self, message):
         chance = random.randint(1, 1000)
         amount = random.randint(50, 250)
-        money_list = self.load(self.moneypath)
-        if chance < 20:
+        if chance < 25 and message.content.lower() != 'dab':
             gen_message = await message.channel.send(
                 f"`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds")
 
@@ -1290,23 +1286,21 @@ class Economy:
 
             try:
                 msg = await client.wait_for('message', check=check, timeout=60)
-                invpath = f'{self.inventorypath}{msg.author.id}.json'
-                inventory = self.load(invpath)
-                if 'Dab Multiplier' in inventory:
-                    if inventory['Dab Multiplier'] == 'yes':
-                        amount2 = amount * 2
-                        grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. They had a Dab Multiplier so they got double Ᵽ. `{amount2}Ᵽ` awarded to them."
-                else:
+                try:
+                    if 'Dab Multiplier' not in db.money.find_one({'userid': str(message.author.id)})['inventory']:
+                        grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
+                        db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
+                    elif 'Dab Multiplier' in db.money.find_one({'userid': str(message.author.id)})['inventory']:
+                        grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. They had a Dab Multiplier so they got double Ᵽ. `{amount * 2}Ᵽ` awarded to them."
+                        db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount * 2}}, True)
+                except KeyError:
                     grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
-                if str(msg.author.id) in money_list:
-                    money_list[str(msg.author.id)] += amount
-                    await message.channel.send(grant)
-                    await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
-                else:
-                    money_list[str(msg.author.id)] = amount
-                    await message.channel.send(grant)
-                    await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
-                self.save(money_list, self.moneypath)
+                    db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
+                except TypeError:
+                    grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
+                    db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
+                await message.channel.send(grant)
+                await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
 
             except asyncio.TimeoutError:
                 await message.channel.send("You took to long to dab the Ᵽ.")
@@ -1314,38 +1308,32 @@ class Economy:
                     content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
 
     @commands.command(aliases=['bal'], help='Check your balance.')
-    async def balance(self, ctx, *, user: FullMember=None):
-        money_list = self.load(self.moneypath)
-        user = user or None
-        if user is None:
-            if str(ctx.author.id) in money_list:
-                if money_list[str(ctx.author.id)] == 0:
-                    usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
-                else:
-                    usermoney = f'{str(money_list[str(ctx.author.id)])}Ᵽ'
+    async def balance(self, ctx, user: FullMember = None):
+        user = user or ctx.author
+        if user is not None:
+            if isinstance(user, discord.Member):
+                try:
+                    client.get_user(user.id)
+                    balance = db.money.find_one({'userid': str(user.id)})
+                    user = user.display_name
+                except AttributeError:
+                    user = user.id
             else:
-                usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
-            embed = discord.Embed(title=f"{ctx.author.display_name}'s Ᵽlaceholders.", description=usermoney,
-                                  colour=0xb18dff)
-            await ctx.send(embed=embed)
-        elif isinstance(user, discord.Member):
-            if str(user.id) in money_list:
-                if money_list[str(user.id)] == 0:
-                    usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
-                else:
-                    usermoney = f'{str(money_list[str(user.id)])}Ᵽ'
-            else:
-                usermoney = 'You literally are broke af. 0 Ᵽlaceholders.'
-            embed = discord.Embed(title=f"{user.display_name}'s Ᵽlaceholders.", description=usermoney,
-                                  colour=0xb18dff)
-            await ctx.send(embed=embed)
+                await ctx.send("That's not a person...")
+                return
+
         else:
-            await ctx.send("That isn't a person.")
+            balance = db.money.find_one({'userid': str(ctx.author.id)})
+
+        if balance is None:
+            await ctx.send(f'{user} is broke and has 0Ᵽ.')
+        else:
+            embed = discord.Embed(title=f"{user}'s Ᵽlaceholders.", description=f'{balance["balance"]}Ᵽ', colour=0xb18dff)
+            await ctx.send(embed=embed)
 
     @commands.command(help='Bot author only command.')
     @commands.check(is_owner)
     async def givep(self, ctx, amount: int, *, user: FullMember):
-        money_list = self.load(self.moneypath)
         user = user or None
         amount = amount or None
         if user is None or not isinstance(user, discord.Member):
@@ -1354,12 +1342,8 @@ class Economy:
             await ctx.send("Please tell me how many Ᵽlaceholders to give.")
         else:
             try:
-                int(amount)
-                if str(user.id) in money_list:
-                    money_list[str(user.id)] += amount
-                else:
-                    money_list[str(user.id)] = amount
-                self.save(money_list, self.moneypath)
+                amount = int(amount)
+                db.money.update({'userid': str(user.id)}, {'$inc': {'balance': amount}}, True)
                 await ctx.send(f'`{amount}Ᵽ` was given to `{user.display_name}`')
             except Exception:
                 await ctx.send("The amount to give the person needs to be a number.")
@@ -1367,7 +1351,6 @@ class Economy:
     @commands.command(help='Bot author only command.')
     @commands.check(is_owner)
     async def takep(self, ctx, amount=None, *, user: FullMember = None):
-        money_list = self.load(self.moneypath)
         user = user or None
         amount = amount or None
         if user is None or not isinstance(user, discord.Member):
@@ -1377,21 +1360,16 @@ class Economy:
         else:
             try:
                 amount = int(amount)
-                if str(user.id) in money_list:
-                    if money_list[str(user.id)] == 0:
-                        await ctx.send(f"`{user.display_name} is already poor enough, no more can be taken from them.")
-                    elif money_list[str(user.id)] - amount < 0:
-                        await ctx.send(
-                            f"Doing this would cause `{user.display_name}` to go in to debt. Instead, we just set them to 0Ᵽ.")
-                        money_list[str(user.id)] = 0
-                        await ctx.send(f'`{user.display_name}` is now poor.')
-                    else:
-                        money_list[str(user.id)] -= amount
-                        await ctx.send(f'`{amount}Ᵽ` was taken from `{user.display_name}`')
+
+                if db.money.find_one({'userid': str(user.id)})['balance'] is None or db.money.find_one({'userid': str(user.id)})['balance'] == 0:
+                    await ctx.send(f"`{user.display_name} is already poor enough, no more can be taken from them.")
+                elif db.money.find_one({'userid': str(user.id)})['balance'] - amount < 0:
+                    await ctx.send(f"Doing this would cause `{user.display_name}` to go in to debt. Instead, we just set them to 0Ᵽ.")
+
+                    db.money.update({'userid': str(user.id)}, {'$inc': {'balance': 0}}, True)
                 else:
-                    await ctx.send(f'{user.display_name} literally has no Ᵽlaceholders to take.')
-                    money_list[str(user.id)] = 0
-                self.save(money_list, self.moneypath)
+                    db.money.update({'userid': str(user.id)}, {'$inc': {'balance': -amount}}, True)
+                    await ctx.send(f'`{amount}Ᵽ` was taken from `{user.display_name}`')
 
             except ValueError:
                 await ctx.send("It needs to be `>takep amount user`")
@@ -1400,7 +1378,6 @@ class Economy:
     async def pay(self, ctx, amount=None, *, user: FullMember = None):
         user = user or None
         amount = amount or None
-        money_list = self.load(self.moneypath)
         if user is None or not isinstance(user, discord.Member):
             await ctx.send("Use the command like this `>pay amount user`")
         elif amount is None:
@@ -1408,195 +1385,89 @@ class Economy:
         else:
             try:
                 amount = int(amount)
-                if not str(ctx.author.id) in money_list:
+                if db.money.find_one({'userid': str(ctx.author.id)})['balance'] is None or db.money.find_one({'userid': str(ctx.author.id)})['balance'] < amount:
                     await ctx.send("You do not have enough Ᵽlaceholders to give that amount.")
-                    money_list[str(ctx.author.id)] = 0
                 elif amount <= 0:
                     await ctx.send("You need to give an amount more than 0.")
-                elif amount > money_list[str(ctx.author.id)]:
-                    await ctx.send("You do not have enough Ᵽlaceholders to give that amount.")
                 else:
-                    money_list[str(ctx.author.id)] -= amount
-                    if not str(user.id) in money_list:
-                        money_list[str(user.id)] = amount
-                    else:
-                        money_list[str(user.id)] += amount
-                    self.save(money_list, self.moneypath)
+                    db.money.update({'userid': str(ctx.author.id)}, {'$inc': {'balance': -amount}})
+                    db.money.update({'userid': str(user.id)}, {'$inc': {'balance': amount}}, True)
                     await ctx.send(f"You have paid `{user.display_name}` {amount}Ᵽ")
 
             except ValueError:
                 await ctx.send("The amount to pay needs to be a number.")
 
-    @commands.command(
-        help='Attempt to steal Ᵽlaceholders from other Members. Be careful though, a failure will result in them stealing from you! Chances are VERY low. \n`>steal amount user`')
-    # @commands.cooldown(1, 3600, commands.BucketType.user)
-    async def steal(self, ctx, amount=None, *, user: FullMember = None):
-        amount = amount or None
-        user = user or None
-        money_list = self.load(self.moneypath)
-        if user is None or not isinstance(user, discord.Member):
-            await ctx.send("Use the command like this `>steal amount user`")
-        elif amount is None:
-            await ctx.send("Use the command like this `>steal amount user`")
-        else:
-            try:
-                amount = int(amount)
-                if str(ctx.author.id) not in money_list:
-                    money_list[str(ctx.author.id)] = 0
-                if amount <= 0:
-                    await ctx.send("You need to try to steal at least something...")
-                elif str(user.id) not in money_list:
-                    await ctx.send("That user does not have enough Ᵽlaceholders to steal that amount.")
-                    money_list[str(user.id)] = 0
-                elif money_list[str(user.id)] < amount:
-                    await ctx.send("That user does not have enough Ᵽlaceholders to steal that amount.")
-                    money_list[str(user.id)] = 0
-                else:
-                    chance = random.randint(1, 10000)
-                    if amount >= (money_list[str(user.id)] * 0.95):
-                        if chance == 666:
-                            await ctx.send(
-                                f"You succeeded! Wow. What are the chances of that. {user.display_name} must have no sense of awareness.")
-                            money_list[str(ctx.author.id)] += amount
-                            money_list[str(user.id)] -= amount
-                        else:
-                            lose = int((money_list[str(ctx.author.id)] * 0.7))
-                            if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
-                            else:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
-                                money_list[str(ctx.author.id)] -= lose
-                                money_list[str(user.id)] += lose
-                    elif amount >= int((money_list[str(user.id)] * 0.9)):
-                        if chance in [6, 9]:
-                            await ctx.send(
-                                f"You snuck into {user.display_name}'s pockets and grabbed out {amount}. Luckily they didn't notice. This payed off big time.")
-                            money_list[str(ctx.author.id)] += amount
-                            money_list[str(user.id)] -= amount
-                        else:
-                            lose = int((money_list[str(ctx.author.id)] * 0.6))
-                            if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
-                            else:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
-                                money_list[str(ctx.author.id)] -= lose
-                                money_list[str(user.id)] += lose
-                    elif amount >= int((money_list[str(user.id)] * 0.8)):
-                        if 8000 >= chance <= 8050:
-                            await ctx.send(
-                                f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice. That was well worth it.")
-                            money_list[str(ctx.author.id)] += amount
-                            money_list[str(user.id)] -= amount
-                        else:
-                            lose = int((money_list[str(ctx.author.id)] * 0.5))
-                            if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
-                            else:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
-                                money_list[str(ctx.author.id)] -= lose
-                                money_list[str(user.id)] += lose
-                    elif amount >= int((money_list[str(user.id)] * 0.7)):
-                        if 4500 >= chance <= 4600:
-                            await ctx.send(
-                                f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice. Risky.")
-                            money_list[str(ctx.author.id)] += amount
-                            money_list[str(user.id)] -= amount
-                        else:
-                            lose = int((money_list[str(ctx.author.id)] * 0.45))
-                            if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
-                            else:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
-                                money_list[str(ctx.author.id)] -= lose
-                                money_list[str(user.id)] += lose
-                    elif amount >= int((money_list[str(user.id)] * 0.6)):
-                        if 1001 >= chance <= 1450:
-                            await ctx.send(
-                                f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice.")
-                            money_list[str(ctx.author.id)] += amount
-                            money_list[str(user.id)] -= amount
-                        else:
-                            lose = int((money_list[str(ctx.author.id)] * 0.25))
-                            if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
-                            else:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
-                                money_list[str(ctx.author.id)] -= lose
-                                money_list[str(user.id)] += lose
-                    elif amount >= int((money_list[str(user.id)] * 0.5)):
-                        if 250 >= chance <= 1000:
-                            await ctx.send(
-                                f"You snuck into {user.display_name}'s pockets and grabbed out {amount}Ᵽ. Luckily they didn't notice.")
-                            money_list[str(ctx.author.id)] += amount
-                            money_list[str(user.id)] -= amount
-                        else:
-                            lose = int((money_list[str(ctx.author.id)] * 0.2))
-                            if money_list[str(ctx.author.id)] == 0:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed you and beat you to a pulp. However you are dirt poor, so instead they took an item from you.(implemented soon)")
-                            else:
-                                await ctx.send(
-                                    f"You failed. {user.display_name} noticed and beat you to a pulp, taking what you had on you with them. You lost {lose}Ᵽ.")
-                                money_list[str(ctx.author.id)] -= lose
-                                money_list[str(user.id)] += lose
-                    else:
-                        await ctx.send(
-                            "You're a real penny pincher huh? Go earn money some other way. You're not gonna nickel and dime your way to the top.")
-                    self.save(money_list, self.moneypath)
-            except ValueError:
-                await ctx.send("You need to give a number to steal.")
-
-    # @steal.error
-    # async def steal_error(self, ctx, error):
-    #     if isinstance(error, commands.errors.CommandOnCooldown):
-    #         await ctx.send(f"You recently tried to steal. You need to wait {int(error.retry_after / 60)} minutes to try again.")
-    #     else:
-    #         print(error)
-
-    @commands.command(help='Get Ᵽlaceholders on the daily')
-    @commands.cooldown(1, 86400, commands.BucketType.user)
+    @commands.command()
     async def daily(self, ctx):
-        money_list = self.load(self.moneypath)
-        if str(ctx.author.id) in money_list:
-            money_list[str(ctx.author.id)] += 500
-        else:
-            money_list[str(ctx.author.id)] = 500
-        await ctx.send("500Ᵽ awarded for daily!")
-        self.save(money_list, self.moneypath)
+        user = str(ctx.author.id)
+        try:
+            person = db.money.find_one({'userid': user})['daily']
+            if person is None:
+                db.money.update({'userid': user}, {'$inc': {'balance': 500}}, True)
+                db.money.update({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
+                await ctx.send('500Ᵽ awarded for daily!')
+            elif db.money.find_one({'userid': user})['daily'] + datetime.timedelta(days=1) < datetime.datetime.today():
+                db.money.update({'userid': user}, {'$inc': {'balance': 500}}, True)
+                db.money.update({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
+                await ctx.send('500Ᵽ awarded for daily!')
+            else:
+                time = db.money.find_one({'userid': user})['daily']
+                timeleft = (db.money.find_one({'userid': user})['daily'] + datetime.timedelta(days=1)) - datetime.datetime.today()
+                seconds = timeleft.total_seconds()
+                minutes = int((seconds % 3600) // 60)
+                hours = int(seconds // 3600)
+                await ctx.send(f"You've already claimed your daily for today. Come back in {f'{hours} hours, ' if hours != 0 else ''}{minutes} minutes and {int(seconds % 60)} seconds.")
+        except Exception:
+            db.money.update({'userid': user}, {'$inc': {'balance': 500}}, True)
+            db.money.update({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
+            await ctx.send('500Ᵽ awarded for daily!')
 
-    @daily.error
-    async def daily_error(self, ctx, error):
-        if isinstance(error, commands.errors.CommandOnCooldown):
-            await ctx.send(
-                f"You can only use this command once per day. Try again in {int(error.retry_after / 60 / 60 + 1)} hours.")
-        else:
-            print(error)
+    @commands.command()
+    async def weekly(self, ctx):
+        user = str(ctx.author.id)
+        try:
+            person = db.money.find_one({'userid': user})['weekly']
+            if person is None:
+                db.money.update({'userid': user}, {'$inc': {'balance': 2500}}, True)
+                db.money.update({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
+                await ctx.send('2500Ᵽ awarded for weekly!')
+            elif db.money.find_one({'userid': user})['weekly'] + datetime.timedelta(days=7) < datetime.datetime.today():
+                db.money.update({'userid': user}, {'$inc': {'balance': 2500}}, True)
+                db.money.update({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
+                await ctx.send('2500Ᵽ awarded for weekly!')
+            else:
+                time = db.money.find_one({'userid': user})['weekly']
+                timeleft = (db.money.find_one({'userid': user})['weekly'] + datetime.timedelta(days=7)) - datetime.datetime.today()
+                seconds = timeleft.total_seconds()
+                minutes = int((seconds % 3600) // 60)
+                hours = int(seconds % 86400) // 3600
+                days = int(seconds // 86400)
+                await ctx.send(
+                    f"You've already claimed your weekly for this week. Come back in {f'{days} days, ' if days != 0 else ''}{f'{hours} hours, ' if hours != 0 else ''}{minutes} minutes and {int(seconds % 60)} seconds.")
+        except Exception:
+            db.money.update({'userid': user}, {'$inc': {'balance': 2500}}, True)
+            db.money.update({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
+            await ctx.send('2500Ᵽ awarded for weekly!')
 
     @commands.command(aliases=['baltop', 'richlist', 'ballb'], help='See the list of the richest people.')
     async def balancelb(self, ctx):
-        money_list = sorted(self.load(self.moneypath).items(), key=lambda kv: kv[1], reverse=True)
         order = 1
-        eligable = []
-        for i in money_list:
+        people = {}
+        for i in db.money.find():
             try:
-                client.get_user(int(i[0]))
-                if i[1] == 0:
+                user = client.get_user(int(i['userid']))
+                if i['balance'] == 0:
                     continue
                 else:
-                    eligable.append(f'▫{order}. **{client.get_user(int(i[0])).display_name}**: {i[1]}Ᵽ\n')
-                    order += 1
-            except AttributeError:
+                    people[user.display_name] = i["balance"]
+            except Exception:
                 continue
+        people = sorted(people.items(), key=lambda kv: kv[1], reverse=True)
+        eligable = []
+        for i in people:
+            eligable.append(f'▫{order}. **{i[0]}**: {i[1]}Ᵽ\n')
+            order += 1
+
         pagesamount = int(len(eligable) / 10)
         leftover = len(eligable) % 10
         page = 0
@@ -1608,6 +1479,7 @@ class Economy:
             amount1 += 10
             amount2 += 10
             page += 1
+
         pages.append(eligable[-leftover:])
         curpage = 0
         foot_page = 1
@@ -1652,58 +1524,96 @@ class Economy:
                         curpage += 1
                     await msg.remove_reaction(emoji='▶', member=ctx.author)
 
-    @commands.command(aliases=['cf', 'bf', 'betflip'],
-                      help='Flip a coin and bet heads or tails. Win to double up. \n`>cf amount side`')
-    async def coinflip(self, ctx, amount=None, side=None):
-        money_list = self.load(self.moneypath)
+    @commands.command()
+    async def wheel(self, ctx, amount=2):
+        user = str(ctx.author.id)
+        chance = random.randint(1, 8)
+        amount = amount or 2
+        if amount <= 0:
+            await ctx.send('You need to bet at least 1Ᵽ.')
+        elif db.money.find_one({'userid': user})['balance'] is None or db.money.find_one({'userid': user})['balance'] < amount:
+            await ctx.send('You do not have enough Ᵽ to bet that amount.')
+        else:
+            try:
+                amount = int(amount)
+                db.money.update({'userid': user}, {'$inc': {'balance': -amount}})
+                if chance == 1:
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.5)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↖   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                    await ctx.send(embed=embed)
+                    win = int(amount * 1.5)
+                elif chance == 2:
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.7)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬆   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                    await ctx.send(embed=embed)
+                    win = int(amount * 1.7)
+                elif chance == 3:
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 2.4)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↗   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                    await ctx.send(embed=embed)
+                    win = int(amount * 2.4)
+                elif chance == 4:
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.2)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬅   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                    await ctx.send(embed=embed)
+                    win = int(amount * 0.2)
+                elif chance == 5:
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.2)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ➡   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                    await ctx.send(embed=embed)
+                    win = int(amount * 1.2)
+                elif chance == 6:
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.1)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↙   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                    await ctx.send(embed=embed)
+                    win = int(amount * 0.1)
+                elif chance == 7:
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.3)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬇   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                    await ctx.send(embed=embed)
+                    win = int(amount * 0.3)
+                elif chance == 8:
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.5)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↘   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                    await ctx.send(embed=embed)
+                    win = int(amount * 0.5)
+                db.money.update({'userid': user}, {'$inc': {'balance': win}})
+
+            except ValueError:
+                await ctx.send('You need to bet an amount... Not whatever that was...')
+
+    @commands.command(aliases=['br'])
+    async def betroll(self, ctx, amount=1):
+        user = str(ctx.author.id)
+        chance = random.randint(1, 100)
+        amount = amount or 1
+        if amount <= 0:
+            await ctx.send('You need to bet at least 1Ᵽ.')
+        elif db.money.find_one({'userid': user})['balance'] is None or db.money.find_one({'userid': user})['balance'] < amount:
+            await ctx.send('You do not have enough Ᵽ to bet that amount.')
+        else:
+            try:
+                amount = int(amount)
+                db.money.update({'userid': user}, {'$inc': {'balance': -amount}})
+                if chance == 100:
+                    await ctx.send(f'You rolled `100` and won `{amount*10}Ᵽ` for rolling 100.')
+                    win = amount * 10
+                    db.money.update({'userid': user}, {'$inc': {'balance': win}})
+                elif chance >= 90:
+                    await ctx.send(f'You rolled `{chance}` and won `{amount*4}Ᵽ` for rolling 90+.')
+                    win = amount * 4
+                    db.money.update({'userid': user}, {'$inc': {'balance': win}})
+                elif chance >= 66:
+                    await ctx.send(f'You rolled `{chance}` and won `{amount*2}Ᵽ` for rolling 66+.')
+                    win = amount * 2
+                    db.money.update({'userid': user}, {'$inc': {'balance': win}})
+                else:
+                    await ctx.send(f'You rolled `{chance}`. Better luck next time...')
+            except ValueError:
+                await ctx.send('You need to bet a number... Not whatever that was.')
+
+    @commands.command(aliases=['cf', 'bf', 'betflip'], help='Flip a coin and bet heads or tails. Win to double up. \n`>cf amount side`')
+    async def coinflip(self, ctx, amount=1, side=None):
         side = side or None
+        user = str(ctx.author.id)
         amount = amount or 1
         sides = ['t', 'h', 'tail', 'head']
         choices = ['heads', 'tails']
-        if money_list[str(ctx.author.id)] <= 0:
-            await ctx.send(
-                "You are broke. You cannot bet. Earn some Ᵽlaceholders... Or steal them...")
-            return
+
         if side is None or side.lower() not in sides:
-            await ctx.send('Please tell me what side you want to bet on. (h/t)')
-
-            def check(m):
-                return m.author == ctx.author and m.content.lower() == 'h' or m.content.lower() == 't'
-
-            try:
-                msg = await client.wait_for('message', check=check, timeout=15)
-                side = 'heads' if msg.content.lower() == 'h' else 'tails'
-                await ctx.send(f"Please tell me how much Ᵽ you want to bet on {side}.")
-
-                def check(m):
-                    return m.author == ctx.author
-
-                try:
-                    msg = await client.wait_for('message', check=check, timeout=15)
-                    if msg.content.lower() == 'all':
-                        amount = money_list[str(ctx.author.id)]
-                    else:
-                        try:
-                            amount = int(msg.content)
-                        except Exception:
-                            await ctx.send("You need to give me a number to gamble. Not whatever that was...")
-                            return
-                    if str(ctx.author.id) in money_list:
-                        flipside = random.choice(choices)
-                        if flipside == side.lower():
-                            await ctx.send(f"I flipped {flipside.title()}, you win `{amount}Ᵽ`")
-                            money_list[str(ctx.author.id)] += int(amount)
-                        else:
-                            await ctx.send(f"I flipped {flipside.title()}, you lose. Sorry.")
-                            money_list[str(ctx.author.id)] -= int(amount)
-                        self.save(money_list, self.moneypath)
-                    else:
-                        await ctx.send("You are broke. You cannot bet. Earn some Ᵽlaceholders... Or steal them...")
-
-                except asyncio.TimeoutError:
-                    await ctx.send("You took too long to reply.")
-            except asyncio.TimeoutError:
-                await ctx.send("You took too long to reply.")
+            await ctx.send('Please use the command like this `>coinflip amount side`.')
         else:
             if side.lower() == 'h':
                 side = 'heads'
@@ -1711,179 +1621,81 @@ class Economy:
                 side = 'tails'
             try:
                 amount = int(amount)
-                if str(ctx.author.id) in money_list:
-                    if money_list[str(ctx.author.id)] <= 0:
-                        await ctx.send("You are broke. You cannot bet. Earn some Ᵽlaceholders... Or steal them...")
-                    else:
-                        flipside = random.choice(choices)
-                        if flipside == side.lower():
-                            await ctx.send(f"I flipped {flipside.title()}, you win `{amount}Ᵽ`")
-                            money_list[str(ctx.author.id)] += int(amount)
-                        else:
-                            await ctx.send(f"I flipped {flipside.title()}, you lose. Sorry.")
-                            money_list[str(ctx.author.id)] -= int(amount)
-                        self.save(money_list, self.moneypath)
+                if amount <= 0:
+                    await ctx.send('You need to bet at least 1Ᵽ.')
+                elif db.money.find_one({'userid': user})['balance'] is None or db.money.find_one({'userid': user})['balance'] < amount:
+                    await ctx.send('You do not have enough Ᵽ to bet that amount.')
                 else:
-                    await ctx.send("You are broke. You cannot bet. Earn some Ᵽlaceholders... Or steal them...")
-            except Exception:
-                if amount.lower() == 'all':
-                    amount = money_list[str(ctx.author.id)]
+                    db.money.update({'userid': str(user)}, {'$inc': {'balance': -amount}})
                     flipside = random.choice(choices)
                     if flipside == side.lower():
                         await ctx.send(f"I flipped {flipside.title()}, you win `{amount}Ᵽ`")
-                        money_list[str(ctx.author.id)] += int(amount)
+                        db.money.update({'userid': str(user)}, {'$inc': {'balance': amount*2}})
                     else:
                         await ctx.send(f"I flipped {flipside.title()}, you lose. Sorry.")
-                        money_list[str(ctx.author.id)] -= int(amount)
-                    self.save(money_list, self.moneypath)
+            except Exception:
+                if amount.lower() == 'all':
+                    amount = db.money.find_one({'userid': user})['balance']
+                    flipside = random.choice(choices)
+                    db.money.update({'userid': str(user)}, {'$inc': {'balance': 0}})
+                    if flipside == side.lower():
+                        await ctx.send(f"I flipped {flipside.title()}, you win `{amount}Ᵽ`")
+                        db.money.update({'userid': str(user)}, {'$inc': {'balance': amount * 2}})
+                    else:
+                        await ctx.send(f"I flipped {flipside.title()}, you lose. Sorry.")
                 else:
                     await ctx.send("You need to give me a number to gamble. Not whatever that was...")
 
-    # @commands.command(aliases=['bj'])
-    # async def blackjack(self, ctx, amount= None):
-    #     money_list = self.load(self.moneypath)
-    #     usermoney = money_list[str(ctx.author.id)]
-    #     amount = amount or None
-    #     if amount is None:
-    #         await ctx.send("Use the command like this `>bj amount`.")
-    #     try:
-    #         amount = int(amount)
-    #     except ValueError:
-    #         await ctx.send("You must enter a value to bet. Not whatever that was...")
-    #
-    #     if amount > usermoney:
-    #         await ctx.send("You do not have that much to bet.")
-    #     elif amount <= 0:
-    #         await ctx.send("You need to at least bet something.")
-    #     elif amount == 'all' or amount == '*':
-    #         amount = usermoney
-    #     embed = discord.Embed(title=f'Blackjack with {ctx.author.display_name} ({amount}Ᵽ)',
-    #                           description="Get the total value of your cards as close to 21 without going over (bust). "
-    #                                       "\nIf you win, you double up. If we draw, you get your money back.\nType `hit` to draw another card. \nType `stand` to stick with what you've got.")
-    #     cards_clubs = ['A', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K']
-    #     cards_spades = ['A', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K']
-    #     cards_diamonds = ['A', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K']
-    #     cards_hearts = ['A', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K']
-    #     faces = ['J', 'Q', 'K']
-    #     dealer_hand = []
-    #     dealer_suits = []
-    #     player_hand = []
-    #     player_suits = []
-    #
-    #     def deal(hand, suits):
-    #         dealt = 0
-    #         while dealt < 2:
-    #             deck = random.choice([cards_clubs, cards_spades, cards_hearts, cards_diamonds])
-    #             card = random.choice(deck)
-    #             hand.append(card)
-    #             if deck == cards_diamonds:
-    #                 suits.append('♦')
-    #             elif deck == cards_hearts:
-    #                 suits.append('♥')
-    #             elif deck == cards_spades:
-    #                 suits.append('♠')
-    #             else:
-    #                 suits.append('♣')
-    #             deck.remove(card)
-    #             dealt += 1
-    #
-    #     deal(dealer_hand, dealer_suits)
-    #     deal(player_hand, player_suits)
-    #     print(dealer_hand)
-    #     print(player_hand)
-    #
-    #     def check_win(hand):
-    #         if 'A' in hand:
-    #             hand.remove('A')
-    #             if sum(hand) + 11 == 21:
-    #                 return True
-    #             elif sum(hand) + 1 == 21:
-    #                 return False
-    #         else:
-    #             if sum(hand) > 21:
-    #                 return False
-    #             elif sum(hand) == 21:
-    #                 return True
-    #
-    #     def check_hand(hand):
-    #         if hand[0] == 'A':
-    #             if hand[1] + 11 == 21:
-    #                 return True
-    #             else:
-    #                 return False
-    #         elif hand[1] == 'A':
-    #             if hand[0] + 11 == 21:
-    #                 return True
-    #             else:
-    #                 return False
-    #         else:
-    #             return False
-    #
-    #     def check_card(hand):
-    #         if hand[0] in faces:
-    #             return '10'
-    #         elif hand[0] == 'A':
-    #             return '1/11'
-    #         else:
-    #             return hand[0]
-    #
-    #     if check_hand(dealer_hand):
-    #         embed.add_field(name="Moosebot's Hand (21)", value=f'{dealer_hand[0]}{dealer_suits[0]}{dealer_suits[0]}{dealer_hand[1]}', inline=False)
-    #         if check_hand(player_hand):
-    #             embed.set_footer(text="We both drew 21. It's a draw. Have your Ᵽlaceholders back.")
-    #             # DRAW CONDITION HERE
-    #             return
-    #         else:
-    #             embed.set_footer(text=f"I drew 21 and won. Bad luck. You lose {amount}Ᵽ.")
-    #             # LOSE CONDITION HERE
-    #             return
-    #     else:
-    #         embed.add_field(name=f"Moosebot's Hand ({check_card(dealer_hand)})", value=f'{dealer_hand[0]}{dealer_suits[0]}????', inline=False)
-    #
-    #     def check_hand(hand):
-    #         if 'A' in hand:
-    #             ind = hand.index('A')
-    #             hand.remove('A')
-    #             if hand[0] in faces:
-    #                 hand[0] = 10
-    #             if sum(hand) + 11 <= 21:
-    #                 total = sum(hand) + 11
-    #                 hand.insert(ind, 'A')
-    #                 return total
-    #             elif sum(hand) + 1 <= 21:
-    #                 total = sum(hand) + 1
-    #                 hand.insert(ind, 'A')
-    #                 return total
-    #             else:
-    #                 return sum(hand)
-    #         else:
-    #             if hand[0] in faces:
-    #                 card = hand[0]
-    #                 hand[0] = 10
-    #                 total = sum(hand)
-    #                 hand.insert(0, card)
-    #                 return total
-    #             elif hand[1] in faces:
-    #                 card = hand[1]
-    #                 hand[1] = 10
-    #                 total = sum(hand)
-    #                 hand.insert(1, card)
-    #                 return total
-    #             return sum(hand)
-    #
-    #     print(player_hand)
-    #     player_total = check_hand(player_hand)
-    #     print(dealer_hand)
-    #     print(player_hand)
-    #     embed.add_field(name=f"{ctx.author.display_name}'s Hand ({player_total})", value=f'{player_hand[0]}{player_suits[0]}{player_hand[1]}{player_suits[1]}', inline=False)
-    #     if player_total > 21:
-    #         embed.set_footer(text=f"You drew over 21 and went bust. Bad luck. I'll take that {amount}Ᵽ from you.")
-    #         # LOSE CONDITION HERE
-    #         return
-    #     else:
-    #         pass
-    #
-    #     await ctx.send(embed=embed)
+    async def get_input(self, ctx, datatype, error=''):
+        while True:
+            try:
+                message = await client.wait_for('message', check=lambda message: message.author is ctx.author,
+                                                     timeout=60)
+                datatype(message.content)
+                return message.content
+            except Exception:
+                await ctx.send(error)
+
+    async def gameover(self, ctx, funct):
+        await ctx.send("Do you want to play again? (**Yes**/**No**)")
+        self.message = await self.get_input(ctx, str)
+        self.message = self.message.lower()
+
+        if self.message == 'yes' or self.message == 'y':
+            await funct()
+        elif self.message == 'no' or self.message == 'n':
+            await ctx.send("Thanks for playing!")
+        else:
+            await self.gameover(ctx, funct)
+
+    @commands.command()
+    async def work(self, ctx, game=None):
+        game = game or None
+        user = str(ctx.author.id)
+        binary = ['b', 'bin', 'binary']
+
+        if game is None:
+            await ctx.send('Please specify the type of work you want to do. (Binary/more to come)')
+
+        elif game.lower() in binary:
+
+            async def play():
+                choice = random.randint(0, 255)
+                await ctx.send(f'What is `{choice}` in binary?')
+                answer = await self.get_input(ctx, int, 'Enter a number, not that...')
+                if int(answer) == int(f'{choice:b}'):
+                    award = random.randint(20, 70)
+                    await ctx.send(f"Well done! That's correct, `{choice}` in binary is `{choice:b}`. You won `{award}Ᵽ`")
+                    db.money.update({'userid': user}, {'$inc': {'balance': award}}, True)
+                    await self.gameover(ctx, play)
+                else:
+                    try:
+                        wrong = int(answer, 2)
+                    except ValueError:
+                        wrong = int(answer)
+                    await ctx.send(f"That was incorrect. `{choice}` in binary is `{choice:b}`. You entered `{wrong}`")
+                    await self.gameover(ctx, play)
+            await play()
 
 
 class Shop:
@@ -1891,36 +1703,13 @@ class Shop:
     def __init__(self, bot):
         self.bot = bot
         self.moneypath = "database/economy/money.json"
-        self.shoppath = "database/economy/shop.json"
-        self.inventorypath = 'database/economy/inventories/'
-
-    def save(self, list, path):
-        with open(path, 'w') as write_file:
-            json.dump(list, write_file, indent=4)
-
-    def load(self, path):
-        firstline = dict()
-        if os.path.exists(path):
-            with open(path, 'r') as read_file:
-                data = json.load(read_file)
-            return data
-        else:
-            s = json.dumps(firstline)
-            with open(path, 'w+') as new_file:
-                new_file.write(s)
-                try:
-                    data = json.load(new_file)
-
-                except json.JSONDecodeError:
-                    data = dict()
-                return data
 
     @commands.command()
     @commands.check(is_owner)
     async def additem(self, ctx, price=None, *, item=None,):
-        shop_items = self.load(self.shoppath)
         item = item or None
         price = price or None
+        shop = db.shop
         if item is None:
             await ctx.send("Tell me what item you want to add, and at what price. `>additem item price`")
         elif price is None:
@@ -1931,8 +1720,9 @@ class Shop:
                 if price < 0:
                     await ctx.send("You can't set the price for an item to be 0 or less.")
                 else:
-                    shop_items[item] = price
-                    self.save(shop_items, self.shoppath)
+                    shop.insert_one({'name': item,
+                                     'name_lower': item.lower(),
+                                     'price': price})
                     await ctx.send(f'{item} was added to the shop for {price}Ᵽ')
             except ValueError:
                 await ctx.send("You need to specify a numerical price. Not whatever that was...")
@@ -1940,29 +1730,29 @@ class Shop:
     @commands.command()
     @commands.check(is_owner)
     async def removeitem(self, ctx, *, item):
-        shop_items = self.load(self.shoppath)
+        shop = db.shop
         item = item or None
         if item is None:
             await ctx.send("You need to say what item you want to remove from the shop. `>removeitem item`")
         else:
-            match = next(iter(x for x in shop_items if x.lower() == item.lower()), None)
-            if match is not None:
-                del shop_items[match]
-                self.save(shop_items, self.shoppath)
-                await ctx.send(f'{item} deleted from shop.')
+            match = shop.find_one({'name_lower': item.lower()})
+            if match is None:
+                await ctx.send(f'Could not find {item} in the shop.')
             else:
-                await ctx.send(f'Could not find {item} in the shop list.')
+                shop.delete_one({'name_lower': item.lower()})
+                await ctx.send(f'{item.title()} has been removed from the shop.')
 
     @commands.command()
     async def shop(self, ctx):
-        shop_items = sorted(self.load(self.shoppath).items(), key=lambda kv: kv[1])
-        pages = int(len(shop_items) / 9)
-        leftover = len(shop_items) % 9
+        shop = db.shop
+        pages = int(shop.count() / 9)
         embed = discord.Embed(title='MooseBot Shop.', colour=0xb18dff)
         amount1 = 0
         amount2 = 9
-        for i in shop_items[amount1:amount2]:
-            embed.add_field(name=f'#{shop_items.index(i) + 1}: {i[0]}', value=f'{i[1]:,d}Ᵽ')
+        order = 1
+        for i in shop.find(sort=[('price', pymongo.ASCENDING)])[amount1:amount2]:
+            embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}Ᵽ')
+            order += 1
         curpage = 1
         msg = await ctx.send(embed=embed)
         await msg.add_reaction('◀')
@@ -1987,8 +1777,9 @@ class Shop:
                         embed.clear_fields()
                         amount1 += 9
                         amount2 += 9
-                        for i in shop_items[amount1:amount2]:
-                            embed.add_field(name=f'#{shop_items.index(i) + 1}: {i[0]}', value=f'{i[1]:,d}Ᵽ')
+                        for i in shop.find(sort=[('price', pymongo.ASCENDING)])[amount1:amount2]:
+                            embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}Ᵽ')
+                            order += 1
                         await msg.edit(embed=embed)
                     await msg.remove_reaction(emoji='▶', member=ctx.author)
                 elif str(reaction.emoji) == '◀' and user == ctx.author:
@@ -2000,47 +1791,69 @@ class Shop:
                         embed.clear_fields()
                         amount1 -= 9
                         amount2 -= 9
-                        for i in shop_items[amount1:amount2]:
-                            embed.add_field(name=f'#{shop_items.index(i) + 1}: {i[0]}', value=f'{i[1]:,d}Ᵽ')
+                        for i in shop.find(sort=[('price', pymongo.ASCENDING)])[amount1:amount2]:
+                            embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}Ᵽ')
+                            order -= 1
                         await msg.edit(embed=embed)
                     await msg.remove_reaction(emoji='◀', member=ctx.author)
 
     @commands.command()
     async def buy(self, ctx, *, item=None):
-        invpath = f'{self.inventorypath}{ctx.author.id}.json'
-        shop_items = sorted(self.load(self.shoppath).items(), key=lambda kv: kv[1])
-        money_list = self.load(self.moneypath)
-        inventory = self.load(invpath)
+        shop = db.shop
         user = str(ctx.author.id)
         item = item or None
+        pet_types = ['Dog', 'Cat', 'Custom Pet']
         if item is None:
             await ctx.send("Please specify which item you want to buy, either by its name or number in the store. `>buy item`")
         else:
             try:
                 item = int(item) - 1
                 try:
-                    item = shop_items[item]
+                    item = shop.find(sort=[('price', pymongo.ASCENDING)])[item]
                 except Exception:
                     await ctx.send(f"There is no item #{item} on the store.")
 
             except ValueError:
-                match = next(iter(i for i in shop_items if i[0].lower() == item.lower()), None)
+                match = shop.find_one({'name_lower': item.lower()})
                 if match is None:
                     await ctx.send("That item does not exist on the store. For ease of use, use the item number.")
                 else:
                     item = match
-        if money_list[user] < item[1]:
-            await ctx.send("You do not have enough Ᵽlaceholders to purchase that item.")
-        else:
-            match = next(iter(i for i in inventory if i.lower() == item[0].lower()), None)
-            if match is not None:
-                await ctx.send("You already own this item.")
-            else:
-                inventory[item[0]] = 'yes'
-                money_list[user] -= item[1]
-                self.save(inventory, invpath)
-                self.save(money_list, self.moneypath)
-                await ctx.send(f"Congratulations on your new purchase of {item[0]}! `{item[1]}Ᵽ` has been deducted from your account.")
+
+            try:
+                if item['name'] in db.money.find_one({'userid': user})['inventory']:
+                    await ctx.send("You already own this item.")
+                elif db.money.find_one({'userid': user})['balance'] is None or db.money.find_one({'userid': user})['balance'] < item['price']:
+                    await ctx.send("You do not have enough Ᵽlaceholders to purchase that item.")
+                else:
+                    if item['name'] in pet_types:
+                        db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'pet': item['name']}}, True)
+                        db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'level': 0}}, True)
+                        db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'curhunger': 100}}, True)
+                        db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'maxhunger': 100}}, True)
+                        db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
+                        db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                        await ctx.send(
+                            f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+                    else:
+                        db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
+                        db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                        await ctx.send(
+                            f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+            except KeyError:
+                if item['name'] in pet_types:
+                    db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'pet': item['name']}}, True)
+                    db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'level': 0}}, True)
+                    db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'curhunger': 100}}, True)
+                    db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'maxhunger': 100}}, True)
+                    db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
+                    db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                    await ctx.send(
+                        f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+                else:
+                    db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
+                    db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                    await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
 
 
 class Moderation:
@@ -2086,14 +1899,16 @@ class Moderation:
         await ctx.author.add_roles(role)
 
     @commands.command()
-    @commands.check(is_admin)
     async def colour(self, ctx, colour, *, role: RolesConverter):
         role = role or None
         if role is None:
-            await ctx.send("You don't have that role, sorry.")
-        else:
+            return
+        if role.name == 'Member':
+            await ctx.send("You can't edit the member role.")
+        elif role in ctx.author.roles or ctx.author.id == 192519529417408512:
             if isinstance(colour, discord.Colour):
                 await role.edit(colour=colour)
+                await ctx.send('Colour changed.')
             else:
                 if colour == 'myp':
                     colour = discord.Colour(0xb18dff)
@@ -2102,6 +1917,9 @@ class Moderation:
                 else:
                     colour = discord.Colour(int("0x" + colour, 16))
                 await role.edit(colour=colour)
+                await ctx.send('Colour changed.')
+        else:
+            await ctx.send("You don't have that role so you can't edit it.")
 
     @commands.command(aliases=['nick'], help="Change a Members nickname. \n`>nick user new nickname`")
     @commands.check(is_admin)
@@ -2169,16 +1987,19 @@ async def kick(ctx):
         await ctx.send("You cannot kick yourself.")
     elif len(ctx.message.mentions) == 1:
         user = ctx.message.mentions[0]
-        try:
-            await this_server.kick(user=user)
-            await ctx.send("{} was successfully kicked".format(ctx.message.mentions[0].display_name))
-        except discord.Forbidden:
-            await ctx.send("I don't have sufficient permissions to kick")
+        if user.id == 192519529417408512:
+            await ctx.send('You cannot kick Daddy dear.')
         else:
             try:
                 await this_server.kick(user=user)
-            except discord.HTTPException:
-                await ctx.send("You do not have permission to kick users.")
+                await ctx.send("{} was successfully kicked".format(ctx.message.mentions[0].display_name))
+            except discord.Forbidden:
+                await ctx.send("I don't have sufficient permissions to kick")
+            else:
+                try:
+                    await this_server.kick(user=user)
+                except discord.HTTPException:
+                    await ctx.send("You do not have permission to kick users.")
     elif len(ctx.message.mentions) > 1:
         await ctx.send("Please only mention one user at a time")
 
@@ -2193,16 +2014,19 @@ async def ban(ctx):
         await ctx.send("You cannot ban yourself.")
     elif len(ctx.message.mentions) == 1:
         user = ctx.message.mentions[0]
-        try:
-            await this_server.ban(user=user)
-            await ctx.send("{} was successfully banned".format(ctx.message.mentions[0].display_name))
-        except discord.Forbidden:
-            await ctx.send("I don't have sufficient permissions to ban")
+        if user.id == 192519529417408512:
+            await ctx.send('You cannot ban Daddy dear.')
         else:
             try:
                 await this_server.ban(user=user)
-            except discord.HTTPException:
-                await ctx.send("You do not have permission to ban users.")
+                await ctx.send("{} was successfully banned".format(ctx.message.mentions[0].display_name))
+            except discord.Forbidden:
+                await ctx.send("I don't have sufficient permissions to ban")
+            else:
+                try:
+                    await this_server.ban(user=user)
+                except discord.HTTPException:
+                    await ctx.send("You do not have permission to ban users.")
     elif len(ctx.message.mentions) > 1:
         await ctx.send("Please only mention one user at a time")
 
@@ -2264,7 +2088,7 @@ async def ship(ctx, arg1: MemberDisplayname, *, arg2: MemberDisplayname):
 
         if ship_str == 100:
             embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
-            embed.add_field(name="Compatibility", value=f"{ship_str}% [##########] Ya'll should fuck! 💗")
+            embed.add_field(name="Compatibility", value=f"{ship_str}% [##########] Y'all should fuck! 💗")
         elif ship_str >= 90:
             embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
             embed.add_field(name="Compatibility.", value=f"{ship_str}% [#########-] Great match!")
