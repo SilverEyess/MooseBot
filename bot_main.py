@@ -18,9 +18,13 @@ from threading import Lock
 from pymongo import MongoClient
 import pymongo
 import decimal
+import motor.motor_asyncio
 xplock = Lock()
 mongo = MongoClient()
-db = mongo.MooseBot
+db2 = mongo.MooseBot
+mclient = motor.motor_asyncio.AsyncIOMotorClient()
+db = mclient.MooseBot
+
 import re
 
 with open('database/token.txt') as f:
@@ -153,12 +157,6 @@ async def on_member_remove(member):
                "Don't let the door hit you on the way out {}!", "{1} kicked {0} to a whole new server.",
                "Finally {} is gone.", "It's about time {} left.", "Time to celebrate {} is gone", "Ciao {}!",
                "auf Wiedersehen {}!", "Bon voyage {}.", "Shalom {}")
-    # xp_list = load(f'database/experience/experience_{str(member.guild.id)}.json')
-    # level_list = load(f'database/experience/levels_{str(member.guild.id)}.json')
-    # if str(member.id) in xp_list:
-    #     del xp_list[str(member.id)]
-    # if str(member.id) in level_list:
-    #     del level_list[str(member.id)]
     if member.guild.id == 427010987334434816:
         await channel.send(random.choice(choices).format(member.mention, winner))
 
@@ -649,8 +647,17 @@ class GuessGame:
         await play()
 
     @commands.command(help="Rock paper scissors game.")
-    async def rps(self, ctx, amount=1):
-        amount = amount or 1
+    async def rps(self, ctx, amount=None):
+        user = str(ctx.author.id)
+        amount = amount or None
+        if amount is None:
+            amount = 1
+        elif amount == 'all':
+            amount = int(db.money.find_one({'userid': user})['balance'])
+        if amount == 'all':
+            amount = db.money.find_one({'userid': user})['balance']
+        if amount <= 0:
+            await ctx.send("You need to bet at least 1Ᵽ to play.")
 
         async def play():
             await ctx.send("Let's play rock, paper, scissors. Select your weapon:")
@@ -1083,17 +1090,21 @@ class Experience:
         order = 1
 
         lvls = {}
-        for i in db.xp.find_one({'serverid': server}):
+        async for i in db.xp.find_one({'serverid': server}):
             try:
                 user = client.get_user(int(i))
-                lvls[user.id] = db.xp.find_one({'serverid': server})[i]
+                lvls[user.id] = await db.xp.find_one({'serverid': server})[i]
             except Exception:
                 continue
         lvls = sorted(lvls.items(), key=lambda kv: kv[1], reverse=True)
         eligable = []
         for i in lvls:
-            eligable.append(f'▫{order}. **{client.get_user(i[0]).display_name}**: {db.lvl.find_one({"serverid": server})[str(i[0])]} `({str(i[1])} exp)` \n')
-            order += 1
+            try:
+                eligable.append(f'▫{order}. **{client.get_user(i[0]).display_name}**: {db.lvl.find_one({"serverid": server})[str(i[0])] if not None else "0"} `({str(i[1])} exp)` \n')
+                order += 1
+            except Exception:
+                continue
+
         pagesamount = int(len(eligable) / 10)
         leftover = len(eligable) % 10
         page = 0
@@ -1155,13 +1166,13 @@ class Experience:
     async def level(self, ctx, member: FullMember=None):
         server = str(ctx.guild.id)
         eligable = {}
-        for i in db.lvl.find_one({'serverid': server}):
+        async for i in db.lvl.find_one({'serverid': server}):
             try:
                 if i == '_id' or i == 'serverid':
                     continue
                 else:
                     client.get_user(int(i))
-                    eligable[i] = db.lvl.find_one({'serverid': server})[i]
+                    eligable[i] = await db.lvl.find_one({'serverid': server})[i]
             except AttributeError:
                 continue
         level_list2 = sorted(eligable.items(), key=lambda kv: kv[1], reverse=True)
@@ -1181,11 +1192,14 @@ class Experience:
         rank = [i for i in level_list2 if i[0] == user]
         nextlvl = f'{user}_nextlevel'
         try:
-            xp = f"{db.xp.find_one({'serverid': server})[user]}/{db.xp.find_one({'serverid': server})[nextlvl]}"
+            person = await db.xp.find_one({'serverid': server})[user]
+            nextlevel = await db.xp.find_one({'serverid': server})[nextlvl]
+            xp = f"{person}/{nextlevel}"
         except KeyError:
-            xp = db.xp.find_one({'serverid': server})[user]
+            xp = await db.xp.find_one({'serverid': server})[user]
+        level = await db.lvl.find_one({'serverid': server})[user]
         embed = discord.Embed(title=f"{member.display_name}'s level details",
-                              description=f"**Rank:** {level_list2.index(rank[0]) + 1} \n**Level:** {db.lvl.find_one({'serverid': server})[user]}\n**Experience:** {xp}",
+                              description=f"**Rank:** {level_list2.index(rank[0]) + 1} \n**Level:** {level}\n**Experience:** {xp}",
                               colour=0xb18dff)
         await ctx.send(embed=embed)
 
@@ -1199,12 +1213,12 @@ class Experience:
         elif args is None:
             await ctx.send(f"Please tell me how much xp to give to `{user.display_name}`.")
         else:
-            db.xp.update({'serverid': str(ctx.guild.id)}, {'$inc': {str(user.id): args}})
+            await db.xp.update({'serverid': str(ctx.guild.id)}, {'$inc': {str(user.id): args}})
             await ctx.send(f"{args} xp successfully given to {user.display_name}.")
 
     @commands.command(aliases=['rmvxp'], help='Bot author only command.')
     @commands.check(is_owner)
-    async def removexp(self, ctx, user: FullMember = None, *, args):
+    async def removexp(self, ctx, user: FullMember=None, *, args):
         user = user or None
         args = args or None
         if user is None:
@@ -1213,16 +1227,15 @@ class Experience:
             await ctx.send(f"Please tell me how much xp to take from `{user.display_name}`.")
         else:
             if args == 'all' or args == '*':
-                beforexp = db.money.find_one({'userid': str(user.id)})
+                beforexp = await db.xp.find_one({'userid': str(user.id)})
                 if beforexp is None:
                     await ctx.send("This user had no xp to take...")
                 else:
-                    db.money.update({'userid': str(user.id)}, {'$set': {'experience': 0}})
+                    await db.xp.update({'userid': str(user.id)}, {'$set': {'experience': 0}})
                     await ctx.send(f"{beforexp} xp successfully taken from {user.display_name}.")
             else:
-                db.money.update({'userid': str(user.id)}, {'$inc': {'experience': -args}})
+                await db.xp.update({'userid': str(user.id)}, {'$inc': {'experience': -int(args)}})
                 await ctx.send(f"{args} xp successfully taken from {user.display_name}.")
-
 
     @commands.command()
     async def test2(self, ctx):
@@ -1236,8 +1249,9 @@ class Experience:
         xpamount = random.randint(1, 10)
         try:
             author = str(message.author.id)
-            db.xp.update({'serverid': str(message.guild.id)}, {'$inc': {author: xpamount}}, True)
-            userxp = db.xp.find_one({'serverid': str(message.guild.id)})[author]
+            await db.xp.update_one({'serverid': str(message.guild.id)}, {'$inc': {author: xpamount}}, True)
+            userxp = await db.xp.find_one({'serverid': str(message.guild.id)})
+            userxp = userxp[author]
             if userxp is not None:
                 level_amount = 100
                 newlevel = 0
@@ -1249,14 +1263,16 @@ class Experience:
                         level_amount = level_amount
                     levelxp += int(level_amount)
                     newlevel += 1
-                    if levelxp > db.xp.find_one({'serverid': str(message.guild.id)})[author]:
+                    if levelxp > userxp:
                         newlevel -= 1
-                db.xp.update({'serverid': str(message.guild.id)}, {'$set': {f'{author}_nextlevel': levelxp + (int((level_amount * 0.04) + level_amount))}}, True)
-                if author not in db.lvl.find_one({'serverid': str(message.guild.id)}):
-                    db.lvl.update({'serverid': str(message.guild.id)}, {'$set': {author: newlevel}}, True)
-                elif newlevel != db.lvl.find_one({'serverid': str(message.guild.id)})[author]:
+                userlvl = await db.lvl.find_one({'serverid': str(message.guild.id)})
+                userlvl = userlvl[author]
+                await db.xp.update_one({'serverid': str(message.guild.id)}, {'$set': {f'{author}_nextlevel': levelxp + (int((level_amount * 0.04) + level_amount))}}, True)
+                if author not in await db.lvl.find_one({'serverid': str(message.guild.id)}):
+                    await db.lvl.update_one({'serverid': str(message.guild.id)}, {'$set': {author: newlevel}}, True)
+                elif newlevel != userlvl:
                     await message.channel.send(f"Congratulations {message.author.mention} you leveled up to level {newlevel}!")
-                    db.lvl.update({'serverid': str(message.guild.id)}, {'$set': {author: newlevel}}, True)
+                    await db.lvl.update_one({'serverid': str(message.guild.id)}, {'$set': {author: newlevel}}, True)
         finally:
             xplock.release()
 
@@ -1287,18 +1303,18 @@ class Economy:
             try:
                 msg = await client.wait_for('message', check=check, timeout=60)
                 try:
-                    if 'Dab Multiplier' not in db.money.find_one({'userid': str(message.author.id)})['inventory']:
+                    if 'Dab Multiplier' not in await db.money.find_one({'userid': str(message.author.id)})['inventory']:
                         grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
-                        db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
-                    elif 'Dab Multiplier' in db.money.find_one({'userid': str(message.author.id)})['inventory']:
+                        await db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
+                    elif 'Dab Multiplier' in await db.money.find_one({'userid': str(message.author.id)})['inventory']:
                         grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. They had a Dab Multiplier so they got double Ᵽ. `{amount * 2}Ᵽ` awarded to them."
-                        db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount * 2}}, True)
+                        await db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount * 2}}, True)
                 except KeyError:
                     grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
-                    db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
+                    await db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
                 except TypeError:
                     grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
-                    db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
+                    await db.money.update({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
                 await message.channel.send(grant)
                 await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
 
@@ -1314,7 +1330,7 @@ class Economy:
             if isinstance(user, discord.Member):
                 try:
                     client.get_user(user.id)
-                    balance = db.money.find_one({'userid': str(user.id)})
+                    balance = await db.money.find_one({'userid': str(user.id)})
                     user = user.display_name
                 except AttributeError:
                     user = user.id
@@ -1323,7 +1339,7 @@ class Economy:
                 return
 
         else:
-            balance = db.money.find_one({'userid': str(ctx.author.id)})
+            balance = await db.money.find_one({'userid': str(ctx.author.id)})
 
         if balance is None:
             await ctx.send(f'{user} is broke and has 0Ᵽ.')
@@ -1331,7 +1347,7 @@ class Economy:
             embed = discord.Embed(title=f"{user}'s Ᵽlaceholders.", description=f'{balance["balance"]}Ᵽ', colour=0xb18dff)
             await ctx.send(embed=embed)
 
-    @commands.command(help='Bot author only command.')
+    @commands.command(aliases=['award'], help='Bot author only command.')
     @commands.check(is_owner)
     async def givep(self, ctx, amount: int, *, user: FullMember):
         user = user or None
@@ -1343,7 +1359,7 @@ class Economy:
         else:
             try:
                 amount = int(amount)
-                db.money.update({'userid': str(user.id)}, {'$inc': {'balance': amount}}, True)
+                await db.money.update({'userid': str(user.id)}, {'$inc': {'balance': amount}}, True)
                 await ctx.send(f'`{amount}Ᵽ` was given to `{user.display_name}`')
             except Exception:
                 await ctx.send("The amount to give the person needs to be a number.")
@@ -1361,20 +1377,20 @@ class Economy:
             try:
                 amount = int(amount)
 
-                if db.money.find_one({'userid': str(user.id)})['balance'] is None or db.money.find_one({'userid': str(user.id)})['balance'] == 0:
+                if await db.money.find_one({'userid': str(user.id)})['balance'] is None or db.money.find_one({'userid': str(user.id)})['balance'] == 0:
                     await ctx.send(f"`{user.display_name} is already poor enough, no more can be taken from them.")
-                elif db.money.find_one({'userid': str(user.id)})['balance'] - amount < 0:
+                elif await db.money.find_one({'userid': str(user.id)})['balance'] - amount < 0:
                     await ctx.send(f"Doing this would cause `{user.display_name}` to go in to debt. Instead, we just set them to 0Ᵽ.")
 
-                    db.money.update({'userid': str(user.id)}, {'$inc': {'balance': 0}}, True)
+                    await db.money.update({'userid': str(user.id)}, {'$inc': {'balance': 0}}, True)
                 else:
-                    db.money.update({'userid': str(user.id)}, {'$inc': {'balance': -amount}}, True)
+                    await db.money.update({'userid': str(user.id)}, {'$inc': {'balance': -amount}}, True)
                     await ctx.send(f'`{amount}Ᵽ` was taken from `{user.display_name}`')
 
             except ValueError:
                 await ctx.send("It needs to be `>takep amount user`")
 
-    @commands.command(help='Pay another user some Ᵽlaceholders. \n`>pay amount user`')
+    @commands.command(aliases=['give'], help='Pay another user some Ᵽlaceholders. \n`>pay amount user`')
     async def pay(self, ctx, amount=None, *, user: FullMember = None):
         user = user or None
         amount = amount or None
@@ -1383,15 +1399,17 @@ class Economy:
         elif amount is None:
             await ctx.send("Use the command like this `>pay amount user`")
         else:
+            if amount == 'all':
+                amount = await db.money.find_one({'userid': str(ctx.author.id)})['balance']
             try:
                 amount = int(amount)
-                if db.money.find_one({'userid': str(ctx.author.id)})['balance'] is None or db.money.find_one({'userid': str(ctx.author.id)})['balance'] < amount:
+                if await db.money.find_one({'userid': str(ctx.author.id)})['balance'] is None or await db.money.find_one({'userid': str(ctx.author.id)})['balance'] < amount:
                     await ctx.send("You do not have enough Ᵽlaceholders to give that amount.")
                 elif amount <= 0:
                     await ctx.send("You need to give an amount more than 0.")
                 else:
-                    db.money.update({'userid': str(ctx.author.id)}, {'$inc': {'balance': -amount}})
-                    db.money.update({'userid': str(user.id)}, {'$inc': {'balance': amount}}, True)
+                    await db.money.update({'userid': str(ctx.author.id)}, {'$inc': {'balance': -amount}})
+                    await db.money.update({'userid': str(user.id)}, {'$inc': {'balance': amount}}, True)
                     await ctx.send(f"You have paid `{user.display_name}` {amount}Ᵽ")
 
             except ValueError:
@@ -1401,43 +1419,43 @@ class Economy:
     async def daily(self, ctx):
         user = str(ctx.author.id)
         try:
-            person = db.money.find_one({'userid': user})['daily']
+            person = await db.money.find_one({'userid': user})['daily']
             if person is None:
-                db.money.update({'userid': user}, {'$inc': {'balance': 500}}, True)
-                db.money.update({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
+                await db.money.update({'userid': user}, {'$inc': {'balance': 500}}, True)
+                await db.money.update({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
                 await ctx.send('500Ᵽ awarded for daily!')
-            elif db.money.find_one({'userid': user})['daily'] + datetime.timedelta(days=1) < datetime.datetime.today():
-                db.money.update({'userid': user}, {'$inc': {'balance': 500}}, True)
-                db.money.update({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
+            elif await db.money.find_one({'userid': user})['daily'] + datetime.timedelta(days=1) < datetime.datetime.today():
+                await db.money.update({'userid': user}, {'$inc': {'balance': 500}}, True)
+                await db.money.update({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
                 await ctx.send('500Ᵽ awarded for daily!')
             else:
-                time = db.money.find_one({'userid': user})['daily']
-                timeleft = (db.money.find_one({'userid': user})['daily'] + datetime.timedelta(days=1)) - datetime.datetime.today()
+                time = await db.money.find_one({'userid': user})['daily']
+                timeleft = (await db.money.find_one({'userid': user})['daily'] + datetime.timedelta(days=1)) - datetime.datetime.today()
                 seconds = timeleft.total_seconds()
                 minutes = int((seconds % 3600) // 60)
                 hours = int(seconds // 3600)
                 await ctx.send(f"You've already claimed your daily for today. Come back in {f'{hours} hours, ' if hours != 0 else ''}{minutes} minutes and {int(seconds % 60)} seconds.")
         except Exception:
-            db.money.update({'userid': user}, {'$inc': {'balance': 500}}, True)
-            db.money.update({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
+            await db.money.update({'userid': user}, {'$inc': {'balance': 500}}, True)
+            await db.money.update({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
             await ctx.send('500Ᵽ awarded for daily!')
 
     @commands.command()
     async def weekly(self, ctx):
         user = str(ctx.author.id)
         try:
-            person = db.money.find_one({'userid': user})['weekly']
+            person = await db.money.find_one({'userid': user})['weekly']
             if person is None:
-                db.money.update({'userid': user}, {'$inc': {'balance': 2500}}, True)
-                db.money.update({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
+                await db.money.update({'userid': user}, {'$inc': {'balance': 2500}}, True)
+                await db.money.update({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
                 await ctx.send('2500Ᵽ awarded for weekly!')
-            elif db.money.find_one({'userid': user})['weekly'] + datetime.timedelta(days=7) < datetime.datetime.today():
-                db.money.update({'userid': user}, {'$inc': {'balance': 2500}}, True)
-                db.money.update({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
+            elif db.money.find_one(await {'userid': user})['weekly'] + datetime.timedelta(days=7) < datetime.datetime.today():
+                await db.money.update({'userid': user}, {'$inc': {'balance': 2500}}, True)
+                await db.money.update({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
                 await ctx.send('2500Ᵽ awarded for weekly!')
             else:
-                time = db.money.find_one({'userid': user})['weekly']
-                timeleft = (db.money.find_one({'userid': user})['weekly'] + datetime.timedelta(days=7)) - datetime.datetime.today()
+                time = await db.money.find_one({'userid': user})['weekly']
+                timeleft = (await db.money.find_one({'userid': user})['weekly'] + datetime.timedelta(days=7)) - datetime.datetime.today()
                 seconds = timeleft.total_seconds()
                 minutes = int((seconds % 3600) // 60)
                 hours = int(seconds % 86400) // 3600
@@ -1445,15 +1463,15 @@ class Economy:
                 await ctx.send(
                     f"You've already claimed your weekly for this week. Come back in {f'{days} days, ' if days != 0 else ''}{f'{hours} hours, ' if hours != 0 else ''}{minutes} minutes and {int(seconds % 60)} seconds.")
         except Exception:
-            db.money.update({'userid': user}, {'$inc': {'balance': 2500}}, True)
-            db.money.update({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
+            await db.money.update({'userid': user}, {'$inc': {'balance': 2500}}, True)
+            await db.money.update({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
             await ctx.send('2500Ᵽ awarded for weekly!')
 
     @commands.command(aliases=['baltop', 'richlist', 'ballb'], help='See the list of the richest people.')
     async def balancelb(self, ctx):
         order = 1
         people = {}
-        for i in db.money.find():
+        async for i in db.money.find():
             try:
                 user = client.get_user(int(i['userid']))
                 if i['balance'] == 0:
@@ -1525,90 +1543,100 @@ class Economy:
                     await msg.remove_reaction(emoji='▶', member=ctx.author)
 
     @commands.command()
-    async def wheel(self, ctx, amount=2):
+    async def wheel(self, ctx, amount=None):
         user = str(ctx.author.id)
         chance = random.randint(1, 8)
-        amount = amount or 2
-        if amount <= 0:
-            await ctx.send('You need to bet at least 1Ᵽ.')
-        elif db.money.find_one({'userid': user})['balance'] is None or db.money.find_one({'userid': user})['balance'] < amount:
-            await ctx.send('You do not have enough Ᵽ to bet that amount.')
-        else:
-            try:
-                amount = int(amount)
-                db.money.update({'userid': user}, {'$inc': {'balance': -amount}})
-                if chance == 1:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.5)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↖   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
-                    await ctx.send(embed=embed)
-                    win = int(amount * 1.5)
-                elif chance == 2:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.7)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬆   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
-                    await ctx.send(embed=embed)
-                    win = int(amount * 1.7)
-                elif chance == 3:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 2.4)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↗   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
-                    await ctx.send(embed=embed)
-                    win = int(amount * 2.4)
-                elif chance == 4:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.2)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬅   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
-                    await ctx.send(embed=embed)
-                    win = int(amount * 0.2)
-                elif chance == 5:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.2)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ➡   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
-                    await ctx.send(embed=embed)
-                    win = int(amount * 1.2)
-                elif chance == 6:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.1)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↙   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
-                    await ctx.send(embed=embed)
-                    win = int(amount * 0.1)
-                elif chance == 7:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.3)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬇   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
-                    await ctx.send(embed=embed)
-                    win = int(amount * 0.3)
-                elif chance == 8:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.5)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↘   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
-                    await ctx.send(embed=embed)
-                    win = int(amount * 0.5)
-                db.money.update({'userid': user}, {'$inc': {'balance': win}})
+        amount = amount or None
+        if amount is None:
+            amount = 2
+        elif amount == 'all':
+            amount = int(await db.money.find_one({'userid': user})['balance'])
+        try:
+            amount = int(amount)
+            if int(amount) <= 0:
+                await ctx.send('You need to bet at least 1Ᵽ.')
+            elif await db.money.find_one({'userid': user})['balance'] is None or await db.money.find_one({'userid': user})['balance'] < int(amount):
+                await ctx.send('You do not have enough Ᵽ to bet that amount.')
+                await db.money.update({'userid': user}, {'$inc': {'balance': -amount}})
+            if chance == 1:
+                embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.5)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↖   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                await ctx.send(embed=embed)
+                win = int(amount * 1.5)
+            elif chance == 2:
+                embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.7)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬆   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                await ctx.send(embed=embed)
+                win = int(amount * 1.7)
+            elif chance == 3:
+                embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 2.4)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↗   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                await ctx.send(embed=embed)
+                win = int(amount * 2.4)
+            elif chance == 4:
+                embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.2)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬅   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                await ctx.send(embed=embed)
+                win = int(amount * 0.2)
+            elif chance == 5:
+                embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.2)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ➡   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                await ctx.send(embed=embed)
+                win = int(amount * 1.2)
+            elif chance == 6:
+                embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.1)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↙   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                await ctx.send(embed=embed)
+                win = int(amount * 0.1)
+            elif chance == 7:
+                embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.3)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬇   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                await ctx.send(embed=embed)
+                win = int(amount * 0.3)
+            elif chance == 8:
+                embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.5)}Ᵽ**', description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↘   『1.2』\n\n『0.1』 『0.3』 『0.5』**', colour=0xb18dff)
+                await ctx.send(embed=embed)
+                win = int(amount * 0.5)
+            await db.money.update({'userid': user}, {'$inc': {'balance': win}})
 
-            except ValueError:
-                await ctx.send('You need to bet an amount... Not whatever that was...')
+        except ValueError:
+            await ctx.send('You need to bet an amount... Not whatever that was...')
 
     @commands.command(aliases=['br'])
-    async def betroll(self, ctx, amount=1):
+    async def betroll(self, ctx, amount=None):
         user = str(ctx.author.id)
         chance = random.randint(1, 100)
-        amount = amount or 1
-        if amount <= 0:
-            await ctx.send('You need to bet at least 1Ᵽ.')
-        elif db.money.find_one({'userid': user})['balance'] is None or db.money.find_one({'userid': user})['balance'] < amount:
-            await ctx.send('You do not have enough Ᵽ to bet that amount.')
-        else:
-            try:
-                amount = int(amount)
-                db.money.update({'userid': user}, {'$inc': {'balance': -amount}})
-                if chance == 100:
-                    await ctx.send(f'You rolled `100` and won `{amount*10}Ᵽ` for rolling 100.')
-                    win = amount * 10
-                    db.money.update({'userid': user}, {'$inc': {'balance': win}})
-                elif chance >= 90:
-                    await ctx.send(f'You rolled `{chance}` and won `{amount*4}Ᵽ` for rolling 90+.')
-                    win = amount * 4
-                    db.money.update({'userid': user}, {'$inc': {'balance': win}})
-                elif chance >= 66:
-                    await ctx.send(f'You rolled `{chance}` and won `{amount*2}Ᵽ` for rolling 66+.')
-                    win = amount * 2
-                    db.money.update({'userid': user}, {'$inc': {'balance': win}})
-                else:
-                    await ctx.send(f'You rolled `{chance}`. Better luck next time...')
-            except ValueError:
-                await ctx.send('You need to bet a number... Not whatever that was.')
+        amount = amount or None
+        if amount is None:
+            amount = 1
+        elif amount == 'all':
+            amount = int(await db.money.find_one({'userid': user})['balance'])
+        try:
+            amount = int(amount)
+            if amount <= 0:
+                await ctx.send('You need to bet at least 1Ᵽ.')
+            elif await db.money.find_one({'userid': user})['balance'] is None or await db.money.find_one({'userid': user})['balance'] < amount:
+                await ctx.send('You do not have enough Ᵽ to bet that amount.')
+            await db.money.update({'userid': user}, {'$inc': {'balance': -amount}})
+            if chance == 100:
+                await ctx.send(f'You rolled `100` and won `{amount*10}Ᵽ` for rolling 100.')
+                win = amount * 10
+                await db.money.update({'userid': user}, {'$inc': {'balance': win}})
+            elif chance >= 90:
+                await ctx.send(f'You rolled `{chance}` and won `{amount*4}Ᵽ` for rolling 90+.')
+                win = amount * 4
+                await db.money.update({'userid': user}, {'$inc': {'balance': win}})
+            elif chance >= 66:
+                await ctx.send(f'You rolled `{chance}` and won `{amount*2}Ᵽ` for rolling 66+.')
+                win = amount * 2
+                await db.money.update({'userid': user}, {'$inc': {'balance': win}})
+            else:
+                await ctx.send(f'You rolled `{chance}`. Better luck next time...')
+        except ValueError:
+            await ctx.send('You need to bet a number... Not whatever that was.')
 
     @commands.command(aliases=['cf', 'bf', 'betflip'], help='Flip a coin and bet heads or tails. Win to double up. \n`>cf amount side`')
-    async def coinflip(self, ctx, amount=1, side=None):
+    async def coinflip(self, ctx, amount=None, side=None):
         side = side or None
         user = str(ctx.author.id)
-        amount = amount or 1
+        amount = amount or None
+        if amount is None:
+            amount = 1
+        elif amount == 'all':
+            amount = int(await db.money.find_one({'userid': user})['balance'])
         sides = ['t', 'h', 'tail', 'head']
         choices = ['heads', 'tails']
 
@@ -1623,24 +1651,24 @@ class Economy:
                 amount = int(amount)
                 if amount <= 0:
                     await ctx.send('You need to bet at least 1Ᵽ.')
-                elif db.money.find_one({'userid': user})['balance'] is None or db.money.find_one({'userid': user})['balance'] < amount:
+                elif await db.money.find_one({'userid': user})['balance'] is None or await db.money.find_one({'userid': user})['balance'] < amount:
                     await ctx.send('You do not have enough Ᵽ to bet that amount.')
                 else:
-                    db.money.update({'userid': str(user)}, {'$inc': {'balance': -amount}})
+                    await db.money.update({'userid': str(user)}, {'$inc': {'balance': -amount}})
                     flipside = random.choice(choices)
                     if flipside == side.lower():
                         await ctx.send(f"I flipped {flipside.title()}, you win `{amount}Ᵽ`")
-                        db.money.update({'userid': str(user)}, {'$inc': {'balance': amount*2}})
+                        await db.money.update({'userid': str(user)}, {'$inc': {'balance': amount*2}})
                     else:
                         await ctx.send(f"I flipped {flipside.title()}, you lose. Sorry.")
             except Exception:
                 if amount.lower() == 'all':
-                    amount = db.money.find_one({'userid': user})['balance']
+                    amount = await db.money.find_one({'userid': user})['balance']
                     flipside = random.choice(choices)
-                    db.money.update({'userid': str(user)}, {'$inc': {'balance': 0}})
+                    await db.money.update({'userid': str(user)}, {'$inc': {'balance': 0}})
                     if flipside == side.lower():
                         await ctx.send(f"I flipped {flipside.title()}, you win `{amount}Ᵽ`")
-                        db.money.update({'userid': str(user)}, {'$inc': {'balance': amount * 2}})
+                        await db.money.update({'userid': str(user)}, {'$inc': {'balance': amount * 2}})
                     else:
                         await ctx.send(f"I flipped {flipside.title()}, you lose. Sorry.")
                 else:
@@ -1680,13 +1708,13 @@ class Economy:
         elif game.lower() in binary:
 
             async def play():
-                choice = random.randint(0, 255)
+                choice = random.randint(1, 255)
                 await ctx.send(f'What is `{choice}` in binary?')
                 answer = await self.get_input(ctx, int, 'Enter a number, not that...')
                 if int(answer) == int(f'{choice:b}'):
                     award = random.randint(20, 70)
                     await ctx.send(f"Well done! That's correct, `{choice}` in binary is `{choice:b}`. You won `{award}Ᵽ`")
-                    db.money.update({'userid': user}, {'$inc': {'balance': award}}, True)
+                    await db.money.update({'userid': user}, {'$inc': {'balance': award}}, True)
                     await self.gameover(ctx, play)
                 else:
                     try:
@@ -1720,7 +1748,7 @@ class Shop:
                 if price < 0:
                     await ctx.send("You can't set the price for an item to be 0 or less.")
                 else:
-                    shop.insert_one({'name': item,
+                    await shop.insert_one({'name': item,
                                      'name_lower': item.lower(),
                                      'price': price})
                     await ctx.send(f'{item} was added to the shop for {price}Ᵽ')
@@ -1735,11 +1763,11 @@ class Shop:
         if item is None:
             await ctx.send("You need to say what item you want to remove from the shop. `>removeitem item`")
         else:
-            match = shop.find_one({'name_lower': item.lower()})
+            match = await shop.find_one({'name_lower': item.lower()})
             if match is None:
                 await ctx.send(f'Could not find {item} in the shop.')
             else:
-                shop.delete_one({'name_lower': item.lower()})
+                await shop.delete_one({'name_lower': item.lower()})
                 await ctx.send(f'{item.title()} has been removed from the shop.')
 
     @commands.command()
@@ -1750,7 +1778,7 @@ class Shop:
         amount1 = 0
         amount2 = 9
         order = 1
-        for i in shop.find(sort=[('price', pymongo.ASCENDING)])[amount1:amount2]:
+        async for i in await shop.find(sort=[('price', pymongo.ASCENDING)])[amount1:amount2]:
             embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}Ᵽ')
             order += 1
         curpage = 1
@@ -1777,7 +1805,7 @@ class Shop:
                         embed.clear_fields()
                         amount1 += 9
                         amount2 += 9
-                        for i in shop.find(sort=[('price', pymongo.ASCENDING)])[amount1:amount2]:
+                        async for i in await shop.find(sort=[('price', pymongo.ASCENDING)])[amount1:amount2]:
                             embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}Ᵽ')
                             order += 1
                         await msg.edit(embed=embed)
@@ -1791,13 +1819,14 @@ class Shop:
                         embed.clear_fields()
                         amount1 -= 9
                         amount2 -= 9
-                        for i in shop.find(sort=[('price', pymongo.ASCENDING)])[amount1:amount2]:
+                        async for i in await shop.find(sort=[('price', pymongo.ASCENDING)])[amount1:amount2]:
                             embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}Ᵽ')
                             order -= 1
                         await msg.edit(embed=embed)
                     await msg.remove_reaction(emoji='◀', member=ctx.author)
 
     @commands.command()
+    @commands.check(is_owner)
     async def buy(self, ctx, *, item=None):
         shop = db.shop
         user = str(ctx.author.id)
@@ -1809,51 +1838,112 @@ class Shop:
             try:
                 item = int(item) - 1
                 try:
-                    item = shop.find(sort=[('price', pymongo.ASCENDING)])[item]
+                    item = await shop.find(sort=[('price', pymongo.ASCENDING)])[item]
                 except Exception:
                     await ctx.send(f"There is no item #{item} on the store.")
 
             except ValueError:
-                match = shop.find_one({'name_lower': item.lower()})
+                match = await shop.find_one({'name_lower': item.lower()})
                 if match is None:
                     await ctx.send("That item does not exist on the store. For ease of use, use the item number.")
                 else:
+                    print(match)
                     item = match
 
             try:
-                if item['name'] in db.money.find_one({'userid': user})['inventory']:
+                print(await db.money.find_one({'userid': user})['balance'])
+                print(await db.money.find_one({'userid': user}))
+                print(item['price'])
+                if item['name'] in await db.money.find_one({'userid': user})['inventory']:
                     await ctx.send("You already own this item.")
-                elif db.money.find_one({'userid': user})['balance'] is None or db.money.find_one({'userid': user})['balance'] < item['price']:
+                elif int(await db.money.find_one({'userid': user})['balance']) < int(item['price']):
                     await ctx.send("You do not have enough Ᵽlaceholders to purchase that item.")
                 else:
                     if item['name'] in pet_types:
-                        db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'pet': item['name']}}, True)
-                        db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'level': 0}}, True)
-                        db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'curhunger': 100}}, True)
-                        db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'maxhunger': 100}}, True)
-                        db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
-                        db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
-                        await ctx.send(
-                            f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+                        await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'pet': item['name']}}, True)
+                        await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'pet_lower': item['name'].lower()}}, True)
+                        await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'level': 0}}, True)
+                        await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'curhunger': 100}}, True)
+                        await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'maxhunger': 100}}, True)
+                        await db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
+                        await db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                        await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
                     else:
-                        db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
-                        db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
-                        await ctx.send(
-                            f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+                        await db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
+                        await db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                        await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
             except KeyError:
                 if item['name'] in pet_types:
-                    db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'pet': item['name']}}, True)
-                    db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'level': 0}}, True)
-                    db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'curhunger': 100}}, True)
-                    db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'maxhunger': 100}}, True)
-                    db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
-                    db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                    await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'pet': item['name']}}, True)
+                    await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'level': 0}}, True)
+                    await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'curhunger': 100}}, True)
+                    await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'maxhunger': 100}}, True)
+                    await db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
+                    await db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
                     await ctx.send(
                         f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
                 else:
-                    db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
-                    db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                    await db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
+                    await db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
                     await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+
+
+class Pets:
+
+    def __init__(self, bot):
+        self.bot = bot
+
+    @commands.command()
+    async def train(self, ctx, pet=None):
+        pets = ['dog', 'cat', 'custom pet']
+
+        async def success(pet):
+            db.pets.update({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]}, {'$set': {'lasttrain': datetime.datetime.today()}})
+            xp = random.randint(25, 75)
+            await ctx.send(f"You train your {petlist[0]['pet']} and they gain {xp} xp.")
+            db.pets.update({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]}, {'$inc': {'xp': xp}}, True)
+            if db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]})['level'] is None:
+                db.pets.update({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]}, {'$set': {'level': 0}}, True)
+            elif db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]})['xp'] / 1000 != db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]})['level']:
+                petxp = db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]})['xp']
+                await ctx.send(f"Your {petlist[0]['pet']} has leveled up to {int(petxp / 1000)}. Congratulations!")
+                db.pets.update({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]}, {'$set': {'level': int(petxp / 1000)}}, True)
+
+        user = str(ctx.author.id)
+        pet = pet or None
+
+        if pet is None:
+            petlist = db.pets.find({'userid': str(ctx.author.id)})
+            if petlist is None:
+                await ctx.send("You have no pets to use this command on.")
+            elif 'lasttrain' in db.pets.find_one({'$and': [{'userid': user}, {'pet': petlist[0]['pet']}]}):
+                if db.pets.find_one({'$and': [{'userid': user}, {'pet': petlist[0]['pet']}]})['lasttrain'] + datetime.timedelta(days=1) < datetime.datetime.today():
+                    await success(petlist[0]['petname_lower'])
+                else:
+                    timeleft = db.pets.find_one({'$and': [{'userid': user}, {'pet': petlist[0]['pet']}]})['lasttrain'] + datetime.timedelta(hours=2) - datetime.datetime.today()
+                    seconds = timeleft.total_seconds()
+                    minutes = int((seconds % 3600) // 60)
+                    hours = int(seconds // 3600)
+                    await ctx.send(f'You recently trained your pet. Please wait {f"{hours} hours and" if hours != 0 else ""} {minutes} to train again.')
+            else:
+                pet = petlist[0]['pet_lower']
+                await success(pet)
+        elif pet in pets:
+            match = db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]})
+            if match is None:
+                await ctx.send('You do not own that pet.')
+            elif 'lasttrain' in db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]}):
+                if db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]})['lasttrain'] + datetime.timedelta(days=1) < datetime.datetime.today():
+                    await success(pet)
+                else:
+                    timeleft = db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]})['lasttrain'] + datetime.timedelta(hours=2) - datetime.datetime.today()
+                    seconds = timeleft.total_seconds()
+                    minutes = int((seconds % 3600) // 60)
+                    hours = int(seconds // 3600)
+                    await ctx.send(f'You recently trained your pet. Please wait {f"{hours} hours and" if hours != 0 else ""} {minutes} to train again.')
+
+        else:
+            await ctx.send('There is no such pet.')
 
 
 class Moderation:
@@ -2557,6 +2647,7 @@ async def bitcoin(ctx):
     await ctx.send("Bitcoin price is: $" + value)
 
 
+client.add_cog(Pets(client))
 client.add_cog(Shop(client))
 client.add_cog(Economy(client))
 client.add_cog(Experience(client))
