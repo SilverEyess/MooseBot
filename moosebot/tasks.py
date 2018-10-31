@@ -1,25 +1,25 @@
 import asyncio
 
 import discord
+from discord.ext.commands import Bot
 
-from moosebot import MooseBot
 from moosebot.utils import *
 
 
-async def rad(bot: MooseBot, message):
-    dard = bot.client.get_emoji(446703695204450305)
+async def rad(client: Bot, message):
+    dard = client.get_emoji(446703695204450305)
     if message.content == "<:rad:428937672552349698>":
         await message.add_reaction(dard)
 
 
-async def dar(bot: MooseBot, message):
-    radical = bot.client.get_emoji(428937672552349698)
+async def dar(client: Bot, message):
+    radical = client.get_emoji(428937672552349698)
     if message.content == "<:dar:446703695204450305>":
         await message.add_reaction(radical)
 
 
-async def saveattach(bot: MooseBot, message):
-    if message.author.id == bot.client.user.id:
+async def saveattach(client: Bot, message):
+    if message.author.id == client.user.id:
         return None
     else:
         channel = message.guild.get_channel(449821022846320641)
@@ -49,7 +49,7 @@ async def saveattach(bot: MooseBot, message):
                     await channel.send(file=discord.File(file_path))
 
 
-async def mobile(bot: MooseBot, ctx):
+async def mobile(bot, ctx):
     channel = ctx.channel
     if ctx.message.author.bot:
         return None

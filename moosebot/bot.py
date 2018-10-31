@@ -2,7 +2,6 @@ import random
 from typing import List, Any
 
 from discord.ext import commands
-from discord.ext.commands import Bot
 
 from moosebot.tasks import *
 
@@ -103,9 +102,9 @@ class MooseBot:
             else:
                 ctx = await client.get_context(message)
                 await asyncio.gather(
-                    rad(self, message),
-                    dar(self, message),
-                    saveattach(self, message),
+                    rad(self.client, message),
+                    dar(self.client, message),
+                    saveattach(self.client, message),
                     mobile(self, ctx),
                     what(ctx)
                 )

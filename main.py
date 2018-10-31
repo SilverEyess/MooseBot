@@ -1,4 +1,5 @@
 from discord.ext import commands
+from discord.ext.commands import CommandInvokeError
 
 from moosebot import MooseBot
 from moosebot.cogs import *
@@ -14,6 +15,10 @@ admins = ["192519529417408512", "345484068886020108"]
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandNotFound):
         print("{} is retarded and '{}' isn't a command.".format(ctx.author.display_name, ctx.message.content))
+    elif isinstance(error, CommandInvokeError):
+        await ctx.send(error.original)
+    else:
+        await ctx.send(f"some error lol {type(error)}")
 
 
 modules = [

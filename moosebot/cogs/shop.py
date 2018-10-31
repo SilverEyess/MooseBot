@@ -54,12 +54,12 @@ class Shop:
     @commands.command()
     async def shop(self, ctx):
         shop = self.bot.database.db.shop
-        pages = int(shop.count() / 9)
+        pages = int((await shop.count_documents({})) / 9)
         embed = discord.Embed(title='MooseBot Shop.', colour=0xb18dff)
         amount1 = 0
         amount2 = 9
         order = 1
-        async for i in await shop.find(sort=[('price', pymongo.ASCENDING)])[amount1:amount2]:
+        async for i in shop.find(sort=[('price', pymongo.ASCENDING)])[amount1:amount2]:
             embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}Ᵽ')
             order += 1
         curpage = 1
