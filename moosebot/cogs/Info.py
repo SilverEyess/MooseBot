@@ -3,12 +3,12 @@ import datetime
 import discord
 from discord.ext import commands
 
-from moosebot import converters
+from moosebot import converters, MooseBot
 
 
 class Info:
 
-    def __init__(self, bot):
+    def __init__(self, bot: MooseBot):
         self.bot = bot
 
     @commands.command()
@@ -68,3 +68,60 @@ class Info:
     @userinfo.error
     async def userinfo_error(self, ctx, error):
         await ctx.send(error)
+
+    @commands.command(pass_context=True, help="Returns information about this bot.")
+    async def info(self, ctx):
+        embed = discord.Embed(title="MooseBot", description="This bot a moose.", colour=0xb18dff)
+        embed.add_field(name="Author", value="<@192519529417408512>")
+        embed.add_field(name='Contributors', value='<@488682312154742787>')
+        embed.add_field(name="Server count", value=f"{len(self.bot.client.guilds)}")
+        embed.add_field(name="Invite me to your server!",
+                        value="[Invite link](https://discordapp.com/oauth2/authorize?client_id=445936072288108544&scope=bot&permissions=66186303)")
+        embed.add_field(name="Join my server!", value="[Join here!](https://discord.gg/7Jcu6yn)")
+        embed.add_field(name='Github', value='[Look at my trash code](https://github.com/SilverEyess/MooseBot)')
+        embed.set_thumbnail(url=ctx.me.avatar_url)
+        await ctx.send(embed=embed)
+
+    @commands.command(help="Provides bot invite link.")
+    async def invite(self, ctx):
+        embed = discord.Embed(title="Moosebot invite", description="Invite Moosebot to your server!", colour=0xb18dff)
+        embed.add_field(name="Invite",
+                        value="Invite me using this **[link](https://discordapp.com/oauth2/authorize?client_id=445936072288108544&scope=bot&permissions=66186303)**")
+        embed.set_thumbnail(url=ctx.me.avatar_url)
+        await ctx.send(embed=embed)
+
+    @commands.command(help="This is literally the help command.", aliases=['h'])
+    async def help(self, ctx, *, arg: str = None):
+        if arg is None:
+            embed = discord.Embed(title="MooseBot", description="A bot that copies other bots and is also a Moose.",
+                                  colour=0xb18dff)
+            embed.add_field(name="Fun Commands",
+                            value="`face` `guess` `8ball` `russian` `phone` `ping` `ship` `dadjoke` "
+                                  "`embarrass` `greek` `letters` `thicc` `choose` `cointoss` `roll` "
+                                  "`reverse` `rps` `urbandictionary` `translate` `square` `meme` "
+                                  "`clap`",
+                            inline=False)
+            embed.add_field(name='Experience', value='`level` `leaderboard`', inline=False)
+            embed.add_field(name='Economy', value='`pay` `steal` `coinflip` `balance` `balancelb`', inline=False)
+            embed.add_field(name="Info Commands",
+                            value="`server` `userinfo` `avatar` `bitcoin` `info` `invite` `emojis` "
+                                  "`gender` `inrole` `feedback`", inline=False)
+            embed.add_field(name="Admin commands", value="`kick` `ban` `clear` `count` `nickname` `moveto`",
+                            inline=False)
+
+            embed.set_thumbnail(url=ctx.me.avatar_url_as(format='png'))
+            embed.set_footer(text=">help [command] to get help for that command.")
+            await ctx.send(embed=embed)
+        else:
+            try:
+                command = self.bot.client.get_command(name=arg)
+                if command.help:
+                    embed = discord.Embed(title=f"{command.name.title()} help.",
+                                          description=f'{command.help} \n\n**Aliases**:\n{", ".join(command.aliases) if command.aliases else "None"}',
+                                          colour=0xb18dff)
+                    embed.set_thumbnail(url=ctx.me.avatar_url_as(format='png'))
+                    await ctx.send(embed=embed)
+                else:
+                    await ctx.send("This command has no help text.")
+            except AttributeError:
+                await ctx.send(f"Command `{arg}` not found.")

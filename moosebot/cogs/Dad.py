@@ -1,9 +1,10 @@
+import asyncio
 import random
 
+import discord
 from discord.ext import commands
 
-from moosebot import MooseBot
-from moosebot.utils import *
+from moosebot import MooseBot, converters
 
 
 class Dad:
@@ -35,7 +36,7 @@ class Dad:
         elif message.channel.id in self.blacklist or message.guild.id in self.blacklist:
             return None
         else:
-            await asyncio.gather(self.dad(message, ctx))
+            await self.dad(message, ctx)
 
     async def dad(self, message, ctx):
         winner = random.choice([i for i in ctx.guild.members if not i.bot]).mention
@@ -154,3 +155,91 @@ class Dad:
             await ctx.send(dadjokes)
         else:
             await ctx.send("That's not an option for this command")
+
+    @commands.command(aliases=["emb"], help="Embarrasses you or a friend! \n`>embarrass` \n`>embarrass user`")
+    async def embarrass(self, ctx, arg: converters.PartialMember = None, *, args=None):
+        path = "database/embarrass.txt"
+        embarrass_list = Dad.load_embarrass(path)
+        bottle = self.bot.client.get_user(192519529417408512)
+        arg = arg or None
+        args = args or None
+        if arg is None:
+            try:
+                hook = await ctx.channel.create_webhook(name="Dadhook", avatar=None)
+                await hook.send(content=random.choice(embarrass_list), username=ctx.author.display_name.ljust(2, '.'),
+                                avatar_url=ctx.author.avatar_url)
+                await hook.delete()
+            except discord.Forbidden:
+                await ctx.send("I require the manage webhooks permission for this command to function.")
+        elif isinstance(arg, discord.Member):
+            try:
+                hook = await ctx.channel.create_webhook(name="Dadhook", avatar=None)
+                await hook.send(content=random.choice(embarrass_list), username=arg.display_name.ljust(2, ','),
+                                avatar_url=arg.avatar_url)
+                await hook.delete()
+            except discord.Forbidden:
+                await ctx.send("I require the manage webhooks permission for this command to function.")
+        elif arg.lower() == "add" or arg.lower() == "a":
+            if args is None:
+                await ctx.send("You need to enter a phrase to suggest being added to the embarrass list.")
+            else:
+
+                await ctx.send(f"{bottle.mention} add this phrase to the embarrass list? Y/N \n\n `{args}`")
+
+                def check(m):
+                    return m.content.lower() == "yes" or m.content.lower() == "y" or m.content.lower() == "no" or m.content.lower() == "n" and m.author.id == 192519529417408512
+
+                try:
+                    msg = await self.bot.client.wait_for('message', check=check, timeout=10)
+                    if msg.content.lower() == 'yes' or msg.content.lower() == 'y':
+                        await ctx.send("Adding phrase to embarrass list.")
+                        embarrass_list.append(args)
+                        Dad.save_embarrass(path, embarrass_list)
+                    elif msg.content.lower() == 'no' or msg.content.lower() == 'n':
+                        await ctx.send(f"Your phrase has been denied {ctx.author.mention}")
+
+                except asyncio.TimeoutError:
+                    await ctx.send("Daddy didn't respond in time, try again later.")
+        elif arg.lower() == "del" or arg.lower() == "delete" or arg.lower() == "d":
+            if args is None:
+                await ctx.send("You need to enter a phrase to suggest being deleted from the embarrass list.")
+            else:
+                match = next(iter([x for x in iter(embarrass_list) if x.lower() == args.lower()]), None)
+                if match is None:
+                    await ctx.send("That phrase was not found in the embarrass list.")
+                else:
+                    await ctx.send(f"{bottle.mention} remove this phrase from the embarrass list? Y/N \n\n `{args}`")
+
+                    def check(m):
+                        return m.content.lower() == "yes" or m.content.lower() == "y" or m.content.lower() == "no" or m.content.lower() == "n" and m.author.id == 192519529417408512
+
+                    try:
+                        msg = await self.bot.client.wait_for('message', check=check, timeout=10)
+                        if msg.content.lower() == 'y' or msg.content.lower() == 'yes':
+                            await ctx.send("Removing the phrase from the embarras list.")
+                            embarrass_list.remove(match)
+                            Dad.save_embarrass(path, embarrass_list)
+                        elif msg.content.lower() == 'n' or msg.content.lower() == 'no':
+                            await ctx.send("Your suggestion to remove that phrase has been denied {ctx.author.mention}")
+
+                    except asyncio.TimeoutError:
+                        await ctx.send("Daddy didn't respond in time, try again later.")
+        elif arg.lower() == 'l' or arg.lower() == 'list':
+            embed = discord.Embed(title="Embarrassing phrases", description='\n'.join(embarrass_list))
+            await ctx.send(embed=embed)
+        else:
+            await ctx.send("That's not an option for this command")
+
+    @staticmethod
+    def load_embarrass(path):
+        embarrass_list = []
+        with open(path, "r") as f:
+            for entry in f.readlines():
+                embarrass_list.append(entry.rstrip())
+        return embarrass_list
+
+    @staticmethod
+    def save_embarrass(path, embarrass_list):
+        with open(path, "w") as f:
+            for entry in embarrass_list:
+                f.write(entry + "\n")

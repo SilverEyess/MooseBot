@@ -10,6 +10,11 @@ from moosebot.cogs.Fun import Fun
 from moosebot.cogs.GuessGame import GuessGame
 from moosebot.cogs.Misc import Misc
 from moosebot.cogs.Server import Server
+from moosebot.cogs.Voice import Voice
+from moosebot.cogs.Colour import Colour
+from moosebot.cogs.Numbers import Numbers
+from moosebot.cogs.Phone import Phone
+from moosebot.cogs.Images import Images
 
 __all__ = [
     "Info",
@@ -23,5 +28,10 @@ __all__ = [
     "Fun",
     "GuessGame",
     "Misc",
-    "Server"
+    "Server",
+    "Voice",
+    "Colour",
+    "Numbers",
+    "Phone",
+    "Images"
 ]

@@ -1,4 +1,5 @@
 import random
+from typing import List, Any
 
 from discord.ext import commands
 from discord.ext.commands import Bot
@@ -113,6 +114,58 @@ class MooseBot:
                         await message.delete()
 
             await client.process_commands(message)
+
+        @client.event
+        async def on_ready():
+            print("Logged in as {}({})".format(client.user.name, client.user.id))
+            print("-----------------------------------------")
+
+            await client.change_presence(game=discord.Game(name="Now with XP!"))
+
+        @client.event
+        async def on_guild_join(guild):
+            if guild.system_channel is not None:
+                channel = guild.system_channel
+            else:
+                for c in guild.text_channels:
+                    if not c.permissions_for(guild.me).send_messages:
+                        continue
+                    channel = c
+            embed = discord.Embed(title="Thanks for inviting me! I am Moosebot.",
+                                  description="I require admin permissions to fully function!", colour=0xb18dff)
+            embed.add_field(name="Author", value="<@192519529417408512>")
+            embed.add_field(name="Server count", value=f"{len(client.guilds)}")
+            embed.add_field(name="Invite me to your server!",
+                            value="[Invite link](https://discordapp.com/oauth2/authorize?client_id=445936072288108544&scope=bot&permissions=66186303)")
+            embed.add_field(name="Join my server!", value="[Join here!](https://discord.gg/7Jcu6yn)")
+            embed.set_thumbnail(url=guild.me.avatar_url_as(format='png'))
+            await channel.send(embed=embed)
+            self.database.db.lvl.insert_one({'serverid': str(guild.id)})
+            self.database.db.xp.insert_one({'serverid': str(guild.id)})
+
+        @client.event
+        async def on_member_update(before, after):
+            if after.guild.id == 377218458108035084:
+                if after.id == 389579708016099328:
+                    if after.display_name != "edgy baby":
+                        await after.edit(nick="edgy baby")
+                        print("Nat tried to change her nickname lmoa")
+                # elif after.id == 488199047874740235:
+                #     if after.display_name != 'anna':
+                #         await after.edit(nick='anna')
+                #         print('Anna tried to change her nickname.')
+            else:
+                return None
+
+    def launch(self, token):
+        self.client.run(token)
+
+    def add_cog(self, cog):
+        self.client.add_cog(cog)
+
+    def add_cogs(self, cogs: List[Any]):
+        for cog in cogs:
+            self.add_cog(cog)
 
     async def senddm(self, message):
         if message.guild is None:
