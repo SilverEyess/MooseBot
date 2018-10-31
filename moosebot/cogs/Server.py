@@ -65,3 +65,7 @@ class Server:
         embed = discord.Embed(title="🔍{}".format(ctx.guild.name), description=description, colour=0xb18dff)
         embed.set_thumbnail(url=ctx.guild.icon_url)
         await ctx.send(embed=embed)
+
+    @commands.command()
+    async def simage(self, ctx):
+        await ctx.send(ctx.guild.icon_url)

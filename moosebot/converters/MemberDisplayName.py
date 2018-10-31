@@ -1,7 +1,7 @@
 from discord.ext import commands
 
 
-class MemberDisplayname(commands.Converter):
+class MemberDisplayName(commands.Converter):
     async def convert(self, ctx, argument):
         try:
             arg = await commands.MemberConverter().convert(ctx, argument)

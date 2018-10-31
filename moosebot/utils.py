@@ -1,9 +1,7 @@
-import asyncio
 import json
 import os
 import shutil
 
-import discord
 import requests
 
 
@@ -53,3 +51,9 @@ def save_image(folder, name, data, filetype=None):
                 shutil.copyfileobj(data, fout)
 
 
+async def check_con(bot, ctx):
+    vcs = [i.guild for i in bot.client.voice_clients]
+    if ctx.guild in vcs:
+        return True
+    else:
+        return False

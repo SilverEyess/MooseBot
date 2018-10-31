@@ -1,3 +1,7 @@
+import asyncio
+import time
+
+import discord
 from discord.ext import commands
 
 from moosebot import MooseBot, converters
@@ -91,3 +95,130 @@ class Moderation:
                     await member.edit(nick=None)
                 except discord.Forbidden:
                     await ctx.send("No permissions to change this users nickname.")
+
+    @commands.command(help="Change the bots current game. BOT OWNER ONLY.")
+    @commands.check(MooseBot.is_owner)
+    async def botgame(self, ctx, *args):
+        game_name = ' '.join(args)
+        game = discord.Game(name=game_name)
+        if await self.bot.client.change_presence(game=game):
+            await ctx.message.delete()
+
+    @commands.command(help="Kicks user. \n`>kick user`")
+    @commands.check(MooseBot.is_mod)
+    async def kick(self, ctx):
+        this_server = ctx.guild
+        if len(ctx.message.mentions) == 0:
+            await ctx.send("Please mention a user to kick")
+        elif ctx.message.mentions[0] == ctx.message.author:
+            await ctx.send("You cannot kick yourself.")
+        elif len(ctx.message.mentions) == 1:
+            user = ctx.message.mentions[0]
+            if user.id == 192519529417408512:
+                await ctx.send('You cannot kick Daddy dear.')
+            else:
+                try:
+                    await this_server.kick(user=user)
+                    await ctx.send("{} was successfully kicked".format(ctx.message.mentions[0].display_name))
+                except discord.Forbidden:
+                    await ctx.send("I don't have sufficient permissions to kick")
+                else:
+                    try:
+                        await this_server.kick(user=user)
+                    except discord.HTTPException:
+                        await ctx.send("You do not have permission to kick users.")
+        elif len(ctx.message.mentions) > 1:
+            await ctx.send("Please only mention one user at a time")
+
+    @commands.command(help="Bans user. \n`>ban user`")
+    @commands.check(MooseBot.is_mod)
+    async def ban(self, ctx):
+        this_server = ctx.guild
+        if len(ctx.message.mentions) == 0:
+            await ctx.send("Please mention a user to ban")
+        elif ctx.message.mentions[0] == ctx.message.author:
+            await ctx.send("You cannot ban yourself.")
+        elif len(ctx.message.mentions) == 1:
+            user = ctx.message.mentions[0]
+            if user.id == 192519529417408512:
+                await ctx.send('You cannot ban Daddy dear.')
+            else:
+                try:
+                    await this_server.ban(user=user)
+                    await ctx.send("{} was successfully banned".format(ctx.message.mentions[0].display_name))
+                except discord.Forbidden:
+                    await ctx.send("I don't have sufficient permissions to ban")
+                else:
+                    try:
+                        await this_server.ban(user=user)
+                    except discord.HTTPException:
+                        await ctx.send("You do not have permission to ban users.")
+        elif len(ctx.message.mentions) > 1:
+            await ctx.send("Please only mention one user at a time")
+
+    @commands.command()
+    @commands.check(MooseBot.is_owner)
+    async def leavesvr(self, ctx, sid):
+        this_server = self.bot.client.get_guild(int(sid))
+        await this_server.leave()
+        await ctx.send("Leaving {} Guild".format(sid))
+        await ctx.message.delete()
+
+    @commands.command(help="Pong.")
+    async def ping(self, ctx):
+        ptime = time.time()
+        x = await ctx.send("Ok, pinging.")
+        pingtime = (time.time() - ptime) * 100
+        msg = f"It took {pingtime:.02f}ms to ping the Moose."
+        await x.edit(content=msg)
+
+    @commands.command(help="Get's a users avatar. \n`>avatar user`")
+    async def avatar(self, ctx, *, member: converters.FullMember = None):
+        member = member or ctx.author
+        if member is not None:
+            if isinstance(member, discord.Member):
+                path = "database/avatar/"
+                avatar = member.avatar_url_as(format='png')
+                await ctx.send(avatar)
+                data = get_image(avatar)
+                save_image(path, member.display_name, data)
+            else:
+                await ctx.send(f"Member `{member}` not found, try mentioning them to be certain.")
+        else:
+            await ctx.send(f"Member `{member}` not found, try mentioning them to be certain.")
+
+    @commands.command()
+    async def purge(self, ctx, where=None, limit=None):
+        limit = limit or None
+        where = where or None
+        if where is None:
+            await ctx.send(
+                "You've got to give me something to work with here. Tell me where to delete(server/channel) then how many messages.")
+        if limit is None:
+            limit = 2
+        else:
+            limit = int(limit) + 1
+        if where.lower() == 'channel':
+            async for i in ctx.channel.history(limit=limit):
+                if i.author == ctx.author:
+                    await i.delete()
+        elif where.lower() == 'server':
+            await ctx.send("working on it.")
+        else:
+            try:
+                int(where) + 1
+            except Exception:
+                await ctx.send("This is broke")
+            else:
+                async for i in ctx.channel.history(limit=where):
+                    if i.author == ctx.author:
+                        await i.delete()
+
+    @commands.command(help="Enter an amount of messages to purge from the chat. \n`>clear amount`")
+    @commands.check(MooseBot.is_mod)
+    async def clear(self, ctx, amount: int = None):
+        amount = amount or None
+        if amount is None:
+            amount = 1
+        deleted = await ctx.channel.purge(limit=amount + 1)
+        await ctx.send(f"I have cleared `{len(deleted)- 1}` messages.", delete_after=0.5)

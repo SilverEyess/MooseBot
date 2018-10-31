@@ -6,7 +6,7 @@ import praw
 from discord.ext import commands
 from googletrans import Translator
 
-from moosebot import MooseBot
+from moosebot import MooseBot, converters
 
 
 class Fun:
@@ -299,3 +299,79 @@ class Fun:
                            "Or no arguments to roll 1, 6 sided die.")
         else:
             await ctx.send(error)
+
+    @commands.command(name="RussianRoulette",
+                      aliases=["rr", "russian"],
+                      help="Enter a phrase/word to award it to a random member. \n`>rr phrase`")
+    async def russian(self, ctx, *args):
+        roulette = ' '.join(args[:])
+        winner = random.choice([i for i in ctx.guild.members if not i.bot])
+
+        if len(args) == 0:
+            await ctx.send("Please enter text to use this command")
+        else:
+            await ctx.send("And the winner of `{}` is {}.".format(roulette, winner.mention))
+
+    @commands.command(help="Ships 2 things together, can be a mix of words and mentions/users. \n`>ship item1 item2`")
+    async def ship(self, ctx, arg1: converters.MemberDisplayName, *, arg2: converters.MemberDisplayName):
+        if arg1 == arg2:
+            await ctx.send(arg1)
+        else:
+            ship_str = random.randint(0, 100)
+            name1_len = int(len(arg1) / 2)
+            name2_len = int(len(arg2) / 2)
+            name1 = arg1[:name1_len].strip()
+            name2 = arg2[name2_len:].strip()
+
+            if ship_str == 100:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility", value=f"{ship_str}% [##########] Y'all should fuck! 💗")
+            elif ship_str >= 90:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility.", value=f"{ship_str}% [#########-] Great match!")
+            elif ship_str >= 80:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility.", value=f"{ship_str}% [########--] Good match.")
+            elif ship_str >= 70:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility.", value=f"{ship_str}% [#######---] Good match.")
+            elif ship_str >= 60:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility.", value=f"{ship_str}% [######----] Okay match.")
+            elif ship_str >= 50:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility.", value=f"{ship_str}% [#####-----] Okay match.")
+            elif ship_str >= 40:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility.", value=f"{ship_str}% [####------] Barely a thing.")
+            elif ship_str >= 30:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility.", value=f"{ship_str}% [###-------] Barely a thing.")
+            elif ship_str >= 20:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility.", value=f"{ship_str}% [##--------] Don't even try.")
+            elif ship_str >= 10:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility.", value=f"{ship_str}% [#---------] This is awful.")
+            elif ship_str >= 10:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility.", value=f"{ship_str}% [#---------] Just stop.")
+            else:
+                embed = discord.Embed(title=f"Ship name: {name1}{name2}", description=None, colour=0xb18dff)
+                embed.add_field(name="Compatibility.", value=f"{ship_str}% [----------] No.")
+
+            await ctx.send(f"💜`{arg1}`\n💜`{arg2}`")
+            await ctx.send(embed=embed)
+
+    @commands.command(aliases=["eightball", "8", "ball", "8ball"],
+                      help="Simple 8ball, ask a yes/no question and I'll tell "
+                           "you the outcome. \n`>8ball question`")
+    async def eight_ball(self, ctx):
+        possible_responses = [
+            "That's a no from me",
+            "Big fat maybe",
+            "I honestly can't be bothered answering",
+            "Yeah, why not?",
+            "Yes imo",
+        ]
+        await ctx.send(random.choice(possible_responses) + ", " + ctx.message.author.mention)

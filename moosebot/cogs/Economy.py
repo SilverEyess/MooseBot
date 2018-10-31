@@ -1,6 +1,8 @@
+import asyncio
 import datetime
 import random
 
+import discord
 from discord.ext import commands
 
 from moosebot import MooseBot, converters

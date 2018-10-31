@@ -1,3 +1,7 @@
+import asyncio
+
+import discord
+
 from moosebot import MooseBot
 from moosebot.utils import *
 
