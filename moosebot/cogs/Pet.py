@@ -18,19 +18,20 @@ class Pet:
         db = self.bot.database.db
 
         async def success(pet):
-            db.pets.update({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]},
-                           {'$set': {'lasttrain': datetime.datetime.today()}})
+            db.pets.update_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]},
+                               {'$set': {'lasttrain': datetime.datetime.today()}})
             xp = random.randint(25, 75)
             await ctx.send(f"You train your {petlist[0]['pet']} and they gain {xp} xp.")
-            db.pets.update({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]}, {'$inc': {'xp': xp}}, True)
+            db.pets.update_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]}, {'$inc': {'xp': xp}}, True)
             if db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]})['level'] is None:
-                db.pets.update({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]}, {'$set': {'level': 0}}, True)
+                db.pets.update_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]}, {'$set': {'level': 0}},
+                                   True)
             elif db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]})['xp'] / 1000 != \
                     db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]})['level']:
                 petxp = db.pets.find_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]})['xp']
                 await ctx.send(f"Your {petlist[0]['pet']} has leveled up to {int(petxp / 1000)}. Congratulations!")
-                db.pets.update({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]},
-                               {'$set': {'level': int(petxp / 1000)}}, True)
+                db.pets.update_one({'$and': [{'userid': user}, {'pet_lower': pet.lower()}]},
+                                   {'$set': {'level': int(petxp / 1000)}}, True)
 
         user = str(ctx.author.id)
         pet = pet or None

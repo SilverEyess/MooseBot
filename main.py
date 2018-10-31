@@ -912,7 +912,7 @@ class Experience:
         elif args is None:
             await ctx.send(f"Please tell me how much xp to give to `{user.display_name}`.")
         else:
-            await db.xp.update({'serverid': str(ctx.guild.id)}, {'$inc': {str(user.id): args}})
+            await db.xp.update_one({'serverid': str(ctx.guild.id)}, {'$inc': {str(user.id): args}})
             await ctx.send(f"{args} xp successfully given to {user.display_name}.")
 
     @commands.command(aliases=['rmvxp'], help='Bot author only command.')
@@ -930,10 +930,10 @@ class Experience:
                 if beforexp is None:
                     await ctx.send("This user had no xp to take...")
                 else:
-                    await db.xp.update({'userid': str(user.id)}, {'$set': {'experience': 0}})
+                    await db.xp.update_one({'userid': str(user.id)}, {'$set': {'experience': 0}})
                     await ctx.send(f"{beforexp} xp successfully taken from {user.display_name}.")
             else:
-                await db.xp.update({'userid': str(user.id)}, {'$inc': {'experience': -int(args)}})
+                await db.xp.update_one({'userid': str(user.id)}, {'$inc': {'experience': -int(args)}})
                 await ctx.send(f"{args} xp successfully taken from {user.display_name}.")
 
     @commands.command()
@@ -941,7 +941,7 @@ class Experience:
         for i in client.guilds:
             if i.id == 497565873570316289:
                 for x in i.members():
-                    db.money.update({'userid': str(x.id)}, {'$inc': {'balance': 500}}, True)
+                    db.money.update_one({'userid': str(x.id)}, {'$inc': {'balance': 500}}, True)
 
     async def grantxp(self, message):
         xplock.acquire()

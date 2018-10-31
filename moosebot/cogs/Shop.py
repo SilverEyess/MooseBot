@@ -141,33 +141,33 @@ class Shop:
                     await ctx.send("You do not have enough Ᵽlaceholders to purchase that item.")
                 else:
                     if item['name'] in pet_types:
-                        await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'pet': item['name']}}, True)
-                        await db.pets.update({'userid': str(ctx.author.id)},
+                        await db.pets.update_one({'userid': str(ctx.author.id)}, {'$set': {'pet': item['name']}}, True)
+                        await db.pets.update_one({'userid': str(ctx.author.id)},
                                              {'$set': {'pet_lower': item['name'].lower()}}, True)
-                        await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'level': 0}}, True)
-                        await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'curhunger': 100}}, True)
-                        await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'maxhunger': 100}}, True)
-                        await db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
-                        await db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                        await db.pets.update_one({'userid': str(ctx.author.id)}, {'$set': {'level': 0}}, True)
+                        await db.pets.update_one({'userid': str(ctx.author.id)}, {'$set': {'curhunger': 100}}, True)
+                        await db.pets.update_one({'userid': str(ctx.author.id)}, {'$set': {'maxhunger': 100}}, True)
+                        await db.money.update_one({'userid': user}, {'$push': {'inventory': item['name']}})
+                        await db.money.update_one({'userid': user}, {'$inc': {'balance': -item['price']}})
                         await ctx.send(
                             f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
                     else:
-                        await db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
-                        await db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                        await db.money.update_one({'userid': user}, {'$push': {'inventory': item['name']}})
+                        await db.money.update_one({'userid': user}, {'$inc': {'balance': -item['price']}})
                         await ctx.send(
                             f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
             except KeyError:
                 if item['name'] in pet_types:
-                    await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'pet': item['name']}}, True)
-                    await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'level': 0}}, True)
-                    await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'curhunger': 100}}, True)
-                    await db.pets.update({'userid': str(ctx.author.id)}, {'$set': {'maxhunger': 100}}, True)
-                    await db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
-                    await db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                    await db.pets.update_one({'userid': str(ctx.author.id)}, {'$set': {'pet': item['name']}}, True)
+                    await db.pets.update_one({'userid': str(ctx.author.id)}, {'$set': {'level': 0}}, True)
+                    await db.pets.update_one({'userid': str(ctx.author.id)}, {'$set': {'curhunger': 100}}, True)
+                    await db.pets.update_one({'userid': str(ctx.author.id)}, {'$set': {'maxhunger': 100}}, True)
+                    await db.money.update_one({'userid': user}, {'$push': {'inventory': item['name']}})
+                    await db.money.update_one({'userid': user}, {'$inc': {'balance': -item['price']}})
                     await ctx.send(
                         f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
                 else:
-                    await db.money.update({'userid': user}, {'$push': {'inventory': item['name']}})
-                    await db.money.update({'userid': user}, {'$inc': {'balance': -item['price']}})
+                    await db.money.update_one({'userid': user}, {'$push': {'inventory': item['name']}})
+                    await db.money.update_one({'userid': user}, {'$inc': {'balance': -item['price']}})
                     await ctx.send(
                         f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
