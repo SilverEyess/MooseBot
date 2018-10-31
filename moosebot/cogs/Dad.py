@@ -91,3 +91,66 @@ class Dad:
                         await ctx.me.edit(nick=None)
                     except Exception:
                         pass
+
+    def dadload(self, path):
+        dadjokes = []
+        with open(path, "r") as f:
+            for entry in f.readlines():
+                dadjokes.append(entry.rstrip())
+        return dadjokes
+
+    def dadsave(self, path, dadjokes):
+        with open(path, "w") as f:
+            for entry in dadjokes:
+                f.write(entry + "\n")
+
+    @commands.command(
+        help="Returns a quality dadjoke. Or try to add/remove jokes(If bot author on your server) \n`>dadjoke add/remove joke`")
+    async def dadjoke(self, ctx, *args):
+        path = "database/dadjokes.txt "
+        dadjokes = self.dadload(path)
+        emoji = " <:lmoa:446850171134017536>"
+        bottle = self.bot.client.get_user(192519529417408512)
+
+        if not args:
+            dadjokes.append(emoji)
+            await ctx.send(random.choice(dadjokes).replace("|", "\n") + emoji)
+        elif args[0].lower() == "add":
+            joke = ' '.join(args[1:])
+            await ctx.send("{} Add this joke to dadjokes? <Yes/No> \n \n '{}'".format(bottle.mention, joke))
+
+            def check(m):
+                return m.content.lower() == "yes" or m.content.lower() == "no"
+
+            msg = await self.bot.client.wait_for('message', check=check)
+
+            if msg.content == 'yes' or msg.content == 'Yes' and msg.author == bottle:
+                await ctx.send("{} Your joke was added to the list of dadjokes!".format(ctx.author.mention))
+                dadjokes.append(joke)
+                self.dadsave(path, dadjokes)
+
+            elif msg.content == 'no' or msg.content == 'No' and msg.author == bottle:
+                await ctx.send("Your joke was not added, make sure it's formatting is correct"
+                               " with a | at the beginning of a new line, otherwise it was just a bad joke, "
+                               "not a dad joke.")
+        elif args[0].lower() == "del" or args[0].lower() == "delete":
+            joke = ' '.join(args[1:])
+            await ctx.send("{} Delete this joke from dadjokes? <Yes/No> \n \n '{}'".format(bottle.mention, joke))
+
+            def check(m):
+                return m.content == "yes" or m.content == "no"
+
+            msg = await self.bot.client.wait_for('message', check=check)
+
+            if msg.content.lower() == 'yes':
+                match = next(iter([x for x in iter(dadjokes) if x.lower() == joke.lower()]), None)
+                if match is not None:
+                    dadjokes.remove(match)
+                    await ctx.send("'{}'\n The above joke was deleted from dadjokes".format(joke))
+                    self.dadsave(path, dadjokes)
+                else:
+                    await ctx.send("That joke is not in the list")
+        elif args[0].lower() == "list":
+            await ctx.send(dadjokes)
+        else:
+            await ctx.send("That's not an option for this command")
