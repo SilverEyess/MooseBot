@@ -10,7 +10,7 @@ class Counting:
         self.bot = bot
 
     @commands.command()
-    @commands.check(is_owner)
+    @commands.check(MooseBot.is_owner)
     async def count(self, ctx):
         if ctx.channel.topic and ctx.channel.topic.startswith(">count"):
             return None

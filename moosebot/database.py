@@ -1,9 +1,9 @@
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 
 
 class MooseDb:
 
     def __init__(self):
-        self.client = MongoClient()
+        self.client = AsyncIOMotorClient()
         self.db = self.client.MooseBot
         # TODO finish
