@@ -7,6 +7,5 @@ __all__ = [
     "bot",
     "MooseBot",
     "MooseDb",
-    "utils",
-    "tasks"
+    "utils"
 ]
