@@ -1,7 +1,6 @@
 from discord.ext import commands
 
 from moosebot import MooseBot
-from moosebot.utils import *
 
 
 class Counting:
@@ -36,5 +35,3 @@ class Counting:
                     await ctx.channel.send(
                         f"{ctx.author.mention} The next message in this channel must start with {count}!",
                         delete_after=2.0)
-
-

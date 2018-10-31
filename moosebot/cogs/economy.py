@@ -6,7 +6,6 @@ import discord
 from discord.ext import commands
 
 from moosebot import MooseBot, converters
-from moosebot.utils import *
 
 
 class Economy:

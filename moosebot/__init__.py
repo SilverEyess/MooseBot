@@ -1,4 +1,4 @@
-from moosebot.MooseBot import MooseBot
+from moosebot.bot import MooseBot
 from moosebot.database import MooseDb
 
 __all__ = [

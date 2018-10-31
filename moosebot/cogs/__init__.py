@@ -1,20 +1,20 @@
-from moosebot.cogs.Info import Info
-from moosebot.cogs.Counting import Counting
-from moosebot.cogs.Dad import Dad
-from moosebot.cogs.Moderation import Moderation
-from moosebot.cogs.Economy import Economy
-from moosebot.cogs.Shop import Shop
-from moosebot.cogs.Pet import Pet
-from moosebot.cogs.Experience import Experience
-from moosebot.cogs.Fun import Fun
-from moosebot.cogs.GuessGame import GuessGame
-from moosebot.cogs.Misc import Misc
-from moosebot.cogs.Server import Server
-from moosebot.cogs.Voice import Voice
-from moosebot.cogs.Colour import Colour
-from moosebot.cogs.Numbers import Numbers
-from moosebot.cogs.Phone import Phone
-from moosebot.cogs.Images import Images
+from moosebot.cogs.colour import Colour
+from moosebot.cogs.counting import Counting
+from moosebot.cogs.dad import Dad
+from moosebot.cogs.economy import Economy
+from moosebot.cogs.experience import Experience
+from moosebot.cogs.fun import Fun
+from moosebot.cogs.guess_game import GuessGame
+from moosebot.cogs.images import Images
+from moosebot.cogs.info import Info
+from moosebot.cogs.misc import Misc
+from moosebot.cogs.moderation import Moderation
+from moosebot.cogs.numbers import Numbers
+from moosebot.cogs.pet import Pet
+from moosebot.cogs.phone import Phone
+from moosebot.cogs.server import Server
+from moosebot.cogs.shop import Shop
+from moosebot.cogs.voice import Voice
 
 __all__ = [
     "Info",
