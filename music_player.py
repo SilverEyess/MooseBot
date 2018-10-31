@@ -1,6 +1,6 @@
 import discord
 import asyncio
-from bot_main import client
+from main import client
 
 
 if not discord.opus.is_loaded():
