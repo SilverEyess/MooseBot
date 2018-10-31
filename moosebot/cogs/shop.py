@@ -1,8 +1,10 @@
+import asyncio
+
+import discord
 import pymongo
 from discord.ext import commands
 
 from moosebot import MooseBot
-from moosebot.utils import *
 
 
 class Shop:
