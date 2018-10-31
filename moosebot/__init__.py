@@ -4,8 +4,9 @@ from moosebot.database import MooseDb
 __all__ = [
     "cogs",
     "converters",
-    "MooseBot.py",
+    "bot",
     "MooseBot",
     "MooseDb",
-    "utils"
+    "utils",
+    "tasks"
 ]
