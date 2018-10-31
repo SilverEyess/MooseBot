@@ -8,6 +8,7 @@ from moosebot.tasks import *
 
 class MooseBot:
     prefix = ">"
+    owners = [192519529417408512, 495151300821123072]
 
     def __init__(self, token):
         from moosebot import MooseDb
@@ -18,8 +19,7 @@ class MooseBot:
         self.token = token
         client = Bot(command_prefix=MooseBot.prefix)
         self.client = client
-        self.db = MooseDb()
-
+        self.database = MooseDb()
 
         client.remove_command('help')
 
@@ -122,3 +122,26 @@ class MooseBot:
                 me = self.client.get_user(192519529417408512)
                 format = f"**{message.author.display_name}**({message.author.id}): `{message.content}`"
                 await me.send(format)
+
+    @staticmethod
+    async def is_owner(ctx):
+        if ctx.author.id in MooseBot.owners:
+            return True
+        else:
+            await ctx.send("You do not have permissions to use this command!")
+
+    @staticmethod
+    async def is_admin(ctx):
+        perm = ctx.author.permissions_in(ctx.channel)
+        if perm.administrator or await MooseBot.is_owner(ctx):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    async def is_mod(ctx):
+        perm = ctx.author.permissions_in(ctx.channel)
+        if perm.kick_members or perm.ban_members or await MooseBot.is_admin(ctx):
+            return True
+        else:
+            return False

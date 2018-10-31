@@ -30,29 +30,6 @@ def load(path):
             return data
 
 
-async def is_admin(ctx):
-    perm = ctx.author.permissions_in(ctx.channel)
-    if perm.administrator or await is_owner(ctx):
-        return True
-    else:
-        return False
-
-
-async def is_owner(ctx):
-    if ctx.author.id == 192519529417408512:
-        return True
-    else:
-        await ctx.send("You do not have permissions to use this command!")
-
-
-async def is_mod(ctx):
-    perm = ctx.author.permissions_in(ctx.channel)
-    if perm.kick_members or perm.ban_members or await is_admin(ctx):
-        return True
-    else:
-        return False
-
-
 def get_image(url):
     response = requests.get(url, stream=True)
     return response.raw
