@@ -111,10 +111,6 @@ class MooseBot:
                     self.mobile(ctx),
                     self.what(ctx)
                 )
-                if message.guild.id == 377218458108035084:
-                    if message.content.startswith('ᵘʷᵘ oh frick ᵘʷᵘ ᵘʷᵘ') or message.content.endswith('ᵘʷᵘ ᵘʷᵘ sorry.'):
-                        await message.delete()
-
             await client.process_commands(message)
 
         @client.event
@@ -196,7 +192,7 @@ class MooseBot:
             if channel is None:
                 return
             if len(message.attachments) >= 1:
-                path = "database/attachments/"
+                path = "database/attachments"
                 for i in message.attachments:
                     url = i.url
                     data = get_image(url)

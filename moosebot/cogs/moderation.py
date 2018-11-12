@@ -188,6 +188,7 @@ class Moderation:
             await ctx.send(f"Member `{member}` not found, try mentioning them to be certain.")
 
     @commands.command()
+    @commands.check(MooseBot.is_owner)
     async def purge(self, ctx, where=None, limit=None):
         limit = limit or None
         where = where or None
@@ -199,9 +200,12 @@ class Moderation:
         else:
             limit = int(limit) + 1
         if where.lower() == 'channel':
-            async for i in ctx.channel.history(limit=limit):
-                if i.author == ctx.author:
-                    await i.delete()
+            deleted = 0
+            while deleted < limit:
+                async for i in ctx.channel.history(limit=None):
+                    if i.author == ctx.author:
+                        await i.delete()
+                        deleted += 1
         elif where.lower() == 'server':
             await ctx.send("working on it.")
         else:
