@@ -18,8 +18,7 @@ async def on_command_error(ctx, error):
     elif isinstance(error, CommandInvokeError):
         await ctx.send(error.original)
     else:
-        await ctx.send(f"some error lol {type(error)}")
-
+        await ctx.send(f"some error lol {type(error.original)}")
 
 modules = [
     Misc(moose),

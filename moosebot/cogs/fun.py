@@ -15,9 +15,14 @@ class Fun:
         self.bot = bot
 
     @commands.command(help="Clap👏to👏your👏text. \n`>clap text`")
-    async def clap(self, ctx, *args):
-        clapped = '👏'.join(args)
-        await ctx.send(clapped)
+    async def clap(self, ctx, *, args=None):
+        args = args or None
+
+        if args is None:
+            await ctx.send("Please👏provide👏a👏message👏to👏be👏clappified.")
+        else:
+            clapped = '👏'.join(args.split())
+            await ctx.send(clapped)
 
     @commands.command(help="Returns a random spicy maymay.")
     async def meme(self, ctx):

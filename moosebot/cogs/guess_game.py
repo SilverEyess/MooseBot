@@ -68,9 +68,9 @@ class GuessGame:
         if amount is None:
             amount = 1
         elif amount == 'all':
-            amount = int(self.db.money.find_one({'userid': user})['balance'])
+            amount = int((await self.db.money.find_one({'userid': user}))['balance'])
         if amount == 'all':
-            amount = self.db.money.find_one({'userid': user})['balance']
+            amount = (await self.db.money.find_one({'userid': user}))['balance']
         if amount <= 0:
             await ctx.send("You need to bet at least 1Ᵽ to play.")
 
@@ -100,12 +100,12 @@ class GuessGame:
                 elif player in beats[computer]:
                     await ctx.send(
                         f"**You win!** Moosebot chose: {computer.title()}, and you chose: {player.title()}.You won {amount}Ᵽ.")
-                    self.db.money.update({'userid': str(ctx.author.id)}, {'$inc': {'balance': amount}})
+                    await self.db.money.update_one({'userid': str(ctx.author.id)}, {'$inc': {'balance': amount}})
                     await self.gameover(ctx, play)
                 else:
                     await ctx.send(
                         f"**You lose!** Moosebot chose: {computer.title()}, and you chose: {player.title()}.You lost {amount}Ᵽ.")
-                    self.db.money.update({'userid': str(ctx.author.id)}, {'$inc': {'balance': -amount}})
+                    await self.db.money.update_one({'userid': str(ctx.author.id)}, {'$inc': {'balance': -amount}})
                     await self.gameover(ctx, play)
             else:
                 await play()

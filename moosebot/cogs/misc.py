@@ -13,7 +13,7 @@ class Misc:
     @commands.command()
     async def calc(self, ctx, *, args):
         dec = decimal.Context()
-        dec.prec = 40
+        dec.prec = 100
 
         def convert(f):
             d1 = dec.create_decimal(repr(f))
