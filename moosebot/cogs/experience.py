@@ -182,6 +182,18 @@ class Experience:
                 await self.db.xp.update_one({'userid': str(user.id)}, {'$inc': {'experience': -int(args)}})
                 await ctx.send(f"{args} xp successfully taken from {user.display_name}.")
 
+    @commands.command()
+    @commands.check(MooseBot.is_owner)
+    async def fixxp(self):
+        xpdb = self.db.xp
+        lvldb = self.db.lvl
+        db = self.db.money
+
+        for server in xpdb:
+            for user in server:
+                db.update_one({'userid': [user]}, )
+
+
     async def grantxp(self, message):
         self.lock.acquire()
         xpamount = random.randint(1, 10)
