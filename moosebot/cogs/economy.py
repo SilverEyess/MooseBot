@@ -4,6 +4,7 @@ import random
 
 import discord
 from discord.ext import commands
+from threading import Lock
 
 from moosebot import MooseBot, converters
 
@@ -11,6 +12,7 @@ from moosebot import MooseBot, converters
 class Economy:
 
     def __init__(self, bot: MooseBot):
+        self.lock = Lock()
         self.bot = bot
         self.db = self.bot.database.db
 
@@ -23,45 +25,49 @@ class Economy:
             await asyncio.gather(self.pickchance(message))
 
     async def pickchance(self, message):
+
         chance = random.randint(1, 1000)
         amount = random.randint(50, 250)
-        if chance < 25 and message.content.lower() != 'dab':
-            gen_message = await message.channel.send(
-                f"`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds")
+        if message.channel.topic is not None and message.channel.topic.startswith(">count"):
+            return
+        else:
+            if chance < 25 and message.content.lower() != 'dab':
+                gen_message = await message.channel.send(
+                    f"`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds")
 
-            def check(m):
-                return m.content.lower() == 'dab' and m.channel == message.channel
+                def check(m):
+                    return m.content.lower() == 'dab' and m.channel == message.channel
 
-            try:
-                msg = await self.bot.client.wait_for('message', check=check, timeout=60)
                 try:
-                    if 'Dab Multiplier' not in \
+                    msg = await self.bot.client.wait_for('message', check=check, timeout=60)
+                    try:
+                        if 'Dab Multiplier' not in \
+                                (await self.db.money.find_one({'userid': str(message.author.id)}))['inventory']:
+                            grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
+                            await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
+                        elif 'Dab Multiplier' in \
                             (await self.db.money.find_one({'userid': str(message.author.id)}))['inventory']:
+
+                            grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders." \
+                                    f"They had a Dab Multiplier so they got double Ᵽ." \
+                                    f"`{amount * 2}Ᵽ` awarded to them."
+
+                            await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount * 2}},
+                                                       True)
+                    except KeyError:
                         grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
                         await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
-                    elif 'Dab Multiplier' in \
-                        (await self.db.money.find_one({'userid': str(message.author.id)}))['inventory']:
+                    except TypeError:
+                        grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
+                        await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
+                    await message.channel.send(grant)
+                    await gen_message.edit(
+                        content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
 
-                        grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders." \
-                                f"They had a Dab Multiplier so they got double Ᵽ." \
-                                f"`{amount * 2}Ᵽ` awarded to them."
-
-                        await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount * 2}},
-                                                   True)
-                except KeyError:
-                    grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
-                    await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
-                except TypeError:
-                    grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
-                    await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
-                await message.channel.send(grant)
-                await gen_message.edit(
-                    content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
-
-            except asyncio.TimeoutError:
-                await message.channel.send("You took to long to dab the Ᵽ.")
-                await gen_message.edit(
-                    content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                except asyncio.TimeoutError:
+                    await message.channel.send("You took to long to dab the Ᵽ.")
+                    await gen_message.edit(
+                        content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
 
     @commands.command(aliases=['bal'], help='Check your balance.')
     async def balance(self, ctx, user: converters.FullMember = None):
@@ -375,21 +381,23 @@ class Economy:
                 await ctx.send('You need to bet at least 1Ᵽ.')
             elif (await self.db.money.find_one({'userid': user}))['balance'] is None or (await self.db.money.find_one({'userid': user}))['balance'] < amount:
                 await ctx.send('You do not have enough Ᵽ to bet that amount.')
-            await self.db.money.update_one({'userid': user}, {'$inc': {'balance': -amount}})
-            if chance == 100:
-                await ctx.send(f'You rolled `100` and won `{amount*10}Ᵽ` for rolling 100.')
-                win = amount * 10
-                await self.db.money.update_one({'userid': user}, {'$inc': {'balance': win}})
-            elif chance >= 90:
-                await ctx.send(f'You rolled `{chance}` and won `{amount*4}Ᵽ` for rolling 90+.')
-                win = amount * 4
-                await self.db.money.update_one({'userid': user}, {'$inc': {'balance': win}})
-            elif chance >= 66:
-                await ctx.send(f'You rolled `{chance}` and won `{amount*2}Ᵽ` for rolling 66+.')
-                win = amount * 2
-                await self.db.money.update_one({'userid': user}, {'$inc': {'balance': win}})
+                return
             else:
-                await ctx.send(f'You rolled `{chance}`. Better luck next time...')
+                await self.db.money.update_one({'userid': user}, {'$inc': {'balance': -amount}})
+                if chance == 100:
+                    await ctx.send(f'You rolled `100` and won `{amount*10}Ᵽ` for rolling 100.')
+                    win = amount * 10
+                    await self.db.money.update_one({'userid': user}, {'$inc': {'balance': win}})
+                elif chance >= 90:
+                    await ctx.send(f'You rolled `{chance}` and won `{amount*4}Ᵽ` for rolling 90+.')
+                    win = amount * 4
+                    await self.db.money.update_one({'userid': user}, {'$inc': {'balance': win}})
+                elif chance >= 66:
+                    await ctx.send(f'You rolled `{chance}` and won `{amount*2}Ᵽ` for rolling 66+.')
+                    win = amount * 2
+                    await self.db.money.update_one({'userid': user}, {'$inc': {'balance': win}})
+                else:
+                    await ctx.send(f'You rolled `{chance}`. Better luck next time...')
         except ValueError:
             await ctx.send('You need to bet a number... Not whatever that was.')
 
@@ -492,3 +500,37 @@ class Economy:
                     await self.gameover(ctx, play)
 
             await play()
+
+    @commands.command()
+    @commands.check(MooseBot.is_owner)
+    async def event(self, ctx, amount=None, time: int=None):
+        amount = amount or None
+        time = time or 300
+        if time < 0:
+            await ctx.send("You need to specify a time that is more than 0 seconds.")
+            return
+        if amount is None:
+            await ctx.send("You need to specify an amount for the event.")
+        else:
+            list = [445936072288108544]
+            seconds = int(time % 60)
+            minutes = int((time % 3600) // 60)
+            hours = int(time // 3600)
+            embed = discord.Embed(title="Reaction event.", description=f"React with a 🐛 to be awarded `{amount}Ᵽ`", colour=0xb18dff)
+            embed.set_footer(text=f"This event will run for{f' {hours} hours' if hours != 0 else ''}{f',' if hours != 0 and minutes != 0 else ''}{f' {minutes} minutes' if minutes != 0 else ''}{f' and' if minutes != 0 and seconds != 0 else ''}{f' {seconds} seconds' if seconds != 0 else ''} from when it was created.")
+            msg = await ctx.send(embed=embed)
+            await msg.add_reaction("🐛")
+            await ctx.message.delete()
+            while True:
+
+                def check(reaction, user):
+                    return user.id not in list and str(reaction.emoji) == '🐛'
+
+                try:
+                    reaction, user = await self.bot.client.wait_for('reaction_add', timeout=int(time), check=check)
+                    list.append(user.id)
+                    await self.db.money.update_one({'userid': str(user.id)}, {'$inc': {'balance': int(amount)}}, True)
+
+                except asyncio.TimeoutError:
+                    await msg.delete()
+                    break

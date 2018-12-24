@@ -1,10 +1,12 @@
 import random
 
+import asyncio
 import discord
 import googletrans
 import praw
 from discord.ext import commands
 from googletrans import Translator
+from threading import Lock
 
 from moosebot import MooseBot, converters
 
@@ -13,6 +15,30 @@ class Fun:
 
     def __init__(self, bot: MooseBot):
         self.bot = bot
+        self.lock = Lock()
+        self.respecton = 0
+
+    async def on_message(self, message):
+        if message.content == "+f" and self.respecton == 0:
+            await asyncio.gather(self.respects(message))
+
+    async def respects(self, message):
+        self.respecton = 1
+        resp = await message.channel.send(f"{message.author.mention} has paid respects. Type `+f` to also pay respect.")
+        #await resp.add_reaction(emoji="one")
+        flist = [message.author.id]
+
+        while True:
+
+            def check(m):
+                return m.channel == message.channel and m.author.id not in flist and m.content == "+f"
+            try:
+                msg = await self.bot.client.wait_for('message', check=check, timeout=10)
+                flist.append(msg.author.id)
+            except asyncio.TimeoutError:
+                break
+        await message.channel.send(f"`{len(flist)}` people paid respects.")
+        self.respecton = 0
 
     @commands.command(help="Clap👏to👏your👏text. \n`>clap text`")
     async def clap(self, ctx, *, args=None):
@@ -23,6 +49,81 @@ class Fun:
         else:
             clapped = '👏'.join(args.split())
             await ctx.send(clapped)
+
+    @commands.command()
+    async def howlong(self, ctx, *, user: converters.FullMember = None):
+        letters = {"a": 1.1,
+                   "b": 1.3,
+                   "c": 1.1,
+                   "d": 1.2,
+                   "e": 1,
+                   "f": 1.4,
+                   "g": 1.7,
+                   "h": 1.3,
+                   "i": 1.1,
+                   "j": 2.3,
+                   "k": 2,
+                   "l": 1.3,
+                   "m": 1.2,
+                   "n": 0.9,
+                   "o": 1,
+                   "p": 0.7,
+                   "q": 2.8,
+                   "r": 0.8,
+                   "s": 0.9,
+                   "t": 0.9,
+                   "u": 1.3,
+                   "v": 1.4,
+                   "w": 1.3,
+                   "x": 2.6,
+                   "y": 1.4,
+                   "z": 2.5,
+                   "0": 0.5,
+                   "1": 1,
+                   "2": 0.5,
+                   "3": 1.2,
+                   "4": 1.1,
+                   "5": 0.8,
+                   "6": 2,
+                   "7": 0.3,
+                   "8": 1.3,
+                   "9": 1.4,
+                   "Τ": 9.6,
+                   "ρ": 3.4,
+                   "ε": 2.7,
+                   "γ": 4,
+                   "α": 1,
+                   "σ": 1.2,
+                   "τ": 1.3
+                   }
+        user = user or None
+        if user is None:
+            uid = ctx.author.id
+            un = ctx.author
+        else:
+            if not isinstance(user, discord.Member):
+                await ctx.send("You need to mention a user or give no input.")
+                return
+            else:
+                uid = user.id
+                un = user
+
+        def calc(unit):
+            size = 0
+            for i in unit:
+                if i in letters:
+                    size += float(letters[i])
+            size = f"{size:.1f}"
+            return size
+        length = calc(un.name)
+        if length == "0.0":
+            length = calc(str(un.display_name))
+            if length == "0.0":
+                length = calc(str(un.id))
+        if uid == 192519529417408512:
+            await ctx.send(f"{'You have' if user is None else f'{user.display_name} has'} an optimally lengthed wiener at {length}cm long.")
+        else:
+            await ctx.send(f"{'You have' if user is None else f'{user.display_name} has'} a {length}cm long wiener.")
 
     @commands.command(help="Returns a random spicy maymay.")
     async def meme(self, ctx):

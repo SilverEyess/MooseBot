@@ -188,6 +188,7 @@ class MooseBot:
         if message.author.id == self.client.user.id:
             return None
         else:
+            channel = message.guild.get_channel(449821022846320641)
             if len(message.attachments) >= 1:
                 path = "database/attachments"
                 for i in message.attachments:
