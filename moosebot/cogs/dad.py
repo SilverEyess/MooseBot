@@ -74,10 +74,10 @@ class Dad:
             elif lower.startswith(im + " tler did nothing wrong"):
                 await ctx.send("You're not funny {}".format(ctx.author.mention))
             elif lower.startswith(im + " mom") or lower.startswith(im + " mum"):
-                if ctx.author.id == 495151300821123072:
+                if ctx.author.id == 536170543859105794:
                     await ctx.send("Hi mum.")
                 else:
-                    await ctx.send("No <@495151300821123072> is mum.")
+                    await ctx.send("No <@536170543859105794> is mum.")
             elif lower.startswith(im + " "):
                 try:
                     users_dad = authname + "'s dad"
