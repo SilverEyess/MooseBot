@@ -31,7 +31,7 @@ class Economy:
         if message.channel.topic is not None and message.channel.topic.startswith(">count"):
             return
         else:
-            if chance < 25 and message.content.lower() != 'dab':
+            if chance < 10 and message.content.lower() != 'dab':
                 gen_message = await message.channel.send(
                     f"`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds")
 
@@ -303,8 +303,10 @@ class Economy:
         amount = amount or None
         if amount is None:
             amount = 2
-        elif amount == 'all':
+        elif not isinstance(amount, int) and amount.lower() == 'all':
             amount = int((await self.db.money.find_one({'userid': user}))['balance'])
+        elif not isinstance(amount, int) and amount.lower() == 'half':
+            amount = (int((await self.db.money.find_one({'userid': user}))['balance']) / 2)
         try:
             amount = int(amount)
             if int(amount) <= 0:

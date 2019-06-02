@@ -229,3 +229,9 @@ class Experience:
                                                  True)
         finally:
             self.lock.release()
+
+    # async def test(self, ctx):
+    #     for i in self.db.lvl:
+    #         for x in i:
+    #             if x != 'serverid':
+    #                 

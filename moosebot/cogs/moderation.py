@@ -172,21 +172,6 @@ class Moderation:
         msg = f"It took {pingtime:.02f}ms to ping the Moose."
         await x.edit(content=msg)
 
-    @commands.command(help="Get's a users avatar. \n`>avatar user`")
-    async def avatar(self, ctx, *, member: converters.FullMember = None):
-        member = member or ctx.author
-        if member is not None:
-            if isinstance(member, discord.Member):
-                path = "database/avatar/"
-                avatar = member.avatar_url_as(format='png')
-                await ctx.send(avatar)
-                data = get_image(avatar)
-                save_image(path, member.display_name, data)
-            else:
-                await ctx.send(f"Member `{member}` not found, try mentioning them to be certain.")
-        else:
-            await ctx.send(f"Member `{member}` not found, try mentioning them to be certain.")
-
     @commands.command()
     @commands.check(MooseBot.is_owner)
     async def purge(self, ctx, where=None, limit=None):

@@ -55,7 +55,7 @@ class Info:
         description = f"{isowner}▫**User ID**: `{member.id}`\n▫**Join Date**: {member.joined_at.strftime('%d/%m/%Y')}\n" \
                       f"▫**Account Created**: {member.created_at.strftime('%d/%m/%Y')}\n▫**Account Age**: {age.days} days" \
                       f"\n▫**Voice Channel**: {member.voice.channel.name if member.voice else 'None'}\n▫**Playing Now**: " \
-                      f"{member.game}\n▫**Colour**: {str(member.colour).upper()}\n▫**Status**: {str(member.status).title()}"
+                      f"{member.activity}\n▫**Colour**: {str(member.colour).upper()}\n▫**Status**: {str(member.status).title()}"
         embed = discord.Embed(title=f"User info for {member}", description=description,
                               colour=0xb18dff if member.colour == discord.Colour(000000) else member.colour)
         if len(member.roles) > 1:
@@ -125,3 +125,18 @@ class Info:
                     await ctx.send("This command has no help text.")
             except AttributeError:
                 await ctx.send(f"Command `{arg}` not found.")
+
+    @commands.command(help="Get's a users avatar. \n`>avatar user`")
+    async def avatar(self, ctx, *, member: converters.FullMember = None):
+        member = member or ctx.author
+        if member is not None:
+            if isinstance(member, discord.Member):
+                path = "database/avatar/"
+                avatar = member.avatar_url
+                await ctx.send(avatar)
+                # data = get_image(avatar)
+                # save_img(path, member.display_name, data)
+            else:
+                await ctx.send(f"Member `{member}` not found, try mentioning them to be certain.")
+        else:
+            await ctx.send(f"Member `{member}` not found, try mentioning them to be certain.")

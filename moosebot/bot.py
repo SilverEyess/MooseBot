@@ -118,7 +118,7 @@ class MooseBot:
             print("Logged in as {}({})".format(client.user.name, client.user.id))
             print("-----------------------------------------")
 
-            await client.change_presence(game=discord.Game(name="Now with XP!"))
+            await client.change_presence(activity=discord.Game(name="Now with XP!"))
 
         @client.event
         async def on_guild_join(guild):
