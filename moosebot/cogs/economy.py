@@ -1,15 +1,16 @@
 import asyncio
 import datetime
 import random
+from threading import Lock
 
 import discord
 from discord.ext import commands
-from threading import Lock
+from discord.ext.commands import Cog
 
 from moosebot import MooseBot, converters
 
 
-class Economy:
+class Economy(Cog):
 
     def __init__(self, bot: MooseBot):
         self.lock = Lock()

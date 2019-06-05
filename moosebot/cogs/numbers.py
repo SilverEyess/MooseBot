@@ -1,10 +1,11 @@
 import requests
 from discord.ext import commands
+from discord.ext.commands import Cog
 
 from moosebot import MooseBot
 
 
-class Numbers:
+class Numbers(Cog):
 
     def __init__(self, bot: MooseBot):
         self.bot = bot

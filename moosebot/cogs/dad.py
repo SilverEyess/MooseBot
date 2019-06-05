@@ -3,11 +3,12 @@ import random
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import Cog
 
 from moosebot import MooseBot, converters
 
 
-class Dad:
+class Dad(Cog):
 
     def __init__(self, bot: MooseBot):
         self.blacklist = [442669193616162826]
