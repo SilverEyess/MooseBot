@@ -3,12 +3,12 @@ import time
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import Cog
 
 from moosebot import MooseBot, converters
-from moosebot.utils import *
 
 
-class Moderation:
+class Moderation(Cog):
 
     def __init__(self, bot: MooseBot):
         self.bot = bot

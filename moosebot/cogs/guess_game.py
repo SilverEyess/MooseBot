@@ -1,11 +1,12 @@
 import random
 
 from discord.ext import commands
+from discord.ext.commands import Cog
 
 from moosebot import MooseBot
 
 
-class GuessGame:
+class GuessGame(Cog):
 
     def __init__(self, bot: MooseBot):
         self.bot = bot

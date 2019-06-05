@@ -1,11 +1,12 @@
 import discord
 import youtube_dl
 from discord.ext import commands
+from discord.ext.commands import Cog
 
 from moosebot import MooseBot
 
 
-class Voice:
+class Voice(Cog):
 
     def __init__(self, bot: MooseBot):
         self.bot = bot
