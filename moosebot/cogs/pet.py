@@ -2,11 +2,12 @@ import datetime
 import random
 
 from discord.ext import commands
+from discord.ext.commands import Cog
 
 from moosebot import MooseBot
 
 
-class Pet:
+class Pet(Cog):
 
     def __init__(self, bot: MooseBot):
         self.bot = bot
