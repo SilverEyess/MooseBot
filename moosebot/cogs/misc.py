@@ -1,13 +1,14 @@
-import decimal
-import discord
 import asyncio
+import decimal
 
+import discord
 from discord.ext import commands
+from discord.ext.commands import Cog
 
 from moosebot import MooseBot
 
 
-class Misc:
+class Misc(Cog):
 
     def __init__(self, bot: MooseBot):
         self.bot = bot

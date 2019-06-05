@@ -1,12 +1,10 @@
-import discord
 # from PIL import ImageFilter, Image
-from discord.ext import commands
+from discord.ext.commands import Cog
 
 from moosebot import MooseBot
-from moosebot.utils import *
 
 
-class Images:
+class Images(Cog):
 
     def __init__(self, bot: MooseBot):
         self.bot = bot

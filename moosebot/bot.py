@@ -1,5 +1,6 @@
 import asyncio
 import random
+import re
 from typing import List, Any
 
 import discord
@@ -234,14 +235,19 @@ class MooseBot:
 
     async def what(self, ctx):
         m = ctx.message.content.lower()
-        whatlist = ["what?", "wat?", "wot?", "scuseme?"]
+        whatlist = ["what", "wat", "wot", "wut", "scuseme"]
         for wat in whatlist:
-            if m == wat:
+            if m.strip(' ?!') == wat:
                 message2 = await ctx.channel.history(before=ctx.message, limit=1).next()
                 if len(message2.embeds) >= 1:
                     await ctx.send("Yeah I'm not sure what they said either.")
                 else:
-                    await ctx.send(f"{message2.author.display_name} said: **{message2.content.upper()}**")
+                    unbolded = re.sub(r"\*\*(.+?)\*\*", r"\1", message2.content)
+                    message = f"{message2.author.display_name} said: **{unbolded.upper()}**"
+                    if len(message) > 2000:
+                        await ctx.send("Yeah I'm not sure what they said either.")
+                    else:
+                        await ctx.send(message)
 
     @staticmethod
     async def is_owner(ctx):

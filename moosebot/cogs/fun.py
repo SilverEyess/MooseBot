@@ -1,17 +1,18 @@
-import random
-
 import asyncio
+import random
+from threading import Lock
+
 import discord
 import googletrans
 import praw
 from discord.ext import commands
+from discord.ext.commands import Cog
 from googletrans import Translator
-from threading import Lock
 
 from moosebot import MooseBot, converters
 
 
-class Fun:
+class Fun(Cog):
 
     def __init__(self, bot: MooseBot):
         self.bot = bot
