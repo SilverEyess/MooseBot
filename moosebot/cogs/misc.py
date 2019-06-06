@@ -31,6 +31,7 @@ class Misc(Cog):
     async def gender(self, ctx):
         await ctx.send("I'm a boy, how could you not tell?")
 
+    @Cog.listener()
     async def on_message(self, message):
         if message.author.id != 445936072288108544:
             await asyncio.gather(self.oreact(message), self.arrowreact(message))

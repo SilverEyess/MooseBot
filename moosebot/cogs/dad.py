@@ -28,6 +28,7 @@ class Dad(Cog):
         else:
             await ctx.send("Please define whether to blacklist the guild or channel.")
 
+    @Cog.listener()
     async def on_message(self, message):
         ctx = await self.bot.client.get_context(message)
         if message.author == self.bot.client.user:
