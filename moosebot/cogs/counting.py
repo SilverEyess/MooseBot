@@ -17,6 +17,7 @@ class Counting(Cog):
         else:
             await ctx.channel.edit(topic=">count | The next message must start with 1")
 
+    @Cog.listener()
     async def on_message(self, ctx):
         if ctx.guild is None:
             return None

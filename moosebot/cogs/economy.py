@@ -17,6 +17,7 @@ class Economy(Cog):
         self.bot = bot
         self.db = self.bot.database.db
 
+    @Cog.listener()
     async def on_message(self, message):
         if message.guild is None:
             return
