@@ -4,17 +4,19 @@ from threading import Lock
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import Cog
 
 from moosebot import MooseBot, converters
 
 
-class Experience:
+class Experience(Cog):
 
     def __init__(self, bot: MooseBot):
         self.lock = Lock()
         self.bot = bot
         self.db = bot.database.db
 
+    @Cog.listener()
     async def on_message(self, message):
         if message.guild is None:
             return
