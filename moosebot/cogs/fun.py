@@ -19,6 +19,7 @@ class Fun(Cog):
         self.lock = Lock()
         self.respecton = 0
 
+    @Cog.listener()
     async def on_message(self, message):
         if message.content == "+f" and self.respecton == 0:
             await asyncio.gather(self.respects(message))
