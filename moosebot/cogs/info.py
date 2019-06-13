@@ -4,7 +4,10 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Cog
 
+import geonamescache
+import pytz
 from moosebot import converters, MooseBot
+
 
 
 class Info(Cog):
@@ -141,3 +144,28 @@ class Info(Cog):
                 await ctx.send(f"Member `{member}` not found, try mentioning them to be certain.")
         else:
             await ctx.send(f"Member `{member}` not found, try mentioning them to be certain.")
+
+    @commands.command(aliases=["ci"], help="Gives information about a city.")
+    async def cityinfo(self, ctx, *, city=None):
+        city = city.title() or None
+        if city is None:
+            await ctx.send("Tell me what city.")
+        else:
+            gc = geonamescache.GeonamesCache()
+            cityinfo = gc.get_cities_by_name(city)
+            try:
+                if len(cityinfo) == 0:
+                    await ctx.send("I can't find this city cus I'm dumb.")
+                else:
+                    for place in cityinfo:
+                        for k in place:
+                            cityinfo = place[k]
+                            tz = pytz.timezone(cityinfo['timezone'])
+                            tzinfo = datetime.datetime.now(tz)
+
+                            description = f"**City Name:** {city.title()}\n **Country Code:**: {cityinfo['countrycode']}\n **Latitude & Longitude:** {cityinfo['latitude']}, {cityinfo['longitude']}" \
+                                f"\n **Population:** ~{cityinfo['population']}\n **Date:** {tzinfo.strftime('%d-%b-%y')}\n **Time:** {tzinfo.strftime('%I:%M:%S %p')} "
+                            embed = discord.Embed(title="City information.",description=description, colour=0xb18dff)
+                            await ctx.send(embed=embed)
+            except Exception:
+                await ctx.send("I can't find this city cus I'm dumb.")

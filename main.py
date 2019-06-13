@@ -8,7 +8,7 @@ with open('database/token.txt') as f:
     token = f.readline()
 
 moose = MooseBot(token)
-admins = ["192519529417408512", "345484068886020108"]
+admins = ["192519529417408512", "536170543859105794"]
 
 
 @moose.client.event
