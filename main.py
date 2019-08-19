@@ -11,14 +11,14 @@ moose = MooseBot(token)
 admins = ["192519529417408512", "536170543859105794"]
 
 
-@moose.client.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandNotFound):
-        print("{} is retarded and '{}' isn't a command.".format(ctx.author.display_name, ctx.message.content))
-    elif isinstance(error, CommandInvokeError):
-        await ctx.send(error.original)
-    else:
-        await ctx.send(f"some error lol {type(error.original)}")
+# @moose.client.event
+# async def on_command_error(ctx, error):
+#     if isinstance(error, commands.CommandNotFound):
+#         print("{} is retarded and '{}' isn't a command.".format(ctx.author.display_name, ctx.message.content))
+#     elif isinstance(error, CommandInvokeError):
+#         await ctx.send(error.original)
+#     else:
+#         await ctx.send(f"some error lol {type(error.original)}")
 
 modules = [
     Misc(moose),
