@@ -12,7 +12,6 @@ class Shop(Cog):
 
     def __init__(self, bot: MooseBot):
         self.bot = bot
-        self.moneypath = "database/economy/money.json"
 
     @commands.command()
     @commands.check(MooseBot.is_owner)

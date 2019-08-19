@@ -50,8 +50,8 @@ class Economy(Cog):
                         elif 'Dab Multiplier' in \
                             (await self.db.money.find_one({'userid': str(message.author.id)}))['inventory']:
 
-                            grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders." \
-                                    f"They had a Dab Multiplier so they got double Ᵽ." \
+                            grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. " \
+                                    f"They had a Dab Multiplier so they got double Ᵽ. " \
                                     f"`{amount * 2}Ᵽ` awarded to them."
 
                             await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount * 2}},

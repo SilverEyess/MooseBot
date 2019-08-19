@@ -38,7 +38,8 @@ modules = [
     Colour(moose),
     Numbers(moose),
     Phone(moose),
-    Images(moose)
+    Images(moose),
+    Fishing(moose)
 ]
 
 moose.add_cogs(modules)

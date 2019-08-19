@@ -15,6 +15,7 @@ from moosebot.cogs.phone import Phone
 from moosebot.cogs.server import Server
 from moosebot.cogs.shop import Shop
 from moosebot.cogs.voice import Voice
+from moosebot.cogs.fishing import Fishing
 
 __all__ = [
     "Info",
@@ -33,5 +34,6 @@ __all__ = [
     "Colour",
     "Numbers",
     "Phone",
-    "Images"
+    "Images",
+    "Fishing"
 ]

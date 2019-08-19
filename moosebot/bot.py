@@ -12,7 +12,7 @@ from moosebot.utils import *
 
 class MooseBot:
     prefix = ">"
-    owners = [192519529417408512, 495151300821123072]
+    owners = [192519529417408512, 609238720532709386]
 
     def __init__(self, token):
         from moosebot import MooseDb
@@ -32,7 +32,7 @@ class MooseBot:
             print("Logged in as {}({})".format(client.user.name, client.user.id))
             print("-----------------------------------------")
 
-            await self.client.change_presence(game=discord.Game(name="Now with XP!"))
+            await client.change_presence(activity=discord.Game(name=">cast a line and catch some fish!"))
 
         @client.event
         async def on_guild_join(guild):
@@ -69,10 +69,10 @@ class MooseBot:
             else:
                 return None
 
-        @client.event
-        async def on_command_error(ctx, error):
-            if isinstance(error, commands.CommandNotFound):
-                print("{} is retarded and '{}' isn't a command.".format(ctx.author.display_name, ctx.message.content))
+        # @client.event
+        # async def on_command_error(ctx, error):
+        #     if isinstance(error, commands.CommandNotFound):
+        #         print("{} is retarded and '{}' isn't a command.".format(ctx.author.display_name, ctx.message.content))
 
         @client.event
         async def on_member_join(member):
@@ -114,12 +114,6 @@ class MooseBot:
                 )
             await client.process_commands(message)
 
-        @client.event
-        async def on_ready():
-            print("Logged in as {}({})".format(client.user.name, client.user.id))
-            print("-----------------------------------------")
-
-            await client.change_presence(activity=discord.Game(name="Now with XP!"))
 
         @client.event
         async def on_guild_join(guild):
