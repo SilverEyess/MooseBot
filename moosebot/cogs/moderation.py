@@ -101,7 +101,7 @@ class Moderation(Cog):
     async def botgame(self, ctx, *args):
         game_name = ' '.join(args)
         game = discord.Game(name=game_name)
-        if await self.bot.client.change_presence(game=game):
+        if await self.bot.client.change_presence(activity=game):
             await ctx.message.delete()
 
     @commands.command(help="Kicks user. \n`>kick user`")
