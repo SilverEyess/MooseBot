@@ -12,6 +12,7 @@ class Moderation(Cog):
 
     def __init__(self, bot: MooseBot):
         self.bot = bot
+        self.db = self.bot.database.db
 
     @commands.command(aliases=['m2', 'move'], help='Moves a member to another channel \n`>moveto user channel`')
     @commands.check(MooseBot.is_admin)
@@ -95,6 +96,25 @@ class Moderation(Cog):
                     await member.edit(nick=None)
                 except discord.Forbidden:
                     await ctx.send("No permissions to change this users nickname.")
+
+    @commands.command()
+    @commands.check(MooseBot.is_admin)
+    async def setwelcomechannel(self, ctx):
+        serverid = str(ctx.guild.id)
+        channel = str(ctx.message.channel.id)
+        server = await self.db.server.find_one({'serverid': serverid})
+        if server is None:
+            await self.db.server.update_one({'serverid': serverid}, {'$set': {'welcomechannel': channel}})
+            await ctx.send("New welcome channel set.")
+        elif 'welcomechannel' not in server:
+            await self.db.server.update_one({'serverid': serverid}, {'$set': {'welcomechannel': channel}})
+            await ctx.send("New welcome channel set.")
+        elif channel == server['welcomechannel']:
+            await ctx.send("This is already your welcome channel.")
+        else:
+            await self.db.server.update_one({'serverid': serverid}, {'$set': {'welcomechannel': channel}})
+            await ctx.send("Welcome channel updated.")
+
 
     @commands.command(help="Change the bots current game. BOT OWNER ONLY.")
     @commands.check(MooseBot.is_owner)
