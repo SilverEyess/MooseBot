@@ -43,12 +43,14 @@ class Economy(Cog):
                 try:
                     msg = await self.bot.client.wait_for('message', check=check, timeout=60)
                     try:
-                        if 'Dab Multiplier' not in \
-                                (await self.db.money.find_one({'userid': str(message.author.id)}))['inventory']:
+                        person = await self.db.money.find_one({'userid': str(message.author.id)})
+                        inventory = person['inventory']
+                        print(person)
+                        print(inventory)
+                        if 'Dab Multiplier' not in inventory:
                             grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
                             await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
-                        elif 'Dab Multiplier' in \
-                            (await self.db.money.find_one({'userid': str(message.author.id)}))['inventory']:
+                        elif 'Dab Multiplier' in inventory:
 
                             grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. " \
                                     f"They had a Dab Multiplier so they got double Ᵽ. " \

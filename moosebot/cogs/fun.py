@@ -84,10 +84,12 @@ class Fun(Cog):
             await message.channel.send(copypasta)
 
     async def swear_jar(self, message):
-        swear_list = ['fuck', 'shit', 'piss', 'cunt', 'bastard', 'dick', 'cock', 'fag', 'hell', 'bussy', 'shart']
+        swear_list = ['fuck', 'shit', 'piss', 'cunt', 'bastard', 'dick', 'cock', 'fag', 'hell', 'bussy', 'shart', 'boy2boy', 'ead', 'spearchucker', 'm2m', 'girl2girl', 'boy 4 boy', 'girl 4 girl']
         message_list = ['Allah is watching.', 'Allah is disappointed.', 'Allah has sacrificed your virgins.', "This is a good extremist Muslim server."]
         serverid = message.guild.id
         jar = await self.db.server.find_one({'serverid': str(serverid)})
+        if jar is None:
+            await self.db.server.update_one({'serverid': str(serverid)}, {'$set': {'swear_jar': 0}}, True)
         for i in swear_list:
             if i in message.content.lower():
                 await self.db.server.update_one({'serverid': str(serverid)}, {'$inc': {'swear_jar': 1}}, True)

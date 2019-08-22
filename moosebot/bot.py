@@ -24,6 +24,7 @@ class MooseBot:
         client = Bot(command_prefix=MooseBot.prefix)
         self.client = client
         self.database = MooseDb()
+        self.db = self.database.db
 
         client.remove_command('help')
 
@@ -76,7 +77,6 @@ class MooseBot:
 
         @client.event
         async def on_member_join(member):
-            channel = client.get_channel(427012525998211072)
             winner = random.choice([i for i in member.guild.members if not i.bot]).mention
             choices = ("Welcome {}!", "{} has joined!", "{} is here to kick ass and chew bubblegum, "
                                                         "and we're all out of ass.", "Prepare yourselves, {} is here.",
@@ -85,19 +85,30 @@ class MooseBot:
                        "Hide the weed, {} is here!", "Party is over... {} showed up.",
                        "I thought {1} was lame, but now that {0} is here, I'm not sure.")
 
-            if member.guild.id == 427010987334434816:
-                await channel.send(random.choice(choices).format(member.mention, winner))
+            server = await MooseDb().db.server.find_one({'serverid': str(member.guild.id)})
+            if server is None:
+                await MooseDb().db.server.update_one({'serverid': str(member.guild.id)})
+            elif 'welcomechannel' in server:
+                welcome = client.get_channel(int(server['welcomechannel']))
+                await welcome.send(random.choice(choices).format(member.mention, winner))
+            else:
+                return
 
         @client.event
         async def on_member_remove(member):
-            channel = client.get_channel(427012525998211072)
             winner = random.choice([i for i in member.guild.members if not i.bot]).mention
             choices = ("{} is outta here.", "{} is gone.", "Cya later {}!", "{} left.", "Adios {}.", "Sayonara {}",
                        "Don't let the door hit you on the way out {}!", "{1} kicked {0} to a whole new server.",
                        "Finally {} is gone.", "It's about time {} left.", "Time to celebrate {} is gone", "Ciao {}!",
                        "auf Wiedersehen {}!", "Bon voyage {}.", "Shalom {}")
-            if member.guild.id == 427010987334434816:
-                await channel.send(random.choice(choices).format(member.mention, winner))
+            server = await MooseDb().db.server.find_one({'serverid': str(member.guild.id)})
+            if server is None:
+                await MooseDb().db.server.update_one({'serverid': str(member.guild.id)})
+            elif 'welcomechannel' in server:
+                welcome = client.get_channel(int(server['welcomechannel']))
+                await welcome.send(random.choice(choices).format(member.mention, winner))
+            else:
+                return
 
         @client.event
         async def on_message(message):
@@ -233,7 +244,9 @@ class MooseBot:
         for wat in whatlist:
             if m.strip(' ?!') == wat:
                 message2 = await ctx.channel.history(before=ctx.message, limit=1).next()
-                if len(message2.embeds) >= 1:
+                if message2.author == ctx.message.author:
+                    await ctx.send("Are you dumb or something?")
+                elif len(message2.embeds) >= 1:
                     await ctx.send("Yeah I'm not sure what they said either.")
                 else:
                     unbolded = re.sub(r"\*\*(.+?)\*\*", r"\1", message2.content)

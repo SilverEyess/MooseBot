@@ -46,7 +46,10 @@ class Misc(Cog):
 
     async def oreact(self, message):
         wordlist = ['o', '🇴', 'bet', 'k', "🇰"]
-        if message.content.lower() in wordlist:
+        OGs = [609238720532709386, 192519529417408512, 292493461268070411, 303280502960291840]
+        if message.author.id in OGs:
+            return
+        elif message.content.lower() in wordlist:
             try:
                 hook = await message.channel.create_webhook(name='ohook', avatar=None)
                 await hook.send(

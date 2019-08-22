@@ -15,11 +15,11 @@ class Fishing(Cog):
         self.db = self.bot.database.db
 
     @commands.command()
-    @commands.check(MooseBot.is_owner)
+    # @commands.check(MooseBot.is_owner)
     @commands.cooldown(1, 300, commands.BucketType.user)
     async def cast(self, ctx):
         fish = ["🐟", "🐠", "🐡"]
-        trophy_fish = ["🎣", "🦍", "👃🏿", "🌰", "👺", "👹", "💩", "🎅", "👅", "🗣", "👌", "👊", "🤙", "🐋", "🐳", "🍄", "🦑", "🦅", "🍆", "🍌", "🍑", "🍒", "🥝", "🕋", "🗿"]
+        trophy_fish = ["🎣", "🦍", "👃🏿", "🌰", "👺", "👹", "💩", "🎅", "👅", "🗣", "👌", "👊", "🤙", "🐋", "🐳", "🍄", "🦑", "🦅", "🍆", "🍌", "🍑", "🍒", "🥝", "🕋", "🗿", "♋"]
         user = str(ctx.author.id)
         trophyroll = random.randint(1, 100000)
         wins = ['69', '6969', '69696']
@@ -67,7 +67,7 @@ class Fishing(Cog):
             weight = random.randint(23001, 30000)
         elif roll <= 100:
             weight = random.randint(30001, 33000)
-        await ctx.send(f"You spent 80Ᵽ and caught a fish weighing {f'{weight/1000}kg.' if weight > 1000 else f'{weight}g.'} {random.choice(fish)}")
+
         try:
             fishtable = await self.db.money.find_one({'userid': user}, {'fish.largestfish'})
             bal = await self.db.money.find_one({'userid': user})
@@ -75,6 +75,7 @@ class Fishing(Cog):
                 await ctx.send('You need at least 80Ᵽ to fish pal.')
                 return
             elif 'fish' not in await self.db.money.find_one({'userid': user}):
+                await ctx.send(f"You spent 80Ᵽ and caught a fish weighing {f'{weight / 1000}kg.' if weight > 1000 else f'{weight}g.'} {random.choice(fish)}")
                 await self.db.money.update_one({'userid': user}, {'$inc': {'fish.totalweight': weight}})
                 await self.db.money.update_one({'userid': user}, {'$set': {'fish.largestfish': weight}})
                 await self.db.money.update_one({'userid': user}, {'$set': {'fish.recentfish': weight}})
@@ -85,6 +86,7 @@ class Fishing(Cog):
                 return
 
             if weight > fishtable['fish']['largestfish']:
+                await ctx.send(f"You spent 80Ᵽ and caught a fish weighing {f'{weight / 1000}kg.' if weight > 1000 else f'{weight}g.'} {random.choice(fish)}")
                 await ctx.send("Wow, that's one big fish! Infact, it's the largest one you've caught! Congratulations!")
                 await self.db.money.update_one({'userid': user}, {'$inc': {'fish.totalweight': weight}})
                 await self.db.money.update_one({'userid': user}, {'$set': {'fish.largestfish': weight}})
@@ -94,6 +96,7 @@ class Fishing(Cog):
                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': -80}}, True)
 
             else:
+                await ctx.send(f"You spent 80Ᵽ and caught a fish weighing {f'{weight/1000}kg.' if weight > 1000 else f'{weight}g.'} {random.choice(fish)}")
                 await self.db.money.update_one({'userid': user}, {'$inc': {'fish.totalweight': weight}})
                 await self.db.money.update_one({'userid': user}, {'$set': {'fish.recentfish': weight}})
                 await self.db.money.update_one({'userid': user}, {'$inc': {'fish.totalfish': 1}})
@@ -101,6 +104,7 @@ class Fishing(Cog):
                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': -80}}, True)
 
         except Exception:
+            await ctx.send(f"You spent 80Ᵽ and caught a fish weighing {f'{weight/1000}kg.' if weight > 1000 else f'{weight}g.'} {random.choice(fish)}")
             await self.db.money.update_one({'userid': user}, {'$inc': {'fish.totalweight': weight}})
             await self.db.money.update_one({'userid': user}, {'$set': {'fish.largestfish': weight}})
             await self.db.money.update_one({'userid': user}, {'$set': {'fish.recentfish': weight}})
@@ -128,14 +132,22 @@ class Fishing(Cog):
             fishrecent = fishtable['recentfish']
             fishtotal = fishtable['totalfish']
             fishsincesell = fishtable['sincelastsell']
-            trophytable = fishtable['trophies']
-            trophies = ', '.join(map(str, trophytable))
-            description = f"✴**Largest fish:** {f'{fishlargest/1000}kg.' if fishlargest > 1000 else f'{fishlargest}g.'}\n" \
-                f"✴**Total fish weight:** {f'{fishweight/1000}kg.' if fishweight > 1000 else f'{fishweight}g.'}\n" \
-                f"✴**Most recent fish:** {f'{fishrecent/1000}kg.' if fishrecent > 1000 else f'{fishrecent}g.'}\n" \
-                f"✴**Total fish caught:** {fishtotal}\n" \
-                f"✴**Fish caught since last sell:** {fishsincesell}\n" \
-                f"✴**Trophies:**\n {trophies}"
+            if 'trophies' not in fishtable:
+                description = f"✴**Largest fish:** {f'{fishlargest / 1000}kg.' if fishlargest > 1000 else f'{fishlargest}g.'}\n" \
+                    f"✴**Total fish weight:** {f'{fishweight / 1000}kg.' if fishweight > 1000 else f'{fishweight}g.'}\n" \
+                    f"✴**Most recent fish:** {f'{fishrecent / 1000}kg.' if fishrecent > 1000 else f'{fishrecent}g.'}\n" \
+                    f"✴**Total fish caught:** {fishtotal}\n" \
+                    f"✴**Fish caught since last sell:** {fishsincesell}\n"
+
+            else:
+                trophytable = fishtable['trophies']
+                trophies = ', '.join(map(str, trophytable))
+                description = f"✴**Largest fish:** {f'{fishlargest/1000}kg.' if fishlargest > 1000 else f'{fishlargest}g.'}\n" \
+                    f"✴**Total fish weight:** {f'{fishweight/1000}kg.' if fishweight > 1000 else f'{fishweight}g.'}\n" \
+                    f"✴**Most recent fish:** {f'{fishrecent/1000}kg.' if fishrecent > 1000 else f'{fishrecent}g.'}\n" \
+                    f"✴**Total fish caught:** {fishtotal}\n" \
+                    f"✴**Fish caught since last sell:** {fishsincesell}\n" \
+                    f"✴**Trophies:**\n {trophies}"
 
             embed = discord.Embed(title=f"{ctx.author.display_name}'s fishing stats.", description=description, colour=0xb18dff)
             await ctx.send(embed=embed)
