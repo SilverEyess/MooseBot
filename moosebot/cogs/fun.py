@@ -84,29 +84,28 @@ class Fun(Cog):
             await message.channel.send(copypasta)
 
     async def swear_jar(self, message):
-        swear_list = ['fuck', 'shit', 'piss', 'cunt', 'bastard', 'dick', 'cock', 'fag', 'hell', 'bussy', 'shart', 'boy2boy', 'ead', 'spearchucker', 'm2m', 'girl2girl', 'boy 4 boy', 'girl 4 girl']
+        swear_list = ['fuck', 'shit', 'piss', 'cunt', 'bastard', 'dick', 'cock', 'fag', 'hell', 'bussy', 'shart', 'boy2boy', 'ead', 'spearchucker', 'm2m', 'girl2girl', 'boy 4 boy', 'girl 4 girl', 'ass', 'prick', 'whore', 'arse', 'ballsucker']
         message_list = ['Allah is watching.', 'Allah is disappointed.', 'Allah has sacrificed your virgins.', "This is a good extremist Muslim server."]
         serverid = message.guild.id
         jar = await self.db.server.find_one({'serverid': str(serverid)})
+
         if jar is None:
             await self.db.server.update_one({'serverid': str(serverid)}, {'$set': {'swear_jar': 0}}, True)
-        for i in swear_list:
-            if i in message.content.lower():
-                await self.db.server.update_one({'serverid': str(serverid)}, {'$inc': {'swear_jar': 1}}, True)
-                swear_count = jar['swear_jar']
-                if swear_count > 100:
-                    divided = swear_count / 100
-                    if divided.is_integer():
-                        continue
-                    elif str(swear_count).endswith('69'):
-                            await message.channel.send(
-                                f"Swear counter: {swear_count} \n{random.choice(message_list)}")
-                            return
-                    else:
-                        return
+        swears = [i for i in swear_list if i in message.content.lower()]
+        swear_count = jar['swear_jar'] + 1
+        for x in swears:
+            await self.db.server.update_one({'serverid': str(serverid)}, {'$inc': {'swear_jar': 1}}, True)
+
+            if swear_count < 100:
                 await message.channel.send(f"Swear counter: {swear_count} \n{random.choice(message_list)}")
-            else:
-                continue
+
+            elif swear_count > 100:
+                divided = swear_count / 100
+                if divided.is_integer():
+                    await message.channel.send(f"Swear counter: {swear_count} \n{random.choice(message_list)}")
+                elif str(swear_count).endswith('69'):
+                    await message.channel.send(f"Swear counter: {swear_count} \n{random.choice(message_list)}")
+            swear_count += 1
 
     @commands.command()
     async def howlong(self, ctx, *, user: converters.FullMember = None):
