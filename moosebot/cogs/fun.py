@@ -87,15 +87,16 @@ class Fun(Cog):
         swear_list = ['fuck', 'shit', 'piss', 'cunt', 'bastard', 'dick', 'minion', 'cock', 'fag', 'hell', 'bussy', 'shart', 'boy2boy', 'ead', 'spearchucker', 'm2m', 'girl2girl', 'boy 4 boy', 'girl 4 girl', 'ass', 'prick', 'whore', 'arse', 'ballsucker']
         message_list = ['Allah is watching.', 'Allah is disappointed.', 'Allah has sacrificed your virgins.', "This is a good extremist Muslim server."]
         serverid = message.guild.id
-        jar = await self.db.server.find_one({'serverid': str(serverid)})
+        server = await self.db.server.find_one({'serverid': str(serverid)})
 
-        if jar is None:
+        if server is None:
             await self.db.server.update_one({'serverid': str(serverid)}, {'$set': {'swear_jar': 0}}, True)
         swears = [i for i in swear_list if i in message.content.lower()]
-        swear_count = jar['swear_jar'] + 1
+
         for x in swears:
             await self.db.server.update_one({'serverid': str(serverid)}, {'$inc': {'swear_jar': 1}}, True)
-
+            jar = await self.db.server.find_one({'serverid': str(serverid)})
+            swear_count = jar['swear_jar']
             if swear_count < 100:
                 await message.channel.send(f"Swear counter: {swear_count} \n{random.choice(message_list)}")
 
@@ -105,7 +106,6 @@ class Fun(Cog):
                     await message.channel.send(f"Swear counter: {swear_count} \n{random.choice(message_list)}")
                 elif str(swear_count).endswith('69'):
                     await message.channel.send(f"Swear counter: {swear_count} \n{random.choice(message_list)}")
-            swear_count += 1
 
     @commands.command()
     async def howlong(self, ctx, *, user: converters.FullMember = None):
