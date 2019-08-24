@@ -18,35 +18,65 @@ class Fishing(Cog):
     # @commands.check(MooseBot.is_owner)
     @commands.cooldown(1, 300, commands.BucketType.user)
     async def cast(self, ctx):
+        # Define table for fish emojis and trophy fish, more trophy fish can be added but just adding to the table.
         fish = ["🐟", "🐠", "🐡"]
         trophy_fish = ["🎣", "🦍", "👃🏿", "🌰", "👺", "👹", "💩", "🎅", "👅", "🗣", "👌", "👊", "🤙", "🐋", "🐳", "🍄", "🦑", "🦅", "🍆", "🍌", "🍑", "🍒", "🥝", "🕋", "🗿", "♋"]
+
+        # Define user's id as a string for later use.
         user = str(ctx.author.id)
-        trophyroll = random.randint(1, 100000)
-        wins = ['69', '6969', '69696']
+
+        # Roll for chance to get a trophy fish and define winning rolls for trophy fish.
+        trophyroll = random.randint(1, 10000)
+        wins = ['69', '696', '6969', '7483', '1', '2', '1453', '16', '1624', '5428']
 
         try:
 
+            # Checks if rolled a winning number for a trophy fish.
             if trophyroll in wins:
 
+                # Get and define the users entry in database that stores their fish and other profile information.
                 dblist = await self.db.money.find_one({'userid': user}, {'fish.trophies'})
+                # Get list of users trophies (if any) and define it
                 trophies = dblist['fish']['trophies']
+                # Shuffle the list of possible trophy fish to randomise order.
+                random.shuffle(trophy_fish)
+                '''
+                 Compare list of users trophies(if any) against the list of possible trophy fish and get the first 
+                 trophy that the user doesn't have already and store that as 'match'.
+                '''
                 match = next(iter([i for i in trophy_fish if i not in trophies]), None)
+                # If there is no match (user has all trophies) then just award them 2000Ᵽ
                 if match is None:
                     await ctx.send("You caught a trophy fish but it looks like you've already got a full collection. Take 2000Ᵽ anyway.")
                     await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 2000}}, True)
+                    await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'trophiescaught': 1}})
                     return
+
+                # Otherwise, tell them the fish they won, add it to their list of trophies and award them 2000Ᵽ
                 else:
                     await ctx.send(f"Well hot damn wait up a minute there bud. You just caught a trohpy fish! You caught a {match}! That's amazing tiger! Here's 2000Ᵽ")
                     await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 2000}}, True)
                     await self.db.money.update_one({'userid': user}, {'$push': {'fish.trophies': match}})
+                    await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'trophiescaught': 1}})
                     return
 
+            '''
+            Catch the exception if the user does not have the 'trophylist' entry in their database entry and give them 
+            a random trophy and 2000Ᵽ 
+            '''
         except KeyError:
             trophy = random.choice(trophy_fish)
             await ctx.send(f"Well hot damn wait up a minute there bud. You just caught a trohpy fish! You caught a {trophy}! That's amazing tiger! Here's 2000Ᵽ")
             await self.db.money.update_one({'userid': user}, {'$push': {'fish.trophies': trophy}})
             await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 2000}}, True)
+            await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'trophiescaught': 1}})
             return
+
+        '''
+        If the user didn't get a trophy fish, the following code gets ran. Roll a number to determine the size range of
+        the fish they catch and store it. Compare the number and when it matches the criteria, roll for a random weight
+        in the range provided and store it.
+        '''
 
         roll = random.randint(1, 100)
         if roll == 69:
@@ -73,7 +103,7 @@ class Fishing(Cog):
             bal = await self.db.money.find_one({'userid': user})
             if 80 > bal['balance']:
                 await ctx.send('You need at least 80Ᵽ to fish pal.')
-                return
+
             elif 'fish' not in await self.db.money.find_one({'userid': user}):
                 await ctx.send(f"You spent 80Ᵽ and caught a fish weighing {f'{weight / 1000}kg.' if weight > 1000 else f'{weight}g.'} {random.choice(fish)}")
                 await self.db.money.update_one({'userid': user}, {'$inc': {'fish.totalweight': weight}})
@@ -83,7 +113,10 @@ class Fishing(Cog):
                 await self.db.money.update_one({'userid': user}, {'$inc': {'fish.sincelastsell': 1}})
                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': -80}}, True)
                 await ctx.send("Wow, that's one big fish! Infact, it's the largest one you've caught! Congratulations!")
-                return
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'moneyspentoncast': 80}})
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalweightcaught': weight}})
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalworthcaught': int(weight * 0.02)}})
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalfishcaught': 1}})
 
             if weight > fishtable['fish']['largestfish']:
                 await ctx.send(f"You spent 80Ᵽ and caught a fish weighing {f'{weight / 1000}kg.' if weight > 1000 else f'{weight}g.'} {random.choice(fish)}")
@@ -94,6 +127,10 @@ class Fishing(Cog):
                 await self.db.money.update_one({'userid': user}, {'$inc': {'fish.totalfish': 1}})
                 await self.db.money.update_one({'userid': user}, {'$inc': {'fish.sincelastsell': 1}})
                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': -80}}, True)
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'moneyspentoncast': 80}})
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalweightcaught': weight}})
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalworthcaught': int(weight * 0.02)}})
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalfishcaught': 1}})
 
             else:
                 await ctx.send(f"You spent 80Ᵽ and caught a fish weighing {f'{weight/1000}kg.' if weight > 1000 else f'{weight}g.'} {random.choice(fish)}")
@@ -102,6 +139,10 @@ class Fishing(Cog):
                 await self.db.money.update_one({'userid': user}, {'$inc': {'fish.totalfish': 1}})
                 await self.db.money.update_one({'userid': user}, {'$inc': {'fish.sincelastsell': 1}})
                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': -80}}, True)
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'moneyspentoncast': 80}})
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalweightcaught': weight}})
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalworthcaught': int(weight * 0.02)}})
+                await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalfishcaught': 1}})
 
         except Exception:
             await ctx.send(f"You spent 80Ᵽ and caught a fish weighing {f'{weight/1000}kg.' if weight > 1000 else f'{weight}g.'} {random.choice(fish)}")
@@ -111,8 +152,11 @@ class Fishing(Cog):
             await self.db.money.update_one({'userid': user}, {'$inc': {'fish.totalfish': 1}})
             await self.db.money.update_one({'userid': user}, {'$inc': {'fish.sincelastsell': 1}})
             await self.db.money.update_one({'userid': user}, {'$inc': {'balance': -80}}, True)
+            await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'moneyspentoncast': 80}})
+            await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalweightcaught': weight}})
+            await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalworthcaught': int(weight * 0.02)}})
+            await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalfishcaught': 1}})
             await ctx.send("Wow, that's one big fish! Infact, it's the largest one you've caught! Congratulations!")
-            return
 
     @cast.error
     async def cast_error(self, ctx, error):
@@ -158,20 +202,21 @@ class Fishing(Cog):
     @commands.command()
     async def sellfish(self, ctx):
         user = str(ctx.author.id)
-        try:
-            table = await self.db.money.find_one({'userid': user}, {'fish'})
-            fishtable = table['fish']
-            fishweight = fishtable['totalweight']
-            money = int(fishweight * 0.02)
-            if fishweight == 0:
-                await ctx.send("Well golly. Looks like you're all out of fish. Time to get on the water again!")
-            else:
-                await ctx.send(f"You just sold {f'{fishweight/1000}kg ' if fishweight > 1000 else f'{fishweight}g '}of fish for {money}Ᵽ. Come back again!")
-                await self.db.money.update_one({'userid': user}, {'$set': {'fish.totalweight': 0}})
-                await self.db.money.update_one({'userid': user}, {'$inc': {'balance': money}}, True)
-                await self.db.money.update_one({'userid': user}, {'$set': {'fish.sincelastsell': 0}})
-
-        except Exception:
+        # try:
+        table = await self.db.money.find_one({'userid': user}, {'fish'})
+        fishtable = table['fish']
+        fishweight = fishtable['totalweight']
+        money = int(fishweight * 0.02)
+        if fishweight == 0:
             await ctx.send("Well golly. Looks like you're all out of fish. Time to get on the water again!")
+        else:
+            await ctx.send(f"You just sold {f'{fishweight/1000}kg ' if fishweight > 1000 else f'{fishweight}g '}of fish for {money}Ᵽ. Come back again!")
+            await self.db.money.update_one({'userid': user}, {'$set': {'fish.totalweight': 0}})
+            await self.db.money.update_one({'userid': user}, {'$inc': {'balance': money}}, True)
+            await self.db.money.update_one({'userid': user}, {'$set': {'fish.sincelastsell': 0}})
+            await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'moneyfromfishsells': money}})
+
+        # except Exception:
+        #     await ctx.send("Well golly. Looks like you're all out of fish. Time to get on the water again!")
 
 
