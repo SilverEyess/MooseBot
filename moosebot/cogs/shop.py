@@ -5,9 +5,10 @@ import pymongo
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-from moosebot import MooseBot
+from moosebot import MooseBot, cog_group
 
 
+@cog_group("Economy")
 class Shop(Cog):
 
     def __init__(self, bot: MooseBot):
