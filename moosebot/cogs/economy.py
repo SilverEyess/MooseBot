@@ -44,34 +44,46 @@ class Economy(Cog):
                     msg = await self.bot.client.wait_for('message', check=check, timeout=60)
                     try:
                         person = await self.db.money.find_one({'userid': str(message.author.id)})
-                        inventory = person['inventory']
                         print(person)
-                        print(inventory)
-                        if 'Dab Multiplier' not in inventory:
+                        if 'inventory' not in person:
+                            print('no inventory')
                             grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
                             await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
-                        elif 'Dab Multiplier' in inventory:
+                            await message.channel.send(grant)
+                            await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                            return
+                        else:
+                            inventory = person['inventory']
+                            print(person)
+                            print(inventory)
+                            if 'Dab Multiplier' not in inventory:
+                                print('no multiplier')
+                                grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
+                                await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
+                            elif 'Dab Multiplier' in inventory:
+                                print('got a multiplier')
 
-                            grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. " \
-                                    f"They had a Dab Multiplier so they got double Ᵽ. " \
-                                    f"`{amount * 2}Ᵽ` awarded to them."
+                                grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. " \
+                                        f"They had a Dab Multiplier so they got double Ᵽ. " \
+                                        f"`{amount * 2}Ᵽ` awarded to them."
 
-                            await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount * 2}},
-                                                       True)
+                                await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount * 2}},
+                                                           True)
+
                     except KeyError:
+                        print('keyerror')
                         grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
                         await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
                     except TypeError:
+                        print('typeerror')
                         grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
                         await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
                     await message.channel.send(grant)
-                    await gen_message.edit(
-                        content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                    await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
 
                 except asyncio.TimeoutError:
                     await message.channel.send("You took to long to dab the Ᵽ.")
-                    await gen_message.edit(
-                        content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                    await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
 
     @commands.command(aliases=['bal'], help='Check your balance.')
     async def balance(self, ctx, user: converters.FullMember = None):
@@ -417,7 +429,7 @@ class Economy(Cog):
             amount = 1
         elif amount == 'all':
             amount = int((await self.db.money.find_one({'userid': user}))['balance'])
-        sides = ['t', 'h', 'tail', 'head']
+        sides = ['t', 'h', 'tail', 'head', 'heads', 'tails']
         choices = ['heads', 'tails']
 
         if side is None or side.lower() not in sides:
