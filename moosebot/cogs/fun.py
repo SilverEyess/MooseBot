@@ -88,6 +88,8 @@ class Fun(Cog):
         message_list = ['Allah is watching.', 'Allah is disappointed.', 'Allah has sacrificed your virgins.', "This is a good extremist Muslim server."]
         serverid = message.guild.id
         server = await self.db.server.find_one({'serverid': str(serverid)})
+        if message.guild is None:
+            return
 
         if server is None:
             await self.db.server.update_one({'serverid': str(serverid)}, {'$set': {'swear_jar': 0}}, True)
