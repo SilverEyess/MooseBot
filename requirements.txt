@@ -3,7 +3,7 @@ async-timeout==3.0.1
 attrs==19.1.0
 cffi==1.12.3
 chardet==3.0.4
-discord.py==1.1.1
+discord.py==1.2.3
 idna==2.8
 idna-ssl==1.1.0
 multidict==4.5.2
@@ -18,3 +18,5 @@ motor==2.0.0
 googletrans==2.4.0
 praw==6.2.0
 youtube_dl==2019.5.20
+pytz==2019.2
+geonamescache==1.0.3

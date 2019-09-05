@@ -1,4 +1,5 @@
 import datetime
+from collections import OrderedDict
 
 import discord
 from discord.ext import commands
@@ -9,8 +10,9 @@ import pytz
 from moosebot import converters, MooseBot
 
 
-
 class Info(Cog):
+    from moosebot.cogs import Voice, Experience, Pet
+    ignored_cogs = [Voice, Experience, Pet]
 
     def __init__(self, bot: MooseBot):
         self.bot = bot
@@ -96,25 +98,32 @@ class Info(Cog):
 
     @commands.command(help="This is literally the help command.", aliases=['h'])
     async def help(self, ctx, *, arg: str = None):
+        from moosebot.cog_helper import get_cog_group
+
         if arg is None:
             embed = discord.Embed(title="MooseBot", description="A bot that copies other bots and is also a Moose.",
                                   colour=0xb18dff)
-            embed.add_field(name="Fun Commands",
-                            value="`face` `guess` `8ball` `russian` `phone` `ping` `ship` `dadjoke` "
-                                  "`embarrass` `greek` `letters` `thicc` `choose` `cointoss` `roll` "
-                                  "`reverse` `rps` `urbandictionary` `translate` `square` `meme` "
-                                  "`clap`",
-                            inline=False)
-            embed.add_field(name='Experience', value='`level` `leaderboard`', inline=False)
-            embed.add_field(name='Economy', value='`pay` `steal` `coinflip` `balance` `balancelb`', inline=False)
-            embed.add_field(name="Info Commands",
-                            value="`server` `userinfo` `avatar` `bitcoin` `info` `invite` `emojis` "
-                                  "`gender` `inrole` `feedback`", inline=False)
-            embed.add_field(name="Admin commands", value="`kick` `ban` `clear` `count` `nickname` `moveto`",
-                            inline=False)
+
+            commands = [(get_cog_group(self.bot.client, cog[0]), command)
+                        for cog in [(name, self.bot.client.get_cog(name)) for name in self.bot.client.cogs]
+                        if type(cog[1]) not in Info.ignored_cogs
+                        for command in cog[1].get_commands()]
+
+            groups = OrderedDict()
+
+            for cog, command in commands:
+                if cog in groups:
+                    groups[cog].append(command)
+                else:
+                    groups[cog] = [command]
+
+            for cog, commands in groups.items():
+                embed.add_field(name=cog,
+                                value=" ".join([f"`{c.name}`" for c in commands]),
+                                inline=False)
 
             embed.set_thumbnail(url=ctx.me.avatar_url_as(format='png'))
-            embed.set_footer(text=">help [command] to get help for that command.")
+            embed.set_footer(text=f"{MooseBot.prefix}help [command] to get help for that command.")
             await ctx.send(embed=embed)
         else:
             try:
@@ -164,8 +173,8 @@ class Info(Cog):
                             tzinfo = datetime.datetime.now(tz)
 
                             description = f"**City Name:** {city.title()}\n **Country Code:**: {cityinfo['countrycode']}\n **Latitude & Longitude:** {cityinfo['latitude']}, {cityinfo['longitude']}" \
-                                f"\n **Population:** ~{cityinfo['population']}\n **Date:** {tzinfo.strftime('%d-%b-%y')}\n **Time:** {tzinfo.strftime('%I:%M:%S %p')} "
-                            embed = discord.Embed(title="City information.",description=description, colour=0xb18dff)
+                                          f"\n **Population:** ~{cityinfo['population']}\n **Date:** {tzinfo.strftime('%d-%b-%y')}\n **Time:** {tzinfo.strftime('%I:%M:%S %p')} "
+                            embed = discord.Embed(title="City information.", description=description, colour=0xb18dff)
                             await ctx.send(embed=embed)
             except Exception:
                 await ctx.send("I can't find this city cus I'm dumb.")
