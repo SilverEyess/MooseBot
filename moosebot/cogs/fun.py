@@ -535,7 +535,8 @@ class Fun(Cog):
         await ctx.send(f"💜`{arg1}`\n💜`{arg2}`")
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["eightball", "8", "ball", "8ball"],
+    @commands.command(name="8ball",
+                      aliases=["eightball", "8", "ball"],
                       help="Simple 8ball, ask a yes/no question and I'll tell "
                            "you the outcome. \n`>8ball question`")
     async def eight_ball(self, ctx):

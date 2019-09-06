@@ -5,9 +5,10 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import Cog
 
-from moosebot import MooseBot, converters
+from moosebot import MooseBot, converters, cog_group
 
 
+@cog_group("Economy")
 class Fishing(Cog):
 
     def __init__(self, bot: MooseBot):

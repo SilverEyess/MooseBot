@@ -5,7 +5,7 @@ from moosebot import MooseBot
 from moosebot.cogs import *
 
 with open('database/token.txt') as f:
-    token = f.readline()
+    token = f.readline().strip()
 
 moose = MooseBot(token)
 admins = ["192519529417408512", "536170543859105794"]

@@ -6,7 +6,6 @@ from moosebot.cogs.experience import Experience
 from moosebot.cogs.fun import Fun
 from moosebot.cogs.guess_game import GuessGame
 from moosebot.cogs.images import Images
-from moosebot.cogs.info import Info
 from moosebot.cogs.misc import Misc
 from moosebot.cogs.moderation import Moderation
 from moosebot.cogs.numbers import Numbers
@@ -16,6 +15,9 @@ from moosebot.cogs.server import Server
 from moosebot.cogs.shop import Shop
 from moosebot.cogs.voice import Voice
 from moosebot.cogs.fishing import Fishing
+
+# Import this last so other cog types are importable for help purposes
+from moosebot.cogs.info import Info
 
 __all__ = [
     "Info",
