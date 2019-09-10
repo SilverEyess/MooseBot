@@ -41,13 +41,29 @@ class Dad(Cog):
             await self.dad(message, ctx)
 
     async def dad(self, message, ctx):
-        winner = random.choice([i for i in ctx.guild.members if not i.bot]).mention
-        im_list = ("Retarded", "A sissy", "Boring <:sleeping:447382065474699265>",
+        members = [m for m in ctx.guild.members if not m.bot and message.author.id != m.id]
+        # Avoid error if there are no other users. If this happens, use MooseBot himself.
+        winner = random.choice(members) if members else self.bot.client.user
+        winner_mention = winner.mention
+
+        im_list = ["Retarded", "A sissy", "Boring :sleeping:", "Lost", "Always confused", "Unemployed", "Spamming",
                    "A NEET", "A drongo", "Regretting my life decisions that have brought me to this point",
-                   "A very nice person", "A Weeb", "Abzy", "A heavy main", "A cunt", "A failure",
-                   "Actually retarded", winner, f"{winner}'s partner in crime", f"{winner}'s secret admirer",
-                   "About to get banned in a minute", "A thot", "A hoe", "A dumbass", "An ass", "Despacito", "Mexico",
-                   "A fan of Muse")
+                   "A very nice person", "A weeb", "Abzy", "A Heavy main", "A cunt", "A failure", "Very talented"
+                   "Actually retarded", "About to get banned in a minute", "A thot", "A hoe", "A dumbass", "An ass",
+                   "Despacito", "Mexico", "A fan of Muse", "SOOOO random!!!! <--- me bein random again ^_^ hehe",
+                   "12 years old", "A rat", "A boomer", "Kinda hot :flushed:", "Depressed", "Bree", "A Mac user",
+                   "Really cool", "A gamer", "A brony", "Australian", "Embarrassed that I'm rich", "A K-pop fan",
+                   "Very intelligent", "Old", "Unattractive", "Short", "A war criminal", "The third wheel",
+                   "Perfect :heart_eyes:", "A virgin", "Literally a baby :baby:", "Basically monky :gorilla:", "Lazy",
+
+
+                   winner_mention, f"{winner_mention}'s partner in crime", f"{winner_mention}'s secret admirer"]
+
+        other_winners = [m for m in members if m != winner]
+        if other_winners:
+            winner2_mention = random.choice(other_winners).mention
+            im_list.append(f"Cheating on {winner_mention} with {winner2_mention}")
+
         auth = message.author.id
         authname = ctx.author.display_name
         imlist = ["i'm", "im", "i am", "i m", "i’m"]
@@ -79,7 +95,7 @@ class Dad(Cog):
                 if ctx.author.id == 609238720532709386:
                     await ctx.send("Hi mum.")
                 else:
-                    await ctx.send("No <@536170543859105794> is mum.")
+                    await ctx.send("No <@609238720532709386> is mum.")
             elif lower.startswith(im + " "):
                 try:
                     users_dad = authname + "'s dad"
