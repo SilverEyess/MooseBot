@@ -14,7 +14,9 @@ class Moderation(Cog):
         self.bot = bot
         self.db = self.bot.database.db
 
-    @commands.command(aliases=['m2', 'move'], help='Moves a member to another channel \n`>moveto user channel`')
+    @commands.command(aliases=['m2', 'move'],
+                      help='Moves a member to another channel \n`>moveto user channel`',
+                      hidden=True)
     @commands.check(MooseBot.is_admin)
     async def moveto(self, ctx, user: converters.FullMember = None, *, args: converters.VoiceChannel = None):
         user = user or None
@@ -38,7 +40,7 @@ class Moderation(Cog):
             await user.move_to(args)
             await ctx.message.delete()
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.check(MooseBot.is_admin)
     async def roleme(self, ctx, arg):
         for i in ctx.guild.roles:
@@ -115,7 +117,6 @@ class Moderation(Cog):
             await self.db.server.update_one({'serverid': serverid}, {'$set': {'welcomechannel': channel}})
             await ctx.send("Welcome channel updated.")
 
-
     @commands.command(help="Change the bots current game. BOT OWNER ONLY.")
     @commands.check(MooseBot.is_owner)
     async def botgame(self, ctx, *args):
@@ -176,7 +177,7 @@ class Moderation(Cog):
         elif len(ctx.message.mentions) > 1:
             await ctx.send("Please only mention one user at a time")
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.check(MooseBot.is_owner)
     async def leavesvr(self, ctx, sid):
         this_server = self.bot.client.get_guild(int(sid))
@@ -230,4 +231,4 @@ class Moderation(Cog):
         if amount is None:
             amount = 1
         deleted = await ctx.channel.purge(limit=amount + 1)
-        await ctx.send(f"I have cleared `{len(deleted)- 1}` messages.", delete_after=0.5)
+        await ctx.send(f"I have cleared `{len(deleted) - 1}` messages.", delete_after=0.5)
