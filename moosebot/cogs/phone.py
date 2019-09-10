@@ -10,7 +10,7 @@ class Phone(Cog):
     def __init__(self, bot: MooseBot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.check(MooseBot.is_owner)
     async def hangup(self, ctx):
         if len(self.bot.phone_channels) == 2:

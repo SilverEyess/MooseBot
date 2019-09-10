@@ -110,7 +110,7 @@ class Economy(Cog):
                                   colour=0xb18dff)
             await ctx.send(embed=embed)
 
-    @commands.command(aliases=['award'], help='Bot author only command.')
+    @commands.command(aliases=['award'], help='Bot author only command.', hidden=True)
     @commands.check(MooseBot.is_owner)
     async def givep(self, ctx, amount: int, *, user: converters.FullMember):
         user = user or None
@@ -127,7 +127,7 @@ class Economy(Cog):
             except Exception:
                 await ctx.send("The amount to give the person needs to be a number.")
 
-    @commands.command(help='Bot author only command.')
+    @commands.command(help='Bot author only command.', hidden=True)
     @commands.check(MooseBot.is_owner)
     async def takep(self, ctx, amount=None, *, user: converters.FullMember = None):
         user = user or None

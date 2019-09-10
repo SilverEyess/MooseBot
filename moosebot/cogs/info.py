@@ -112,6 +112,7 @@ class Info(Cog):
             groups = OrderedDict()
 
             for cog, command in commands:
+                if command.hidden: continue
                 if cog in groups:
                     groups[cog].append(command)
                 else:
@@ -128,7 +129,9 @@ class Info(Cog):
         else:
             try:
                 command = self.bot.client.get_command(name=arg)
-                if command.help:
+                if command.hidden:
+                    await ctx.send(f"Command `{arg}` not found.")
+                elif command.help:
                     embed = discord.Embed(title=f"{command.name.title()} help.",
                                           description=f'{command.help} \n\n**Aliases**:\n{", ".join(command.aliases) if command.aliases else "None"}',
                                           colour=0xb18dff)

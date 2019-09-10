@@ -11,7 +11,7 @@ class Server(Cog):
     def __init__(self, bot: MooseBot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def listsvr(self, ctx):
         embed = discord.Embed(title="Connected servers", description="List of servers that Moosebot is in.",
                               colour=0xb18dff)
