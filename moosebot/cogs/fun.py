@@ -84,7 +84,7 @@ class Fun(Cog):
             await message.channel.send(copypasta)
 
     async def swear_jar(self, message):
-        swear_list = ['fuck', 'shit', 'piss', 'cunt', 'bastard', 'dick', 'minion', 'cock', 'fag', 'hell', 'bussy', 'shart', 'boy2boy', 'ead', 'spearchucker', 'm2m', 'girl2girl', 'boy 4 boy', 'girl 4 girl', 'ass', 'prick', 'whore', 'arse', 'ballsucker']
+        swear_list = ['fuck', 'shit', 'piss', 'bitch', 'cunt', 'bastard', 'dick', 'minion', 'cock', 'fag', 'hell', 'bussy', 'shart', 'boy2boy', 'ead', 'spearchucker', 'm2m', 'girl2girl', 'boy 4 boy', 'girl 4 girl', 'ass', 'prick', 'whore', 'arse', 'ballsucker']
         message_list = ['Allah is watching.', 'Allah is disappointed.', 'Allah has sacrificed your virgins.', "This is a good extremist Muslim server."]
         serverid = message.guild.id
         server = await self.db.server.find_one({'serverid': str(serverid)})
@@ -97,6 +97,7 @@ class Fun(Cog):
 
         for x in swears:
             await self.db.server.update_one({'serverid': str(serverid)}, {'$inc': {'swear_jar': 1}}, True)
+            await self.db.money.update_one({'userid': str(message.author.id)}, {'$inc': {'swears': 1}})
             jar = await self.db.server.find_one({'serverid': str(serverid)})
             swear_count = jar['swear_jar']
             if swear_count < 100:
@@ -184,7 +185,7 @@ class Fun(Cog):
         else:
             await ctx.send(f"{'You have' if user is None else f'{user.display_name} has'} a {length}cm long wiener.")
 
-    @commands.command(help="Returns a random spicy maymay.")
+    @commands.command(help="Returns a random spicy maymay.", hidden=True)
     async def meme(self, ctx):
         reddit = praw.Reddit(client_id="pok5Y9XHfdwYcA", client_secret="rnch9ufFK2nDpM75NhiDCKzZG_c",
                              user_agent="SilverEyes_")

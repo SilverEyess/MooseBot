@@ -16,7 +16,7 @@ class Server(Cog):
         embed = discord.Embed(title="Connected servers", description="List of servers that Moosebot is in.",
                               colour=0xb18dff)
         for i in self.bot.client.guilds:
-            embed.add_field(name=i.name, value="**ID**: `{}`".format(i.id), inline=False)
+            embed.add_field(name=i.name, value=f"**ID**: `{i.id}`", inline=False)
         await ctx.send(embed=embed)
 
     @commands.command(help="Returns all emojis on this server")
@@ -24,9 +24,9 @@ class Server(Cog):
         emojisl = []
         for i in ctx.guild.emojis:
             if i.animated:
-                emojisl.append("<a:{}:{}> `:{}:` \n".format(i.name, i.id, i.name))
+                emojisl.append(f"<a:{i.name}:{i.id}> `:{i.name}:` \n")
             else:
-                emojisl.append("<:{}:{}> `:{}:` \n".format(i.name, i.id, i.name))
+                emojisl.append(f"<:{i.name}:{i.id}> `:{i.name}:` \n")
         emoji_list = ''.join(emojisl)
         await ctx.send(emoji_list)
 

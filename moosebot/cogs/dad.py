@@ -14,7 +14,7 @@ class Dad(Cog):
         self.blacklist = [442669193616162826]
         self.bot = bot
 
-    @commands.command(aliases=["db"])
+    @commands.command(aliases=["db"], hidden=True)
     @commands.check(MooseBot.is_owner)
     async def dadblacklist(self, ctx, arg=None):
         if arg is None:
@@ -48,7 +48,7 @@ class Dad(Cog):
 
         im_list = ["Retarded", "A sissy", "Boring :sleeping:", "Lost", "Always confused", "Unemployed", "Spamming",
                    "A NEET", "A drongo", "Regretting my life decisions that have brought me to this point",
-                   "A very nice person", "A weeb", "Abzy", "A Heavy main", "A cunt", "A failure", "Very talented"
+                   "A very nice person", "A weeb", "Abzy", "A Heavy main", "A cunt", "A failure", "Very talented",
                    "Actually retarded", "About to get banned in a minute", "A thot", "A hoe", "A dumbass", "An ass",
                    "Despacito", "Mexico", "A fan of Muse", "SOOOO random!!!! <--- me bein random again ^_^ hehe",
                    "12 years old", "A rat", "A boomer", "Kinda hot :flushed:", "Depressed", "Bree", "A Mac user",
@@ -92,10 +92,10 @@ class Dad(Cog):
             elif lower.startswith(im + " tler did nothing wrong"):
                 await ctx.send("You're not funny {}".format(ctx.author.mention))
             elif lower.startswith(im + " mom") or lower.startswith(im + " mum"):
-                if ctx.author.id == 609238720532709386:
+                if ctx.author.id == 627844395239997470:
                     await ctx.send("Hi mum.")
                 else:
-                    await ctx.send("No <@609238720532709386> is mum.")
+                    await ctx.send("No <@627844395239997470> is mum.")
             elif lower.startswith(im + " "):
                 try:
                     users_dad = authname + "'s dad"

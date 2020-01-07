@@ -117,7 +117,7 @@ class Moderation(Cog):
             await self.db.server.update_one({'serverid': serverid}, {'$set': {'welcomechannel': channel}})
             await ctx.send("Welcome channel updated.")
 
-    @commands.command(help="Change the bots current game. BOT OWNER ONLY.")
+    @commands.command(help="Change the bots current game. BOT OWNER ONLY.", hidden=True)
     @commands.check(MooseBot.is_owner)
     async def botgame(self, ctx, *args):
         game_name = ' '.join(args)

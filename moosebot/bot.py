@@ -12,7 +12,7 @@ from moosebot.utils import *
 
 class MooseBot:
     prefix = ">"
-    owners = [192519529417408512, 609238720532709386]
+    owners = [192519529417408512, 627844395239997470]
 
     def __init__(self, token):
         from moosebot import MooseDb
@@ -56,19 +56,6 @@ class MooseBot:
             self.database.db.lvl.insert_one({'serverid': str(guild.id)})
             self.database.db.xp.insert_one({'serverid': str(guild.id)})
 
-        @client.event
-        async def on_member_update(before, after):
-            if after.guild.id == 377218458108035084:
-                if after.id == 389579708016099328:
-                    if after.display_name != "edgy baby":
-                        await after.edit(nick="edgy baby")
-                        print("Nat tried to change her nickname lmoa")
-                # elif after.id == 488199047874740235:
-                #     if after.display_name != 'anna':
-                #         await after.edit(nick='anna')
-                #         print('Anna tried to change her nickname.')
-            else:
-                return None
 
         # @client.event
         # async def on_command_error(ctx, error):
@@ -86,11 +73,35 @@ class MooseBot:
                        "I thought {1} was lame, but now that {0} is here, I'm not sure.")
 
             server = await MooseDb().db.server.find_one({'serverid': str(member.guild.id)})
+            await asyncio.gather(generate(str(member.id)))
             if server is None:
                 await MooseDb().db.server.update_one({'serverid': str(member.guild.id)})
             elif 'welcomechannel' in server:
                 welcome = client.get_channel(int(server['welcomechannel']))
                 await welcome.send(random.choice(choices).format(member.mention, winner))
+            else:
+                return
+
+        async def generate(user):
+
+            people = MooseDb().db.money
+            userid = user
+            person = people.find_one({'userid': userid})
+            if person is None:
+                await people.update_one({'userid': userid}, {'$set': {'fish.totalweight': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.largestfish': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.recentfish': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.totalfish': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.sincelastsell': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.rod': 'None'}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.curbait': 'None'}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.bait.Bait': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.bait.Game Bait': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'balance': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'daily': 'None'}})
+                await people.update_one({'userid': userid}, {'$set': {'weekly': 'None'}})
+                await people.update_one({'userid': userid}, {'$push': {'inventory': 'Yeet'}})
+                await people.update_one({'userid': userid}, {'$pull': {'inventory': 'Yeet'}})
             else:
                 return
 
@@ -146,20 +157,6 @@ class MooseBot:
             await channel.send(embed=embed)
             self.database.db.lvl.insert_one({'serverid': str(guild.id)})
             self.database.db.xp.insert_one({'serverid': str(guild.id)})
-
-        @client.event
-        async def on_member_update(before, after):
-            if after.guild.id == 377218458108035084:
-                if after.id == 389579708016099328:
-                    if after.display_name != "edgy baby":
-                        await after.edit(nick="edgy baby")
-                        print("Nat tried to change her nickname lmoa")
-                # elif after.id == 488199047874740235:
-                #     if after.display_name != 'anna':
-                #         await after.edit(nick='anna')
-                #         print('Anna tried to change her nickname.')
-            else:
-                return None
 
     def launch(self, token):
         self.client.run(token)
@@ -278,3 +275,21 @@ class MooseBot:
             return True
         else:
             return False
+
+    #
+    # async def generate(self, userid):
+    #     userid = str(userid.id)
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'fish.totalweight': 0}})
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'fish.largestfish': 0}})
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'fish.recentfish': 0}})
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'fish.totalfish': 0}})
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'fish.sincelastsell': 0}})
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'fish.rod': 'None'}})
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'fish.curbait': 'None'}})
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'fish.bait.Bait': 0}})
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'fish.bait.Game Bait': 0}})
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'balance': 0}})
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'daily': 'None'}})
+    #     await self.db.money.update_one({'userid': userid}, {'$set': {'weekly': 'None'}})
+    #     await self.db.money.update_one({'userid': userid}, {'$push': {'inventory': 'Yeet'}})
+    #     await self.db.money.update_one({'userid': userid}, {'$pull': {'inventory': 'Yeet'}})

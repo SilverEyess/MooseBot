@@ -4,6 +4,7 @@ import random
 from threading import Lock
 
 import discord
+import pymongo
 from discord.ext import commands
 from discord.ext.commands import Cog
 
@@ -38,30 +39,28 @@ class Economy(Cog):
                     f"`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds")
 
                 def check(m):
-                    return m.content.lower() == 'dab' and m.channel == message.channel
+                    return m.content.lower() == 'dab'or m.content.lower() == 'даб' and m.channel == message.channel
 
                 try:
                     msg = await self.bot.client.wait_for('message', check=check, timeout=60)
                     try:
-                        person = await self.db.money.find_one({'userid': str(message.author.id)})
-                        print(person)
+                        person = await self.db.money.find_one({'userid': str(msg.author.id)})
                         if 'inventory' not in person:
-                            print('no inventory')
                             grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
                             await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
-                            await message.channel.send(grant)
-                            await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                            grantmsg = await message.channel.send(grant)
+                            # await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                            await gen_message.delete()
+                            await msg.delete()
+                            await asyncio.sleep(3)
+                            await grantmsg.delete()
                             return
                         else:
                             inventory = person['inventory']
-                            print(person)
-                            print(inventory)
                             if 'Dab Multiplier' not in inventory:
-                                print('no multiplier')
                                 grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
                                 await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
                             elif 'Dab Multiplier' in inventory:
-                                print('got a multiplier')
 
                                 grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. " \
                                         f"They had a Dab Multiplier so they got double Ᵽ. " \
@@ -71,19 +70,24 @@ class Economy(Cog):
                                                            True)
 
                     except KeyError:
-                        print('keyerror')
                         grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
                         await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
                     except TypeError:
-                        print('typeerror')
                         grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
                         await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
-                    await message.channel.send(grant)
-                    await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                    grantmsg = await message.channel.send(grant)
+                    # await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                    await gen_message.delete()
+                    await msg.delete()
+                    await asyncio.sleep(3)
+                    await grantmsg.delete()
 
                 except asyncio.TimeoutError:
-                    await message.channel.send("You took to long to dab the Ᵽ.")
-                    await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                    toolate = await message.channel.send("You took to long to dab the Ᵽ.")
+                    # await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                    await gen_message.delete()
+                    await asyncio.sleep(5)
+                    await toolate.delete()
 
     @commands.command(aliases=['bal'], help='Check your balance.')
     async def balance(self, ctx, user: converters.FullMember = None):
@@ -141,7 +145,7 @@ class Economy(Cog):
                 amount = int(amount)
 
                 if (await self.db.money.find_one({'userid': str(user.id)}))['balance'] is None or (await self.db.money.find_one({'userid': str(user.id)}))['balance'] == 0:
-                    await ctx.send(f"`{user.display_name} is already poor enough, no more can be taken from them.")
+                    await ctx.send(f"{user.display_name} is already poor enough, no more can be taken from them.")
                 elif (await self.db.money.find_one({'userid': str(user.id)}))['balance'] - amount < 0:
                     await ctx.send(
                         f"Doing this would cause `{user.display_name}` to go in to debt. Instead, we just set them to 0Ᵽ.")
@@ -383,6 +387,87 @@ class Economy(Cog):
 
         except ValueError:
             await ctx.send('You need to bet an amount... Not whatever that was...')
+
+    @commands.command(hidden=True)
+    @commands.check(MooseBot.is_owner)
+    async def generate(self, ctx):
+        people = self.bot.database.db.money
+        for i in self.bot.client.guilds:
+            for x in i.members:
+                userid = str(x.id)
+                await people.update_one({'userid': userid}, {'$set': {'fish.totalweight': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.largestfish': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.recentfish': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.totalfish': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.sincelastsell': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.rod': 'None'}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.curbait': 'None'}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.bait.Bait': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'fish.bait.Game Bait': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'balance': 0}})
+                await people.update_one({'userid': userid}, {'$set': {'daily': 'None'}})
+                await people.update_one({'userid': userid}, {'$set': {'weekly': 'None'}})
+                await people.update_one({'userid': userid}, {'$push': {'inventory': 'Yeet'}})
+                await people.update_one({'userid': userid}, {'$pull': {'inventory': 'Yeet'}})
+
+    @commands.command(hidden=True)
+    @commands.check(MooseBot.is_owner)
+    async def gen1(self, ctx, user: converters.PartialMember = None):
+        user = user or None
+        if user is None:
+            await ctx.send('Tell me who to generate for')
+        else:
+            userid = str(user.id)
+        people = self.bot.database.db.money
+        await people.update_one({'userid': userid}, {'$set': {'fish.totalweight': 0}})
+        await people.update_one({'userid': userid}, {'$set': {'fish.largestfish': 0}})
+        await people.update_one({'userid': userid}, {'$set': {'fish.recentfish': 0}})
+        await people.update_one({'userid': userid}, {'$set': {'fish.totalfish': 0}})
+        await people.update_one({'userid': userid}, {'$set': {'fish.sincelastsell': 0}})
+        await people.update_one({'userid': userid}, {'$set': {'fish.rod': 'None'}})
+        await people.update_one({'userid': userid}, {'$set': {'fish.curbait': 'None'}})
+        await people.update_one({'userid': userid}, {'$set': {'fish.bait.Bait': 0}})
+        await people.update_one({'userid': userid}, {'$set': {'fish.bait.Game Bait': 0}})
+        await people.update_one({'userid': userid}, {'$set': {'balance': 0}})
+        await people.update_one({'userid': userid}, {'$set': {'daily': 'None'}})
+        await people.update_one({'userid': userid}, {'$set': {'weekly': 'None'}})
+        await people.update_one({'userid': userid}, {'$push': {'inventory': 'Yeet'}})
+        await people.update_one({'userid': userid}, {'$pull': {'inventory': 'Yeet'}})
+        await ctx.send(f'Generated tables for {user.display_name}')
+
+    @commands.command(hidden=True)
+    @commands.check(MooseBot.is_owner)
+    async def reset(self, ctx):
+        people = self.bot.database.db.money
+        personlist = people.find()
+        personlist.sort('price', pymongo.ASCENDING)
+        for i in await personlist.to_list(length=200):
+            person = await people.find_one({'userid': str(i['userid'])})
+            print(person)
+            # personlist = person.to_list(length=100)
+            print(personlist)
+            try:
+                for x in person['inventory']:
+                    await people.update_one({'userid': str(i['userid'])}, {'$pull': {'inventory': x}})
+
+                for x in person['fish']['trophies']:
+                    await people.update_one({'userid': str(i['userid'])}, {'$pull': {'fish.trophies': x}})
+            except Exception:
+                continue
+
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'fish.totalweight': 0}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'fish.largestfish': 0}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'fish.recentfish': 0}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'fish.totalfish': 0}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'fish.sincelastsell': 0}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'fish.rod': 'None'}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'fish.curbait': 'None'}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'fish.bait.Bait': 0}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'fish.bait.Large Bait': 0}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'fish.bait.Game Bait': 0}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'balance': 0}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'daily': 'None'}})
+            await people.update_one({'userid': str(i['userid'])}, {'$set': {'weekly': 'None'}})
 
     @commands.command(aliases=['br'])
     async def betroll(self, ctx, amount=None):

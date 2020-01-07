@@ -13,23 +13,42 @@ class Misc(Cog):
     def __init__(self, bot: MooseBot):
         self.bot = bot
 
-    @commands.command()
-    async def calc(self, ctx, *, args):
-        dec = decimal.Context()
-        dec.prec = 100
-
-        def convert(f):
-            d1 = dec.create_decimal(repr(f))
-            return format(d1, 'f')
-
-        args = args.split(',')
-        args = ''.join(args)
-        e = int(float(convert(eval(args))))
-        await ctx.send(f'{e:,d}')
+    # @commands.command()
+    # async def calc(self, ctx, *, args):
+    #     dec = decimal.Context()
+    #     dec.prec = 100
+    #
+    #     def convert(f):
+    #         d1 = dec.create_decimal(repr(f))
+    #         return format(d1, 'f')
+    #
+    #     args = args.split(',')
+    #     args = ''.join(args)
+    #     e = int(float(convert(eval(args))))
+    #     await ctx.send(f'{e:,d}')
 
     @commands.command(help="Returns my gender.")
     async def gender(self, ctx):
         await ctx.send("I'm a boy, how could you not tell?")
+
+    # @Cog.listener()
+    # async def on_member_update(self, before, after):
+    #     if after.guild.id == 377218458108035084:
+    #         if after.id == 488199047874740235:
+    #             if after.display_name != before.display_name:
+    #                 await after.edit(nick='The Best.')
+    #                 print('Ana tried to change her nickname.')
+    #             elif after.nick != before.nick:
+    #                 await after.edit(nick='The Best.')
+    #                 print('Ana tried to change her nickname.')
+    #     else:
+    #         return
+
+    @commands.command()
+    @commands.is_owner()
+    async def reloadcog(self, ctx, cog):
+        ctx.bot.reload_extension(f'{cog}')
+        await ctx.send(f'Cog *{cog}* reloaded.')
 
     @Cog.listener()
     async def on_message(self, message):
