@@ -179,3 +179,7 @@ class Experience(Cog):
     #         for x in i:
     #             if x != 'serverid':
     #                 
+
+
+def setup(bot):
+    bot.add_cog(Experience(bot.moose))

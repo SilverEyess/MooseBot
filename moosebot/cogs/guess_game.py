@@ -113,3 +113,7 @@ class GuessGame(Cog, name="Guessing Game"):
                 await play()
 
         await play()
+
+
+def setup(bot):
+    bot.add_cog(GuessGame(bot.moose))

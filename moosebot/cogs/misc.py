@@ -79,3 +79,6 @@ class Misc(Cog):
             except discord.Forbidden:
                 await message.channel.send("I require the manage webhooks permission for this command to function.")
 
+
+def setup(bot):
+    bot.add_cog(Misc(bot.moose))

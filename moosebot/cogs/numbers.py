@@ -22,3 +22,7 @@ class Numbers(Cog):
         response = requests.get(url)
         value = response.json()["bpi"]["USD"]["rate"]
         await ctx.send("Bitcoin price is: $" + value)
+
+
+def setup(bot):
+    bot.add_cog(Numbers(bot.moose))

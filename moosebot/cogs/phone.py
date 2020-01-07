@@ -51,3 +51,7 @@ class Phone(Cog):
             self.bot.phone_servers.append(this_server)
             await self.bot.phone_channels[0].send("You are now connected to someone through the phone, say hi!")
             await self.bot.phone_channels[1].send("You are now connected to someone through the phone, say hi!")
+
+
+def setup(bot):
+    bot.add_cog(Phone(bot.moose))

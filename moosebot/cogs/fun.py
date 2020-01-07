@@ -549,3 +549,7 @@ class Fun(Cog):
             "Yes imo",
         ]
         await ctx.send(random.choice(possible_responses) + ", " + ctx.message.author.mention)
+
+
+def setup(bot):
+    bot.add_cog(Fun(bot.moose))

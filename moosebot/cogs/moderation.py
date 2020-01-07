@@ -40,6 +40,13 @@ class Moderation(Cog):
             await user.move_to(args)
             await ctx.message.delete()
 
+    @commands.command(aliases=["rel", "reload"], hidden=True)
+    @commands.check(MooseBot.is_owner)
+    async def reload_cogs(self, ctx, ext):
+        full = f"moosebot.cogs.{ext}"
+        ctx.bot.reload_extension(full)
+        await ctx.send(f":ok_hand: Reloaded `{full}`")
+
     @commands.command(hidden=True)
     @commands.check(MooseBot.is_admin)
     async def roleme(self, ctx, arg):
@@ -232,3 +239,7 @@ class Moderation(Cog):
             amount = 1
         deleted = await ctx.channel.purge(limit=amount + 1)
         await ctx.send(f"I have cleared `{len(deleted) - 1}` messages.", delete_after=0.5)
+
+
+def setup(bot):
+    bot.add_cog(Moderation(bot.moose))

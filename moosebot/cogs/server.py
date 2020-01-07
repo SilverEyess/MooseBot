@@ -71,3 +71,7 @@ class Server(Cog):
     @commands.command()
     async def simage(self, ctx):
         await ctx.send(ctx.guild.icon_url)
+
+
+def setup(bot):
+    bot.add_cog(Server(bot.moose))

@@ -261,3 +261,7 @@ class Dad(Cog):
         with open(path, "w") as f:
             for entry in embarrass_list:
                 f.write(entry + "\n")
+
+
+def setup(bot):
+    bot.add_cog(Dad(bot.moose))

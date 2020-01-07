@@ -637,3 +637,7 @@ class Economy(Cog):
                 except asyncio.TimeoutError:
                     await msg.delete()
                     break
+
+
+def setup(bot):
+    bot.add_cog(Economy(bot.moose))

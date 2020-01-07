@@ -23,6 +23,7 @@ class MooseBot:
         self.token = token
         client = Bot(command_prefix=MooseBot.prefix)
         self.client = client
+        self.client.moose = self
         self.database = MooseDb()
         self.db = self.database.db
 
@@ -160,13 +161,6 @@ class MooseBot:
 
     def launch(self, token):
         self.client.run(token)
-
-    def add_cog(self, cog):
-        self.client.add_cog(cog)
-
-    def add_cogs(self, cogs: List[Any]):
-        for cog in cogs:
-            self.add_cog(cog)
 
     async def senddm(self, message):
         if message.guild is None:
