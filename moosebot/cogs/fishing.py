@@ -233,3 +233,5 @@ class Fishing(Cog):
         #     await ctx.send("Well golly. Looks like you're all out of fish. Time to get on the water again!")
 
 
+def setup(bot):
+    bot.add_cog(Fishing(bot.moose))

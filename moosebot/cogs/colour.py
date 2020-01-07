@@ -23,3 +23,7 @@ class Colour(Cog):
                 await i.edit(colour=colour)
             else:
                 await ctx.send("You do not possess a role with this ability")
+
+
+def setup(bot):
+    bot.add_cog(Colour(bot.moose))

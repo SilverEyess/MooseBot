@@ -71,3 +71,7 @@ class Voice(Cog):
                 return await x.disconnect()
 
         return await ctx.send("\u200BI am not connected to any voice channel on this server!")
+
+
+def setup(bot):
+    bot.add_cog(Voice(bot.moose))

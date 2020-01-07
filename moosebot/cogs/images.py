@@ -67,3 +67,7 @@ class Images(Cog):
     #         im_sharp = im.filter(ImageFilter.SHARPEN)
     #         im_sharp.save("database/avatar/temp_image.png", "PNG")
     #         await ctx.send(file=discord.File('database/avatar/temp_image.png'))
+
+
+def setup(bot):
+    bot.add_cog(Images(bot.moose))

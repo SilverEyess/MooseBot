@@ -174,3 +174,7 @@ class Shop(Cog):
                     await db.money.update_one({'userid': user}, {'$inc': {'balance': -item['price']}})
                     await ctx.send(
                         f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+
+
+def setup(bot):
+    bot.add_cog(Shop(bot.moose))

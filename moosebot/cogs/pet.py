@@ -75,3 +75,7 @@ class Pet(Cog):
 
         else:
             await ctx.send('There is no such pet.')
+
+
+def setup(bot):
+    bot.add_cog(Pet(bot.moose))

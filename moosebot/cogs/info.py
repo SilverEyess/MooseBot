@@ -181,3 +181,7 @@ class Info(Cog):
                             await ctx.send(embed=embed)
             except Exception:
                 await ctx.send("I can't find this city cus I'm dumb.")
+
+
+def setup(bot):
+    bot.add_cog(Info(bot.moose))

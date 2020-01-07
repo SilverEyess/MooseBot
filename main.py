@@ -10,7 +10,6 @@ with open('database/token.txt') as f:
 moose = MooseBot(token)
 admins = ["192519529417408512", "536170543859105794"]
 
-
 # @moose.client.event
 # async def on_command_error(ctx, error):
 #     if isinstance(error, commands.CommandNotFound):
@@ -20,28 +19,29 @@ admins = ["192519529417408512", "536170543859105794"]
 #     else:
 #         await ctx.send(f"some error lol {type(error.original)}")
 
-modules = [
-    Misc(moose),
-    Pet(moose),
-    Shop(moose),
-    Economy(moose),
+extensions = [
+    "moosebot.cogs.colour",
+    "moosebot.cogs.counting",
+    "moosebot.cogs.dad",
+    "moosebot.cogs.economy",
     # TODO rewrite
-    # Experience(moose),
-    Info(moose),
-    Counting(moose),
-    Fun(moose),
-    GuessGame(moose),
-    Dad(moose),
-    Moderation(moose),
-    Server(moose),
-    Voice(moose),
-    Colour(moose),
-    Numbers(moose),
-    Phone(moose),
-    Images(moose),
-    Fishing(moose)
+    # "moosebot.cogs.experience",
+    "moosebot.cogs.fishing",
+    "moosebot.cogs.fun",
+    "moosebot.cogs.guess_game",
+    "moosebot.cogs.images",
+    "moosebot.cogs.info",
+    "moosebot.cogs.misc",
+    "moosebot.cogs.moderation",
+    "moosebot.cogs.numbers",
+    "moosebot.cogs.pet",
+    "moosebot.cogs.phone",
+    "moosebot.cogs.server",
+    "moosebot.cogs.shop",
+    # "moosebot.cogs.voice",
 ]
 
-moose.add_cogs(modules)
+for ext in extensions:
+    moose.client.load_extension(ext)
 
 moose.launch(token)

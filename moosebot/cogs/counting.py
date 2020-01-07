@@ -38,3 +38,7 @@ class Counting(Cog):
                     await ctx.channel.send(
                         f"{ctx.author.mention} The next message in this channel must start with {count}!",
                         delete_after=2.0)
+
+
+def setup(bot):
+    bot.add_cog(Counting(bot.moose))
