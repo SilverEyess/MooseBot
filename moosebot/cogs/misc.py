@@ -44,12 +44,6 @@ class Misc(Cog):
     #     else:
     #         return
 
-    @commands.command()
-    @commands.is_owner()
-    async def reloadcog(self, ctx, cog):
-        ctx.bot.reload_extension(f'{cog}')
-        await ctx.send(f'Cog *{cog}* reloaded.')
-
     @Cog.listener()
     async def on_message(self, message):
         if message.author.id != 445936072288108544:
@@ -65,7 +59,7 @@ class Misc(Cog):
 
     async def oreact(self, message):
         wordlist = ['o', '🇴', 'bet', 'k', "🇰"]
-        OGs = [609238720532709386, 192519529417408512, 292493461268070411, 303280502960291840]
+        OGs = [661655807246598164, 192519529417408512, 292493461268070411, 303280502960291840]
         if message.author.id in OGs:
             return
         elif message.content.lower() in wordlist:

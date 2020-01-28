@@ -247,6 +247,21 @@ class Fun(Cog):
                 value=f"{translated_text.text}")
             await ctx.send(embed=embed)
 
+    def load(self, path):
+        result = []
+        with open(path, "r") as f:
+            for entry in f.readlines():
+                result.append(entry.rstrip())
+        return result
+
+    @commands.command()
+    async def sponsor(self, ctx):
+        choices = self.load('database/sponsors.txt')
+        choice = random.choice(choices).replace("|", "\n")
+        embed = discord.Embed(title='Please pause for this important message from our sponsors.', description=choice, colour=0xb18dff)
+        embed.set_thumbnail(url='https://library.kissclipart.com/20180903/gpe/kissclipart-money-vector-clipart-money-clip-art-795916cc43a26bc2.jpg')
+        await ctx.send(embed=embed)
+
     @commands.command(
         help="Enter phrases/words separated by commas(,) and I will choose one at random. \n`>choose option1, option 2, option3`")
     async def choose(self, ctx, *choices: str):

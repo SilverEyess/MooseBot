@@ -73,10 +73,10 @@ class MooseBot:
                        "Hide the weed, {} is here!", "Party is over... {} showed up.",
                        "I thought {1} was lame, but now that {0} is here, I'm not sure.")
 
-            server = await MooseDb().db.server.find_one({'serverid': str(member.guild.id)})
+            server = await self.db.server.find_one({'serverid': str(member.guild.id)})
             await asyncio.gather(generate(str(member.id)))
             if server is None:
-                await MooseDb().db.server.update_one({'serverid': str(member.guild.id)})
+                await self.db.server.update_one({'serverid': str(member.guild.id)})
             elif 'welcomechannel' in server:
                 welcome = client.get_channel(int(server['welcomechannel']))
                 await welcome.send(random.choice(choices).format(member.mention, winner))
@@ -85,7 +85,7 @@ class MooseBot:
 
         async def generate(user):
 
-            people = MooseDb().db.money
+            people = self.db.money
             userid = user
             person = people.find_one({'userid': userid})
             if person is None:
@@ -113,9 +113,9 @@ class MooseBot:
                        "Don't let the door hit you on the way out {}!", "{1} kicked {0} to a whole new server.",
                        "Finally {} is gone.", "It's about time {} left.", "Time to celebrate {} is gone", "Ciao {}!",
                        "auf Wiedersehen {}!", "Bon voyage {}.", "Shalom {}")
-            server = await MooseDb().db.server.find_one({'serverid': str(member.guild.id)})
+            server = await self.db.server.find_one({'serverid': str(member.guild.id)})
             if server is None:
-                await MooseDb().db.server.update_one({'serverid': str(member.guild.id)})
+                await self.db.server.update_one({'serverid': str(member.guild.id)})
             elif 'welcomechannel' in server:
                 welcome = client.get_channel(int(server['welcomechannel']))
                 await welcome.send(random.choice(choices).format(member.mention, winner))

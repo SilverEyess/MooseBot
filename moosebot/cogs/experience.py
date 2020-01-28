@@ -34,12 +34,12 @@ class Experience(Cog):
         server = str(ctx.guild.id)
         desc = ""
 
-        people = self.db.money.find()
+        people = self.db.money.find({f"xp.{server}": {"$exists": 1}}).sort([(f"xp.{server}.xp", pymongo.DESCENDING)])
         # people.sort({'xp': server})
-        rank = 1
         # print(people)
-        for i in await people.to_list(length=20):
-            # print(i)
+        rank = 1
+        max_rank = 10
+        async for i in people:
             if 'xp' in i:
                 if str(ctx.guild.id) in i['xp']:
                     # print('server')
@@ -51,10 +51,13 @@ class Experience(Cog):
                             desc += f'{rank}. {user.display_name}: {i["xp"][server]["xp"]}\n'
                             rank += 1
 
+            if rank > max_rank:
+                break
+
         embed = discord.Embed(title='Experience Leaderboard', description=desc)
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=['lvl', 'rank'], help='Check your current xp and level standings.')
+    @commands.command(aliases=['lvl', 'rank', 'xp', 'exp'], help='Check your current xp and level standings.')
     async def level(self, ctx, member: converters.FullMember = None):
         member = member or ctx.author
         server = str(ctx.guild.id)

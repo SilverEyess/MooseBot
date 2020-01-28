@@ -24,7 +24,7 @@ extensions = [
     "moosebot.cogs.dad",
     "moosebot.cogs.economy",
     # TODO rewrite
-    # "moosebot.cogs.experience",
+    "moosebot.cogs.experience",
     "moosebot.cogs.fishing",
     "moosebot.cogs.fun",
     "moosebot.cogs.guess_game",
@@ -38,6 +38,7 @@ extensions = [
     "moosebot.cogs.server",
     "moosebot.cogs.shop",
     # "moosebot.cogs.voice",
+    "moosebot.cogs.permissions"
 ]
 
 for ext in extensions:

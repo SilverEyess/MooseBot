@@ -13,30 +13,26 @@ class Dad(Cog):
     def __init__(self, bot: MooseBot):
         self.blacklist = [442669193616162826]
         self.bot = bot
-
-    @commands.command(aliases=["db"], hidden=True)
-    @commands.check(MooseBot.is_owner)
-    async def dadblacklist(self, ctx, arg=None):
-        if arg is None:
-            await ctx.send("Please define whether to blacklist the guild or channel.")
-        elif arg.lower() == "channel":
-            self.blacklist.append(ctx.channel.id)
-            await ctx.send("Channel added to dad blacklist.")
-        elif arg.lower() == "guild" or arg.lower() == "server":
-            self.blacklist.append(ctx.guild.id)
-            await ctx.send("Guild added to dad blacklist.")
-        else:
-            await ctx.send("Please define whether to blacklist the guild or channel.")
+        self.db = self.bot.database.db
 
     @Cog.listener()
     async def on_message(self, message):
         ctx = await self.bot.client.get_context(message)
+        serverid = str(message.guild.id)
+        server = await self.db.server.find_one({'serverid': serverid})
         if message.author == self.bot.client.user:
             return None
         elif isinstance(message.channel, discord.abc.PrivateChannel):
             return None
-        elif message.channel.id in self.blacklist or message.guild.id in self.blacklist:
-            return None
+        elif server is not None:
+            if 'dadblacklist' not in server:
+                await self.dad(message, ctx)
+            elif serverid in server['dadblacklist']:
+                return None
+            elif str(message.channel.id) in server['dadblacklist']:
+                return None
+            else:
+                await self.dad(message, ctx)
         else:
             await self.dad(message, ctx)
 
@@ -149,7 +145,7 @@ class Dad(Cog):
                 self.dadsave(path, dadjokes)
 
             elif msg.content == 'no' or msg.content == 'No' and msg.author == bottle:
-                await ctx.send("Your joke was not added, make sure it's formatting is correct"
+                await ctx.send("Your joke was not added, make sure its formatting is correct"
                                " with a | at the beginning of a new line, otherwise it was just a bad joke, "
                                "not a dad joke.")
         elif args[0].lower() == "del" or args[0].lower() == "delete":
@@ -243,7 +239,7 @@ class Dad(Cog):
                     except asyncio.TimeoutError:
                         await ctx.send("Daddy didn't respond in time, try again later.")
         elif arg.lower() == 'l' or arg.lower() == 'list':
-            embed = discord.Embed(title="Embarrassing phrases", description='\n'.join(embarrass_list))
+            embed = discord.Embed(title="Embarrassing phrases", description='\n'.join(embarrass_list),colour=0xb18dff)
             await ctx.send(embed=embed)
         else:
             await ctx.send("That's not an option for this command")

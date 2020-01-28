@@ -112,6 +112,7 @@ class Moderation(Cog):
         serverid = str(ctx.guild.id)
         channel = str(ctx.message.channel.id)
         server = await self.db.server.find_one({'serverid': serverid})
+
         if server is None:
             await self.db.server.update_one({'serverid': serverid}, {'$set': {'welcomechannel': channel}})
             await ctx.send("New welcome channel set.")
