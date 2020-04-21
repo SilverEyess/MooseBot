@@ -85,6 +85,10 @@ class Fun(Cog):
         elif "china" in message.content.lower():
             await message.channel.send(copypasta)
 
+    @commands.command()
+    async def test(self, ctx):
+        await ctx.send("This works")
+
     async def swear_jar(self, message):
         swear_list = ['fuck', 'shit', 'piss', 'bitch', 'cunt', 'bastard', 'dick', 'minion', 'cock', 'fag', 'hell', 'bussy', 'shart', 'boy2boy', 'ead', 'spearchucker', 'm2m', 'girl2girl', 'boy 4 boy', 'girl 4 girl', 'ass', 'prick', 'whore', 'arse', 'ballsucker']
         message_list = ['Allah is watching.', 'Allah is disappointed.', 'Allah has sacrificed your virgins.', "This is a good extremist Muslim server."]
