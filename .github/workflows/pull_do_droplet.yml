@@ -1,0 +1,32 @@
+name: Pull from DO Droplet
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install resources
+        run: |-
+          sudo apt-get install ssh
+      - name: Fetch/reset
+        env:
+          DROPLET_KEY: ${{ secrets.DROPLET_KEY }}
+          DROPLET_IP: ${{ secrets.DROPLET_IP }}
+        run: |-
+          key=$(mktemp)
+          echo -n "$DROPLET_KEY" > "$key"
+          ssh -o StrictHostKeyChecking=no -i "$key" "root@$DROPLET_IP" <<"EOF"
+            cd /root/MooseBot
+            systemctl stop moose
+            git fetch origin
+            git reset --hard origin/master
+            systemctl enable --now moose
+          EOF
+
+          rm -f "$key"
