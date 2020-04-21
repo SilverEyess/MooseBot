@@ -24,8 +24,19 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i "$key" "root@$DROPLET_IP" <<"EOF"
             cd /root/MooseBot
             systemctl stop moose
-            git fetch origin
-            git reset --hard origin/master
+
+            count=1
+            while :; do
+              git fetch origin
+              if [ $? -eq 0 ]; then
+                git reset --hard origin/master
+                break
+              fi
+              echo "Fetch failed, retrying... ($count)"
+              let count=$count+1
+              sleep 10
+            done
+
             systemctl enable --now moose
           EOF
 
