@@ -12,7 +12,7 @@ from moosebot.utils import *
 
 class MooseBot:
     prefix = ">"
-    owners = [192519529417408512, 661655807246598164]
+    owners = [192519529417408512, 702226595670261851]
 
     def __init__(self, token):
         from moosebot import MooseDb

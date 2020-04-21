@@ -59,7 +59,7 @@ class Misc(Cog):
 
     async def oreact(self, message):
         wordlist = ['o', '🇴', 'bet', 'k', "🇰"]
-        OGs = [661655807246598164, 192519529417408512, 292493461268070411, 303280502960291840]
+        OGs = [702226595670261851, 192519529417408512, 292493461268070411, 303280502960291840]
         if message.author.id in OGs:
             return
         elif message.content.lower() in wordlist:
