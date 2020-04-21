@@ -23,7 +23,6 @@ extensions = [
     "moosebot.cogs.counting",
     "moosebot.cogs.dad",
     "moosebot.cogs.economy",
-    # TODO rewrite
     "moosebot.cogs.experience",
     "moosebot.cogs.fishing",
     "moosebot.cogs.fun",

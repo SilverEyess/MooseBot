@@ -27,14 +27,17 @@ class Dad(Cog):
         elif server is not None:
             if 'dadblacklist' not in server:
                 await self.dad(message, ctx)
+                await self.doingreply(message)
             elif serverid in server['dadblacklist']:
                 return None
             elif str(message.channel.id) in server['dadblacklist']:
                 return None
             else:
                 await self.dad(message, ctx)
+                await self.doingreply(message)
         else:
             await self.dad(message, ctx)
+            await self.doingreply(message)
 
     async def dad(self, message, ctx):
         members = [m for m in ctx.guild.members if not m.bot and message.author.id != m.id]
@@ -118,6 +121,17 @@ class Dad(Cog):
         with open(path, "w") as f:
             for entry in dadjokes:
                 f.write(entry + "\n")
+
+    async def doingreply(self, message):
+        if 'doing' in message.content.lower():
+            continuations = ['your', 'my', 'our', 'his', 'her', 'their', 'ur']
+            words = message.content.split()
+            match = next(iter(i for i in words if i.lower() == 'doing'))
+            place = words.index(match)
+            reply = words[place+1]
+            if reply.lower() in continuations:
+                reply += f' {words[place+2]}'
+            await message.channel.send(f"I'm {reply} ;)")
 
     @commands.command(
         help="Returns a quality dadjoke. Or try to add/remove jokes(If bot author on your server) \n`>dadjoke add/remove joke`")
