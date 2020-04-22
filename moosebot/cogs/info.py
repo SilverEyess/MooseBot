@@ -132,7 +132,7 @@ class Info(Cog):
     async def info(self, ctx):
         embed = discord.Embed(title="MooseBot", description="This bot a moose.", colour=0xb18dff)
         embed.add_field(name="Author", value="<@192519529417408512>")
-        embed.add_field(name='Contributors', value='<@692804688671670322>')
+        embed.add_field(name='Contributors', value='<@702226595670261851>')
         embed.add_field(name="Server count", value=f"{len(self.bot.client.guilds)}")
         embed.add_field(name="Invite me to your server!",
                         value="[Invite link](https://discordapp.com/oauth2/authorize?client_id=445936072288108544&scope=bot&permissions=66186303)")
