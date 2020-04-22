@@ -136,7 +136,7 @@ class Dad(Cog):
     @commands.command(
         help="Returns a quality dadjoke. Or try to add/remove jokes(If bot author on your server) \n`>dadjoke add/remove joke`")
     async def dadjoke(self, ctx, *args):
-        path = "database/dadjokes.txt "
+        path = "database/dadjokes.txt"
         dadjokes = self.dadload(path)
         emoji = " <:lmoa:446850171134017536>"
         bottle = self.bot.client.get_user(192519529417408512)
