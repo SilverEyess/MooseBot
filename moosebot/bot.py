@@ -181,33 +181,33 @@ class MooseBot:
         if message.content == "<:dar:446703695204450305>":
             await message.add_reaction(radical)
 
-    async def saveattach(self, message):
-        if message.author.id == self.client.user.id:
-            return None
-        else:
-            channel = message.guild.get_channel(449821022846320641)
-            if len(message.attachments) >= 1:
-                path = "database/attachments"
-                for i in message.attachments:
-                    url = i.url
-                    data = get_image(url)
-                    file_name = str(i.id)
-                    file_type = i.url[-4:]
-                    types = [".png", ".mp4", ".jpg", ".gif", ".gifv", ".mp3", ".jpeg", ".mov"]
-                    if file_type in types:
-                        save_image(path, file_name, data, file_type)
-                    else:
-                        file_type = i.url[-5:]
-                        if file_type in types:
-                            save_image(path, file_name, data, file_type)
-                        else:
-                            file_type = ".png"
-                            save_image(path, file_name, data, file_type)
-                    file_type = i.url[-4:]
-                    file_path = os.path.join(path, file_name + file_type)
-                    await asyncio.sleep(2)
-                    if message.guild.id == 427010987334434816:
-                        await channel.send(file=discord.File(file_path))
+    # async def saveattach(self, message):
+    #     if message.author.id == self.client.user.id:
+    #         return None
+    #     else:
+    #         channel = message.guild.get_channel(449821022846320641)
+    #         if len(message.attachments) >= 1:
+    #             path = "database/attachments"
+    #             for i in message.attachments:
+    #                 url = i.url
+    #                 data = get_image(url)
+    #                 file_name = str(i.id)
+    #                 file_type = i.url[-4:]
+    #                 types = [".png", ".mp4", ".jpg", ".gif", ".gifv", ".mp3", ".jpeg", ".mov"]
+    #                 if file_type in types:
+    #                     save_image(path, file_name, data, file_type)
+    #                 else:
+    #                     file_type = i.url[-5:]
+    #                     if file_type in types:
+    #                         save_image(path, file_name, data, file_type)
+    #                     else:
+    #                         file_type = ".png"
+    #                         save_image(path, file_name, data, file_type)
+    #                 file_type = i.url[-4:]
+    #                 file_path = os.path.join(path, file_name + file_type)
+    #                 await asyncio.sleep(2)
+    #                 if message.guild.id == 427010987334434816:
+    #                     await channel.send(file=discord.File(file_path))
 
     async def mobile(self, ctx):
         channel = ctx.channel
