@@ -114,7 +114,7 @@ class Info(Cog):
         description = f"{isowner}▫**User ID**: `{member.id}`\n▫**Join Date**: {member.joined_at.strftime('%d/%m/%Y')}\n" \
                       f"▫**Account Created**: {member.created_at.strftime('%d/%m/%Y')}\n▫**Account Age**: {age.days} days" \
                       f"\n▫**Voice Channel**: {member.voice.channel.name if member.voice else 'None'}\n▫**Playing Now**: " \
-                      f"{(member.activity if not member.activity.name() else member.activity.name())}\n▫**Colour**: {str(member.colour).upper()}\n▫**Status**: {str(member.status).title()}"
+                      f"{member.activity}\n▫**Colour**: {str(member.colour).upper()}\n▫**Status**: {str(member.status).title()}"
         embed = discord.Embed(title=f"User info for {member}", description=description,
                               colour=0xb18dff if member.colour == discord.Colour(000000) else member.colour)
         if len(member.roles) > 1:
