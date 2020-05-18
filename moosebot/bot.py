@@ -131,7 +131,6 @@ class MooseBot:
                 await asyncio.gather(
                     self.rad(message),
                     self.dar(message),
-                    self.saveattach(message),
                     self.mobile(ctx),
                     self.what(ctx)
                 )
