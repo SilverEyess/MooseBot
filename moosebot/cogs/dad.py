@@ -65,7 +65,7 @@ class Dad(Cog):
 
         auth = message.author.id
         authname = ctx.author.display_name
-        imlist = ["i'm", "im", "i am", "i m", "i’m"]
+        imlist = ["i'm", "im", "i am", "i m", "i’m", "(iam)", "(i'm)", "(im)", "(i am)"]
         lower = message.content.lower()
 
         for im in imlist:
