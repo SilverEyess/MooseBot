@@ -45,17 +45,15 @@ class Dad(Cog):
         winner = random.choice(members) if members else self.bot.client.user
         winner_mention = winner.mention
 
-        im_list = ["Retarded", "A sissy", "Boring :sleeping:", "Lost", "Always confused", "Unemployed", "Spamming",
+        im_list = ["A sissy", "Boring :sleeping:", "Lost", "Always confused", "Unemployed", "Spamming",
                    "A NEET", "A drongo", "Regretting my life decisions that have brought me to this point",
-                   "A very nice person", "A weeb", "Abzy", "A Heavy main", "A cunt", "A failure", "Very talented",
+                   "A very nice person", "A weeb", "Abzy", "A Heavy main", "A failure", "Very talented",
                    "Actually retarded", "About to get banned in a minute", "A thot", "A hoe", "A dumbass", "An ass",
                    "Despacito", "Mexico", "A fan of Muse", "SOOOO random!!!! <--- me bein random again ^_^ hehe",
-                   "12 years old", "A rat", "A boomer", "Kinda hot :flushed:", "Depressed", "Bree", "A Mac user",
+                   "12 years old", "A rat", "A boomer", "Kinda hot :flushed:", "Depressed", "A Mac user",
                    "Really cool", "A gamer", "A brony", "Australian", "Embarrassed that I'm rich", "A K-pop fan",
                    "Very intelligent", "Old", "Unattractive", "Short", "A war criminal", "The third wheel",
                    "Perfect :heart_eyes:", "A virgin", "Literally a baby :baby:", "Basically monky :gorilla:", "Lazy",
-
-
                    winner_mention, f"{winner_mention}'s partner in crime", f"{winner_mention}'s secret admirer"]
 
         other_winners = [m for m in members if m != winner]
