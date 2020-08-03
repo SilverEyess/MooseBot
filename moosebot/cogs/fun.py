@@ -273,6 +273,7 @@ class Fun(Cog):
                 await asyncio.sleep(1)
             else:
                 choice = 0
+                msg = f"You are cool {emojies[choice]}"
                 await message.edit(content=msg)
                 await asyncio.sleep(1)
 
