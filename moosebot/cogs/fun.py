@@ -261,6 +261,22 @@ class Fun(Cog):
         return result
 
     @commands.command()
+    async def amicool(self, ctx):
+        emojies = ['😎', '🙂']
+        chances = random.randint(1, 10)
+        current = 0
+        choice = 0
+        while current < chances:
+            current += 1
+            if choice == 0:
+                choice = 1
+                msg = f"You are uncool {emojies[choice]}"
+            else:
+                choice = 0
+                msg = f"You are cool {emojies[choice]}"
+        await ctx.send(msg)
+
+    @commands.command()
     async def sponsor(self, ctx):
         choices = self.load('database/sponsors.txt')
         choice = random.choice(choices).replace("|", "\n")
