@@ -265,15 +265,18 @@ class Fun(Cog):
         emojies = ['😎', '🙂']
         chances = random.randint(1, 10)
         current = 0
-        choice = 0
+        choice = random.randint(0, 1)
+        msg = "You are..."
+        message = await ctx.send(msg)
         while current < chances:
             current += 1
             if choice == 0:
                 choice = 1
                 msg = f"You are uncool {emojies[choice]}"
+                await message.edit(msg)
             else:
                 choice = 0
-                msg = f"You are cool {emojies[choice]}"
+                await message.edit(msg)
         await ctx.send(msg)
 
     @commands.command()
