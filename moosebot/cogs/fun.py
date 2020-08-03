@@ -269,11 +269,11 @@ class Fun(Cog):
             if choice == 0:
                 choice = 1
                 msg = f"You are uncool {emojies[choice]}"
-                await message.edit(msg)
+                await message.edit(content=msg)
                 await asyncio.sleep(1)
             else:
                 choice = 0
-                await message.edit(msg)
+                await message.edit(content=msg)
                 await asyncio.sleep(1)
 
     @commands.command()
