@@ -275,7 +275,6 @@ class Fun(Cog):
                 choice = 0
                 await message.edit(msg)
                 await asyncio.sleep(1)
-        await ctx.send(msg)
 
     @commands.command()
     async def sponsor(self, ctx):
