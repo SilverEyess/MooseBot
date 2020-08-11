@@ -2,10 +2,23 @@ from discord.ext import commands
 from discord.ext.commands import CommandInvokeError
 
 from moosebot import MooseBot
+import json
 from moosebot.cogs import *
 
-with open('database/token.txt') as f:
-    token = f.readline().strip()
+with open('database/config.json') as json_file:
+    data = json.load(json_file)
+    token = data['config'][0]['token']
+    MooseBot.prefix = data['config'][0]['prefix']
+    MooseBot.admins.append(data['config'][0]['owner'])
+    admins = data['config'][0]['admins'].split(',')
+    for i in admins:
+        MooseBot.admins.append(i)
+    print(MooseBot.admins)
+    MooseBot.currency = data['config'][0]['currency']
+    print(MooseBot.currency)
+
+# with open('database/token.txt') as f:
+#     token = f.readline().strip()
 
 moose = MooseBot(token)
 

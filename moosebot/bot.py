@@ -1,6 +1,7 @@
 import asyncio
 import random
 import re
+import json
 from typing import List, Any
 
 import discord
@@ -11,8 +12,10 @@ from moosebot.utils import *
 
 
 class MooseBot:
-    prefix = ">"
-    owners = [192519529417408512, 702226595670261851]
+    prefix = ""
+    owner = ""
+    admins = []
+    currency = ""
 
     def __init__(self, token):
         from moosebot import MooseDb
@@ -28,6 +31,7 @@ class MooseBot:
         self.db = self.database.db
 
         client.remove_command('help')
+
 
         @client.event
         async def on_ready():
@@ -47,7 +51,7 @@ class MooseBot:
                     channel = c
             embed = discord.Embed(title="Thanks for inviting me! I am MooseBot.",
                                   description="I require admin permissions to fully function!", colour=0xb18dff)
-            embed.add_field(name="Author", value="<@192519529417408512>")
+            embed.add_field(name="Author", value=f"<@{MooseBot.owner}>")
             embed.add_field(name="Server count", value=f"{len(client.guilds)}")
             embed.add_field(name="Invite me to your server!",
                             value="[Invite link](https://discordapp.com/oauth2/authorize?client_id=445936072288108544&scope=bot&permissions=66186303)")
@@ -148,7 +152,7 @@ class MooseBot:
                     channel = c
             embed = discord.Embed(title="Thanks for inviting me! I am Moosebot.",
                                   description="I require admin permissions to fully function!", colour=0xb18dff)
-            embed.add_field(name="Author", value="<@192519529417408512>")
+            embed.add_field(name="Author", value=f"<@{MooseBot.owner}>")
             embed.add_field(name="Server count", value=f"{len(client.guilds)}")
             embed.add_field(name="Invite me to your server!",
                             value="[Invite link](https://discordapp.com/oauth2/authorize?client_id=445936072288108544&scope=bot&permissions=66186303)")
@@ -163,10 +167,10 @@ class MooseBot:
 
     async def senddm(self, message):
         if message.guild is None:
-            if message.author.id == 445936072288108544 or message.author.id == 192519529417408512:
+            if message.author.id == 445936072288108544 or message.author.id == int(MooseBot.owner):
                 return
             else:
-                me = self.client.get_user(192519529417408512)
+                me = self.client.get_user(int(MooseBot.owner))
                 format = f"**{message.author.display_name}**({message.author.id}): `{message.content}`"
                 await me.send(format)
 
@@ -248,7 +252,7 @@ class MooseBot:
 
     @staticmethod
     async def is_owner(ctx):
-        if ctx.author.id in MooseBot.owners:
+        if ctx.author.id in MooseBot.admins:
             return True
         else:
             await ctx.send("You do not have permissions to use this command!")
@@ -268,6 +272,20 @@ class MooseBot:
             return True
         else:
             return False
+
+    @staticmethod
+    async def can_kick(ctx):
+        perm = ctx.author.permissions_in(ctx.channel)
+        if perm.kick_members:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    async def can_ban(ctx):
+        perm = ctx.author.permissions_in(ctx.channel)
+        if perm.ban_members:
+            return True
 
     #
     # async def generate(self, userid):

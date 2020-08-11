@@ -36,7 +36,7 @@ class Economy(Cog):
         else:
             if chance < 10 and message.content.lower() != 'dab':
                 gen_message = await message.channel.send(
-                    f"`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds")
+                    f"`{amount}{MooseBot.currency} has spawned! Type `dab` to collect it! You have 60 seconds")
 
                 def check(m):
                     return m.content.lower() == 'dab'or m.content.lower() == 'даб' and m.channel == message.channel
@@ -46,10 +46,10 @@ class Economy(Cog):
                     try:
                         person = await self.db.money.find_one({'userid': str(msg.author.id)})
                         if 'inventory' not in person:
-                            grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
+                            grant = f"{msg.author.mention} dabbed on the {MooseBot.currency}. `{amount}{MooseBot.currency}` awarded to them."
                             await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
                             grantmsg = await message.channel.send(grant)
-                            # await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                            # await gen_message.edit(content=f"~~`{amount}{MooseBot.currency}` has spawned! Type `dab` to collect it! You have 60 seconds~~")
                             await gen_message.delete()
                             await msg.delete()
                             await asyncio.sleep(3)
@@ -58,33 +58,33 @@ class Economy(Cog):
                         else:
                             inventory = person['inventory']
                             if 'Dab Multiplier' not in inventory:
-                                grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
+                                grant = f"{msg.author.mention} dabbed on the {MooseBot.currency}. `{amount}{MooseBot.currency}` awarded to them."
                                 await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
                             elif 'Dab Multiplier' in inventory:
 
-                                grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. " \
-                                        f"They had a Dab Multiplier so they got double Ᵽ. " \
-                                        f"`{amount * 2}Ᵽ` awarded to them."
+                                grant = f"{msg.author.mention} dabbed on the {MooseBot.currency}. " \
+                                        f"They had a Dab Multiplier so they got double {MooseBot.currency}. " \
+                                        f"`{amount * 2}{MooseBot.currency}` awarded to them."
 
                                 await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount * 2}},
                                                            True)
 
                     except KeyError:
-                        grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
+                        grant = f"{msg.author.mention} dabbed on the {MooseBot.currency}. `{amount}{MooseBot.currency}` awarded to them."
                         await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
                     except TypeError:
-                        grant = f"{msg.author.mention} dabbed on the Ᵽlaceholders. `{amount}Ᵽ` awarded to them."
+                        grant = f"{msg.author.mention} dabbed on the {MooseBot.currency}. `{amount}{MooseBot.currency}` awarded to them."
                         await self.db.money.update_one({'userid': str(msg.author.id)}, {'$inc': {'balance': amount}}, True)
                     grantmsg = await message.channel.send(grant)
-                    # await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                    # await gen_message.edit(content=f"~~`{amount}{MooseBot.currency}` has spawned! Type `dab` to collect it! You have 60 seconds~~")
                     await gen_message.delete()
                     await msg.delete()
                     await asyncio.sleep(3)
                     await grantmsg.delete()
 
                 except asyncio.TimeoutError:
-                    toolate = await message.channel.send("You took to long to dab the Ᵽ.")
-                    # await gen_message.edit(content=f"~~`{amount}Ᵽ` has spawned! Type `dab` to collect it! You have 60 seconds~~")
+                    toolate = await message.channel.send(f"You took to long to dab the {MooseBot.currency}.")
+                    # await gen_message.edit(content=f"~~`{amount}{MooseBot.currency}` has spawned! Type `dab` to collect it! You have 60 seconds~~")
                     await gen_message.delete()
                     await asyncio.sleep(5)
                     await toolate.delete()
@@ -108,9 +108,9 @@ class Economy(Cog):
             balance = await self.db.money.find_one({'userid': str(ctx.author.id)})
 
         if balance is None:
-            await ctx.send(f'{user} is broke and has 0Ᵽ.')
+            await ctx.send(f'{user} is broke and has 0{MooseBot.currency}.')
         else:
-            embed = discord.Embed(title=f"{user}'s Ᵽlaceholders.", description=f'{balance["balance"]}Ᵽ',
+            embed = discord.Embed(title=f"{user}'s {MooseBot.currency}.", description=f'{balance["balance"]}{MooseBot.currency}',
                                   colour=0xb18dff)
             await ctx.send(embed=embed)
 
@@ -120,14 +120,14 @@ class Economy(Cog):
         user = user or None
         amount = amount or None
         if user is None or not isinstance(user, discord.Member):
-            await ctx.send("Please tell me who to give the Ᵽlaceholders to.")
+            await ctx.send(f"Please tell me who to give the {MooseBot.currency} to.")
         elif amount is None:
-            await ctx.send("Please tell me how many Ᵽlaceholders to give.")
+            await ctx.send(f"Please tell me how many {MooseBot.currency} to give.")
         else:
             try:
                 amount = int(amount)
                 await self.db.money.update_one({'userid': str(user.id)}, {'$inc': {'balance': amount}}, True)
-                await ctx.send(f'`{amount}Ᵽ` was given to `{user.display_name}`')
+                await ctx.send(f'`{amount}{MooseBot.currency}` was given to `{user.display_name}`')
             except Exception:
                 await ctx.send("The amount to give the person needs to be a number.")
 
@@ -137,9 +137,9 @@ class Economy(Cog):
         user = user or None
         amount = amount or None
         if user is None or not isinstance(user, discord.Member):
-            await ctx.send("Please tell me who to take the Ᵽlaceholders from.")
+            await ctx.send(f"Please tell me who to take the {MooseBot.currency} from.")
         elif amount is None:
-            await ctx.send("Please tell me how many Ᵽlaceholders to take.")
+            await ctx.send(f"Please tell me how many {MooseBot.currency} to take.")
         else:
             try:
                 amount = int(amount)
@@ -148,17 +148,17 @@ class Economy(Cog):
                     await ctx.send(f"{user.display_name} is already poor enough, no more can be taken from them.")
                 elif (await self.db.money.find_one({'userid': str(user.id)}))['balance'] - amount < 0:
                     await ctx.send(
-                        f"Doing this would cause `{user.display_name}` to go in to debt. Instead, we just set them to 0Ᵽ.")
+                        f"Doing this would cause `{user.display_name}` to go in to debt. Instead, we just set them to 0{MooseBot.currency}.")
 
                     await self.db.money.update_one({'userid': str(user.id)}, {'$inc': {'balance': 0}}, True)
                 else:
                     await self.db.money.update_one({'userid': str(user.id)}, {'$inc': {'balance': -amount}}, True)
-                    await ctx.send(f'`{amount}Ᵽ` was taken from `{user.display_name}`')
+                    await ctx.send(f'`{amount}{MooseBot.currency}` was taken from `{user.display_name}`')
 
             except ValueError:
                 await ctx.send("It needs to be `>takep amount user`")
 
-    @commands.command(aliases=['give'], help='Pay another user some Ᵽlaceholders. \n`>pay amount user`')
+    @commands.command(aliases=['give'], help=f'Pay another user some {MooseBot.currency}. \n`>pay amount user`')
     async def pay(self, ctx, amount=None, *, user: converters.FullMember = None):
         user = user or None
         amount = amount or None
@@ -173,13 +173,13 @@ class Economy(Cog):
                 amount = int(amount)
                 if (await self.db.money.find_one({'userid': str(ctx.author.id)}))['balance'] is None or \
                         (await self.db.money.find_one({'userid': str(ctx.author.id)}))['balance'] < amount:
-                    await ctx.send("You do not have enough Ᵽlaceholders to give that amount.")
+                    await ctx.send(f"You do not have enough {MooseBot.currency} to give that amount.")
                 elif amount <= 0:
                     await ctx.send("You need to give an amount more than 0.")
                 else:
                     await self.db.money.update_one({'userid': str(ctx.author.id)}, {'$inc': {'balance': -amount}})
                     await self.db.money.update_one({'userid': str(user.id)}, {'$inc': {'balance': amount}}, True)
-                    await ctx.send(f"You have paid `{user.display_name}` {amount}Ᵽ")
+                    await ctx.send(f"You have paid `{user.display_name}` {amount}{MooseBot.currency}")
 
             except ValueError:
                 await ctx.send("The amount to pay needs to be a number.")
@@ -192,12 +192,12 @@ class Economy(Cog):
             if person is None:
                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 500}}, True)
                 await self.db.money.update_one({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
-                await ctx.send('500Ᵽ awarded for daily!')
+                await ctx.send(f'500{MooseBot.currency} awarded for daily!')
             elif (await self.db.money.find_one({'userid': user}))['daily'] + datetime.timedelta(
                     days=1) < datetime.datetime.today():
                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 500}}, True)
                 await self.db.money.update_one({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
-                await ctx.send('500Ᵽ awarded for daily!')
+                await ctx.send(f'500{MooseBot.currency} awarded for daily!')
             else:
                 time = (await self.db.money.find_one({'userid': user}))['daily']
                 timeleft = ((await self.db.money.find_one({'userid': user}))['daily'] + datetime.timedelta(
@@ -210,7 +210,7 @@ class Economy(Cog):
         except Exception:
             await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 500}}, True)
             await self.db.money.update_one({'userid': user}, {'$set': {'daily': datetime.datetime.today()}})
-            await ctx.send('500Ᵽ awarded for daily!')
+            await ctx.send(f'500{MooseBot.currency} awarded for daily!')
 
     @commands.command()
     async def weekly(self, ctx):
@@ -220,12 +220,12 @@ class Economy(Cog):
             if person is None:
                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 2500}}, True)
                 await self.db.money.update_one({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
-                await ctx.send('2500Ᵽ awarded for weekly!')
+                await ctx.send(f'2500{MooseBot.currency} awarded for weekly!')
             elif (await self.db.money.find_one({'userid': user}))['weekly'] + datetime.timedelta(
                     days=7) < datetime.datetime.today():
                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 2500}}, True)
                 await self.db.money.update_one({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
-                await ctx.send('2500Ᵽ awarded for weekly!')
+                await ctx.send(f'2500{MooseBot.currency} awarded for weekly!')
             else:
                 time = (await self.db.money.find_one({'userid': user}))['weekly']
                 timeleft = ((await self.db.money.find_one({'userid': user}))['weekly'] + datetime.timedelta(
@@ -239,7 +239,7 @@ class Economy(Cog):
         except Exception:
             await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 2500}}, True)
             await self.db.money.update_one({'userid': user}, {'$set': {'weekly': datetime.datetime.today()}})
-            await ctx.send('2500Ᵽ awarded for weekly!')
+            await ctx.send(f'2500{MooseBot.currency} awarded for weekly!')
 
     @commands.command(aliases=['baltop', 'richlist', 'ballb'], help='See the list of the richest people.')
     async def balancelb(self, ctx):
@@ -257,7 +257,7 @@ class Economy(Cog):
         people = sorted(people.items(), key=lambda kv: kv[1], reverse=True)
         eligable = []
         for i in people:
-            eligable.append(f'▫{order}. **{i[0]}**: {i[1]}Ᵽ\n')
+            eligable.append(f'▫{order}. **{i[0]}**: {i[1]}{MooseBot.currency}\n')
             order += 1
 
         pagesamount = int(len(eligable) / 10)
@@ -330,55 +330,55 @@ class Economy(Cog):
         try:
             amount = int(amount)
             if int(amount) <= 0:
-                await ctx.send('You need to bet at least 1Ᵽ.')
+                await ctx.send(f'You need to bet at least 1{MooseBot.currency}.')
             elif (await self.db.money.find_one({'userid': user}))['balance'] is None or (await self.db.money.find_one({'userid': user}))['balance'] < int(amount):
-                await ctx.send('You do not have enough Ᵽ to bet that amount.')
+                await ctx.send(f'You do not have enough {MooseBot.currency} to bet that amount.')
             else:
                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': -amount}})
                 if chance == 1:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.5)}Ᵽ**',
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.5)}{MooseBot.currency}**',
                                           description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↖   『1.2』\n\n『0.1』 『0.3』 『0.5』**',
                                           colour=0xb18dff)
                     await ctx.send(embed=embed)
                     win = int(amount * 1.5)
                 elif chance == 2:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.7)}Ᵽ**',
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.7)}{MooseBot.currency}**',
                                           description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬆   『1.2』\n\n『0.1』 『0.3』 『0.5』**',
                                           colour=0xb18dff)
                     await ctx.send(embed=embed)
                     win = int(amount * 1.7)
                 elif chance == 3:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 2.4)}Ᵽ**',
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 2.4)}{MooseBot.currency}**',
                                           description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↗   『1.2』\n\n『0.1』 『0.3』 『0.5』**',
                                           colour=0xb18dff)
                     await ctx.send(embed=embed)
                     win = int(amount * 2.4)
                 elif chance == 4:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.2)}Ᵽ**',
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.2)}{MooseBot.currency}**',
                                           description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬅   『1.2』\n\n『0.1』 『0.3』 『0.5』**',
                                           colour=0xb18dff)
                     await ctx.send(embed=embed)
                     win = int(amount * 0.2)
                 elif chance == 5:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.2)}Ᵽ**',
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 1.2)}{MooseBot.currency}**',
                                           description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ➡   『1.2』\n\n『0.1』 『0.3』 『0.5』**',
                                           colour=0xb18dff)
                     await ctx.send(embed=embed)
                     win = int(amount * 1.2)
                 elif chance == 6:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.1)}Ᵽ**',
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.1)}{MooseBot.currency}**',
                                           description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↙   『1.2』\n\n『0.1』 『0.3』 『0.5』**',
                                           colour=0xb18dff)
                     await ctx.send(embed=embed)
                     win = int(amount * 0.1)
                 elif chance == 7:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.3)}Ᵽ**',
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.3)}{MooseBot.currency}**',
                                           description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ⬇   『1.2』\n\n『0.1』 『0.3』 『0.5』**',
                                           colour=0xb18dff)
                     await ctx.send(embed=embed)
                     win = int(amount * 0.3)
                 elif chance == 8:
-                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.5)}Ᵽ**',
+                    embed = discord.Embed(title=f'**{ctx.author} has won: {int(amount * 0.5)}{MooseBot.currency}**',
                                           description='**『1.5』 『1.7』 『2.4』\n\n『0.2』   ↘   『1.2』\n\n『0.1』 『0.3』 『0.5』**',
                                           colour=0xb18dff)
                     await ctx.send(embed=embed)
@@ -481,22 +481,22 @@ class Economy(Cog):
         try:
             amount = int(amount)
             if amount <= 0:
-                await ctx.send('You need to bet at least 1Ᵽ.')
+                await ctx.send(f'You need to bet at least 1{MooseBot.currency}.')
             elif (await self.db.money.find_one({'userid': user}))['balance'] is None or (await self.db.money.find_one({'userid': user}))['balance'] < amount:
-                await ctx.send('You do not have enough Ᵽ to bet that amount.')
+                await ctx.send(f'You do not have enough {MooseBot.currency} to bet that amount.')
                 return
             else:
                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': -amount}})
                 if chance == 100:
-                    await ctx.send(f'You rolled `100` and won `{amount*10}Ᵽ` for rolling 100.')
+                    await ctx.send(f'You rolled `100` and won `{amount*10}{MooseBot.currency}` for rolling 100.')
                     win = amount * 10
                     await self.db.money.update_one({'userid': user}, {'$inc': {'balance': win}})
                 elif chance >= 90:
-                    await ctx.send(f'You rolled `{chance}` and won `{amount*4}Ᵽ` for rolling 90+.')
+                    await ctx.send(f'You rolled `{chance}` and won `{amount*4}{MooseBot.currency}` for rolling 90+.')
                     win = amount * 4
                     await self.db.money.update_one({'userid': user}, {'$inc': {'balance': win}})
                 elif chance >= 66:
-                    await ctx.send(f'You rolled `{chance}` and won `{amount*2}Ᵽ` for rolling 66+.')
+                    await ctx.send(f'You rolled `{chance}` and won `{amount*2}{MooseBot.currency}` for rolling 66+.')
                     win = amount * 2
                     await self.db.money.update_one({'userid': user}, {'$inc': {'balance': win}})
                 else:
@@ -527,14 +527,14 @@ class Economy(Cog):
             try:
                 amount = int(amount)
                 if amount <= 0:
-                    await ctx.send('You need to bet at least 1Ᵽ.')
+                    await ctx.send(f'You need to bet at least 1{MooseBot.currency}.')
                 elif (await self.db.money.find_one({'userid': user}))['balance'] is None or (await self.db.money.find_one({'userid': user}))['balance'] < amount:
-                    await ctx.send('You do not have enough Ᵽ to bet that amount.')
+                    await ctx.send(f'You do not have enough {MooseBot.currency} to bet that amount.')
                 else:
                     await self.db.money.update_one({'userid': str(user)}, {'$inc': {'balance': -amount}})
                     flipside = random.choice(choices)
                     if flipside == side.lower():
-                        await ctx.send(f"I flipped {flipside.title()}, you win `{amount}Ᵽ`")
+                        await ctx.send(f"I flipped {flipside.title()}, you win `{amount}{MooseBot.currency}`")
                         await self.db.money.update_one({'userid': str(user)}, {'$inc': {'balance': amount * 2}})
                     else:
                         await ctx.send(f"I flipped {flipside.title()}, you lose. Sorry.")
@@ -544,7 +544,7 @@ class Economy(Cog):
                     flipside = random.choice(choices)
                     await self.db.money.update_one({'userid': str(user)}, {'$inc': {'balance': 0}})
                     if flipside == side.lower():
-                        await ctx.send(f"I flipped {flipside.title()}, you win `{amount}Ᵽ`")
+                        await ctx.send(f"I flipped {flipside.title()}, you win `{amount}{MooseBot.currency}`")
                         await self.db.money.update_one({'userid': str(user)}, {'$inc': {'balance': amount * 2}})
                     else:
                         await ctx.send(f"I flipped {flipside.title()}, you lose. Sorry.")
@@ -591,7 +591,7 @@ class Economy(Cog):
                 if int(answer) == int(f'{choice:b}'):
                     award = random.randint(20, 70)
                     await ctx.send(
-                        f"Well done! That's correct, `{choice}` in binary is `{choice:b}`. You won `{award}Ᵽ`")
+                        f"Well done! That's correct, `{choice}` in binary is `{choice:b}`. You won `{award}{MooseBot.currency}`")
                     await self.db.money.update_one({'userid': user}, {'$inc': {'balance': award}}, True)
                     await self.gameover(ctx, play)
                 else:
@@ -619,7 +619,7 @@ class Economy(Cog):
             seconds = int(time % 60)
             minutes = int((time % 3600) // 60)
             hours = int(time // 3600)
-            embed = discord.Embed(title="Reaction event.", description=f"React with a 🐛 to be awarded `{amount}Ᵽ`", colour=0xb18dff)
+            embed = discord.Embed(title="Reaction event.", description=f"React with a 🐛 to be awarded `{amount}{MooseBot.currency}`", colour=0xb18dff)
             embed.set_footer(text=f"This event will run for{f' {hours} hours' if hours != 0 else ''}{f',' if hours != 0 and minutes != 0 else ''}{f' {minutes} minutes' if minutes != 0 else ''}{f' and' if minutes != 0 and seconds != 0 else ''}{f' {seconds} seconds' if seconds != 0 else ''} from when it was created.")
             msg = await ctx.send(embed=embed)
             await msg.add_reaction("🐛")

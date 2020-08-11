@@ -74,7 +74,7 @@ class GuessGame(Cog, name="Guessing Game"):
         if amount == 'all':
             amount = (await self.db.money.find_one({'userid': user}))['balance']
         if amount <= 0:
-            await ctx.send("You need to bet at least 1Ᵽ to play.")
+            await ctx.send(f"You need to bet at least 1{MooseBot.currency} to play.")
 
         async def play():
             await ctx.send("Let's play rock, paper, scissors. Select your weapon:")
@@ -97,16 +97,16 @@ class GuessGame(Cog, name="Guessing Game"):
 
             if computer and player in choices:
                 if computer == player:
-                    await ctx.send(f"**Tie!** You both chose {computer.title()}. You lose no Ᵽlaceholders.")
+                    await ctx.send(f"**Tie!** You both chose {computer.title()}. You lose no {MooseBot.currency}.")
                     await self.gameover(ctx, play)
                 elif player in beats[computer]:
                     await ctx.send(
-                        f"**You win!** Moosebot chose: {computer.title()}, and you chose: {player.title()}.You won {amount}Ᵽ.")
+                        f"**You win!** Moosebot chose: {computer.title()}, and you chose: {player.title()}.You won {amount}{MooseBot.currency}.")
                     await self.db.money.update_one({'userid': str(ctx.author.id)}, {'$inc': {'balance': amount}})
                     await self.gameover(ctx, play)
                 else:
                     await ctx.send(
-                        f"**You lose!** Moosebot chose: {computer.title()}, and you chose: {player.title()}.You lost {amount}Ᵽ.")
+                        f"**You lose!** Moosebot chose: {computer.title()}, and you chose: {player.title()}.You lost {amount}{MooseBot.currency}.")
                     await self.db.money.update_one({'userid': str(ctx.author.id)}, {'$inc': {'balance': -amount}})
                     await self.gameover(ctx, play)
             else:

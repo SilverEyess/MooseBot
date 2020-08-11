@@ -54,18 +54,18 @@ class Fishing(Cog):
                                         '''
                                         match = next(iter([i for i in trophy_fish if i not in trophies]), None)
 
-                                        # If there is no match (user has all trophies) then just award them 2000Ᵽ
+                                        # If there is no match (user has all trophies) then just award them 2000
                                         if match is None:
                                             await ctx.send(
-                                                f"@here {ctx.author.mention} caught a trophy fish! However, it looks like you've already got a full collection. Take 20000Ᵽ anyway.")
+                                                f"@here {ctx.author.mention} caught a trophy fish! However, it looks like you've already got a full collection. Take 20000{MooseBot.currency} anyway.")
                                             await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 20000}}, True)
                                             await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'trophiescaught': 1}})
                                             return
 
-                                        # Otherwise, tell them the fish they won, add it to their list of trophies and award them 2000Ᵽ
+                                        # Otherwise, tell them the fish they won, add it to their list of trophies and award them 2000
                                         else:
                                             await ctx.send(
-                                                f"Well hot damn wait up a minute there bud. @here, {ctx.author.mention} just caught a trohpy fish! You caught a {match}! That's amazing tiger! Here's 20000Ᵽ")
+                                                f"Well hot damn wait up a minute there bud. @here, {ctx.author.mention} just caught a trohpy fish! You caught a {match}! That's amazing tiger! Here's 20000{MooseBot.currency}")
                                             await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 20000}}, True)
                                             await self.db.money.update_one({'userid': user}, {'$push': {'fish.trophies': match}})
                                             await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'trophiescaught': 1}})
@@ -85,16 +85,16 @@ class Fishing(Cog):
                         '''
                         match = next(iter([i for i in trophy_fish if i not in trophies]), None)
 
-                        # If there is no match (user has all trophies) then just award them 2000Ᵽ
+                        # If there is no match (user has all trophies) then just award them 2000
                         if match is None:
-                            await ctx.send(f"@here {ctx.author.mention} caught a trophy fish! However, it looks like you've already got a full collection. Take 20000Ᵽ anyway.")
+                            await ctx.send(f"@here {ctx.author.mention} caught a trophy fish! However, it looks like you've already got a full collection. Take 20000{MooseBot.currency} anyway.")
                             await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 20000}}, True)
                             await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'trophiescaught': 1}})
                             return
 
-                        # Otherwise, tell them the fish they won, add it to their list of trophies and award them 2000Ᵽ
+                        # Otherwise, tell them the fish they won, add it to their list of trophies and award them 2000
                         else:
-                            await ctx.send(f"Well hot damn wait up a minute there bud. @here, {ctx.author.mention} just caught a trohpy fish! You caught a {match}! That's amazing tiger! Here's 20000Ᵽ")
+                            await ctx.send(f"Well hot damn wait up a minute there bud. @here, {ctx.author.mention} just caught a trohpy fish! You caught a {match}! That's amazing tiger! Here's 20000{MooseBot.currency}")
                             await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 20000}}, True)
                             await self.db.money.update_one({'userid': user}, {'$push': {'fish.trophies': match}})
                             await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'trophiescaught': 1}})
@@ -113,18 +113,18 @@ class Fishing(Cog):
                     '''
                     match = next(iter([i for i in trophy_fish if i not in trophies]), None)
 
-                    # If there is no match (user has all trophies) then just award them 2000Ᵽ
+                    # If there is no match (user has all trophies) then just award them 2000
                     if match is None:
                         await ctx.send(
-                            f"@here {ctx.author.mention} caught a trophy fish! However, it looks like you've already got a full collection. Take 20000Ᵽ anyway.")
+                            f"@here {ctx.author.mention} caught a trophy fish! However, it looks like you've already got a full collection. Take 20000{MooseBot.currency} anyway.")
                         await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 20000}}, True)
                         await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'trophiescaught': 1}})
                         return
 
-                    # Otherwise, tell them the fish they won, add it to their list of trophies and award them 2000Ᵽ
+                    # Otherwise, tell them the fish they won, add it to their list of trophies and award them 2000
                     else:
                         await ctx.send(
-                            f"Well hot damn wait up a minute there bud. @here, {ctx.author.mention} just caught a trohpy fish! You caught a {match}! That's amazing tiger! Here's 20000Ᵽ")
+                            f"Well hot damn wait up a minute there bud. @here, {ctx.author.mention} just caught a trohpy fish! You caught a {match}! That's amazing tiger! Here's 20000{MooseBot.currency}")
                         await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 20000}}, True)
                         await self.db.money.update_one({'userid': user}, {'$push': {'fish.trophies': match}})
                         await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'trophiescaught': 1}})
@@ -132,11 +132,11 @@ class Fishing(Cog):
 
             '''
             Catch the exception if the user does not have the 'trophylist' entry in their database entry and give them 
-            a random trophy and 2000Ᵽ 
+            a random trophy and 2000 
             '''
         except KeyError:
             trophy = random.choice(trophy_fish)
-            await ctx.send(f"Well hot damn wait up a minute there bud. @here, {ctx.author.mention} just caught a trohpy fish! You caught a {trophy}! That's amazing tiger! Here's 20000Ᵽ")
+            await ctx.send(f"Well hot damn wait up a minute there bud. @here, {ctx.author.mention} just caught a trohpy fish! You caught a {trophy}! That's amazing tiger! Here's 20000{MooseBot.currency}")
             await self.db.money.update_one({'userid': user}, {'$push': {'fish.trophies': trophy}})
             await self.db.money.update_one({'userid': user}, {'$inc': {'balance': 20000}}, True)
             await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'trophiescaught': 1}})
@@ -265,7 +265,7 @@ class Fishing(Cog):
                 await self.db.stats.update_one({'fishingstats': 'all'}, {'$inc': {'totalfishcaught': 1}})
 
         except Exception:
-            await ctx.send(f"{ctx.author.display_name} spent 80Ᵽ and caught a fish weighing {f'{weight/1000}kg.' if weight > 1000 else f'{weight}g.'} {random.choice(fish)}")
+            await ctx.send(f"{ctx.author.display_name} spent 80{MooseBot.currency} and caught a fish weighing {f'{weight/1000}kg.' if weight > 1000 else f'{weight}g.'} {random.choice(fish)}")
             await self.db.money.update_one({'userid': user}, {'$inc': {'fish.totalweight': weight}})
             await self.db.money.update_one({'userid': user}, {'$set': {'fish.largestfish': weight}})
             await self.db.money.update_one({'userid': user}, {'$set': {'fish.recentfish': weight}})
@@ -328,7 +328,7 @@ class Fishing(Cog):
                         f"✴**Most recent fish:** {f'{fishrecent / 1000}kg.' if fishrecent > 1000 else f'{fishrecent}g.'}\n" \
                         f"✴**Total fish caught:** {fishtotal}\n" \
                         f"✴**Fish caught since last sell:** {fishsincesell}\n" \
-                        f"✴**Current fish sell price:** {fishvalue}Ᵽ"
+                        f"✴**Current fish sell price:** {fishvalue}{MooseBot.currency}"
 
                 else:
                     trophytable = fishtable['trophies']
@@ -338,7 +338,7 @@ class Fishing(Cog):
                         f"✴**Most recent fish:** {f'{fishrecent/1000}kg.' if fishrecent > 1000 else f'{fishrecent}g.'}\n" \
                         f"✴**Total fish caught:** {fishtotal}\n" \
                         f"✴**Fish caught since last sell:** {fishsincesell}\n" \
-                        f"✴**Current fish sell price:** {fishvalue}Ᵽ\n" \
+                        f"✴**Current fish sell price:** {fishvalue}{MooseBot.currency}\n" \
                         f"✴**Trophies:**\n {trophies}"
 
                 value = ""

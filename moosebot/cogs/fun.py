@@ -182,7 +182,7 @@ class Fun(Cog):
             length = calc(str(un.display_name))
             if length == "0.0":
                 length = calc(str(un.id))
-        if uid == 192519529417408512:
+        if uid == int(MooseBot.owner):
             await ctx.send(f"{'You have' if user is None else f'{user.display_name} has'} an optimally lengthed wiener at {length}cm long.")
         else:
             await ctx.send(f"{'You have' if user is None else f'{user.display_name} has'} a {length}cm long wiener.")

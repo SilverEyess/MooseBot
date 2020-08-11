@@ -67,7 +67,7 @@ class Moderation(Cog):
             return
         if role.name == 'Member':
             await ctx.send("You can't edit the member role.")
-        elif role in ctx.author.roles or ctx.author.id == 192519529417408512:
+        elif role in ctx.author.roles or ctx.author.id == int(MooseBot.owner):
             if isinstance(colour, discord.Colour):
                 await role.edit(colour=colour)
                 await ctx.send('Colour changed.')
@@ -134,7 +134,7 @@ class Moderation(Cog):
             await ctx.message.delete()
 
     @commands.command(help="Kicks user. \n`>kick user`")
-    @commands.check(MooseBot.is_mod)
+    @commands.check(MooseBot.can_kick)
     async def kick(self, ctx):
         this_server = ctx.guild
         if len(ctx.message.mentions) == 0:
@@ -143,7 +143,7 @@ class Moderation(Cog):
             await ctx.send("You cannot kick yourself.")
         elif len(ctx.message.mentions) == 1:
             user = ctx.message.mentions[0]
-            if user.id == 192519529417408512:
+            if user.id == int(MooseBot.owner):
                 await ctx.send('You cannot kick Daddy dear.')
             else:
                 try:
@@ -160,7 +160,7 @@ class Moderation(Cog):
             await ctx.send("Please only mention one user at a time")
 
     @commands.command(help="Bans user. \n`>ban user`")
-    @commands.check(MooseBot.is_mod)
+    @commands.check(MooseBot.can_ban)
     async def ban(self, ctx):
         this_server = ctx.guild
         if len(ctx.message.mentions) == 0:
@@ -169,7 +169,7 @@ class Moderation(Cog):
             await ctx.send("You cannot ban yourself.")
         elif len(ctx.message.mentions) == 1:
             user = ctx.message.mentions[0]
-            if user.id == 192519529417408512:
+            if user.id == int(MooseBot.owner):
                 await ctx.send('You cannot ban Daddy dear.')
             else:
                 try:

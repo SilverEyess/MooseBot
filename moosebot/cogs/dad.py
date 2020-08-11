@@ -68,7 +68,7 @@ class Dad(Cog):
 
         for im in imlist:
             if lower.startswith(im + " dad") or lower.startswith(im + " father"):
-                if auth == 192519529417408512:
+                if auth == int(MooseBot.owner):
                     try:
                         await ctx.me.edit(nick=authname + "'s child")
                         await ctx.send("Hi daddy <:heart_eyes:447658820529946624>")
@@ -79,8 +79,7 @@ class Dad(Cog):
                     try:
                         await ctx.me.edit(nick=ctx.guild.name + "'s Dad")
                         await ctx.send(
-                            "No {0.author.mention}, <@192519529417408512> is daddy <:heart_eyes:447658820529946624>.".format(
-                                message))
+                            f"No {message.author.mention}, <@{MooseBot.owner}> is daddy <:heart_eyes:447658820529946624>.")
                         await ctx.me.edit(nick=None)
                     except Exception:
                         await ctx.send("No {0.author.mention}, I'm dad.".format(message))
@@ -137,7 +136,7 @@ class Dad(Cog):
         path = "database/dadjokes.txt"
         dadjokes = self.dadload(path)
         emoji = " <:lmoa:446850171134017536>"
-        bottle = self.bot.client.get_user(192519529417408512)
+        bottle = self.bot.client.get_user(int(MooseBot.owner))
 
         if not args:
             dadjokes.append(emoji)
@@ -186,7 +185,7 @@ class Dad(Cog):
     async def embarrass(self, ctx, arg: converters.PartialMember = None, *, args=None):
         path = "database/embarrass.txt"
         embarrass_list = Dad.load_embarrass(path)
-        bottle = self.bot.client.get_user(192519529417408512)
+        bottle = self.bot.client.get_user(int(MooseBot.owner))
         arg = arg or None
         args = args or None
         if arg is None:
@@ -213,7 +212,7 @@ class Dad(Cog):
                 await ctx.send(f"{bottle.mention} add this phrase to the embarrass list? Y/N \n\n `{args}`")
 
                 def check(m):
-                    return m.content.lower() == "yes" or m.content.lower() == "y" or m.content.lower() == "no" or m.content.lower() == "n" and m.author.id == 192519529417408512
+                    return m.content.lower() == "yes" or m.content.lower() == "y" or m.content.lower() == "no" or m.content.lower() == "n" and m.author.id == int(MooseBot.owner)
 
                 try:
                     msg = await self.bot.client.wait_for('message', check=check, timeout=10)
@@ -237,7 +236,7 @@ class Dad(Cog):
                     await ctx.send(f"{bottle.mention} remove this phrase from the embarrass list? Y/N \n\n `{args}`")
 
                     def check(m):
-                        return m.content.lower() == "yes" or m.content.lower() == "y" or m.content.lower() == "no" or m.content.lower() == "n" and m.author.id == 192519529417408512
+                        return m.content.lower() == "yes" or m.content.lower() == "y" or m.content.lower() == "no" or m.content.lower() == "n" and m.author.id == int(MooseBot.owner)
 
                     try:
                         msg = await self.bot.client.wait_for('message', check=check, timeout=10)

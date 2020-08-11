@@ -31,7 +31,7 @@ class Shop(Cog):
                     await ctx.send("You can't set the price for an item to be 0 or less.")
                 else:
                     await shop.insert_one({'name': item, 'name_lower': item.lower(), 'price': price, 'limit': 1})
-                    await ctx.send(f'{item} was added to the shop for {price}Ᵽ')
+                    await ctx.send(f'{item} was added to the shop for {price}{MooseBot.currency}')
             except ValueError:
                 await ctx.send("You need to specify a numerical price. Not whatever that was...")
 
@@ -70,7 +70,7 @@ class Shop(Cog):
             if 'inventory' in person:
                 inventory = person['inventory']
                 if i['name'] in inventory and limit == 1:
-                    embed.add_field(name=f'#{order}: {i["name"]} ✅', value=f'{i["price"]:,d}Ᵽ')
+                    embed.add_field(name=f'#{order}: {i["name"]} ✅', value=f'{i["price"]:,d}{symbol}')
                 elif limit > 1:
                     if 'Bait Bucket' in inventory:
                         limit = limit * 3
@@ -82,15 +82,15 @@ class Shop(Cog):
                                 baittotal = 0
                                 for x in baittable:
                                     baittotal += int(baittable[x])
-                                embed.add_field(name=f'#{order}: {i["name"]} {baittotal}/{limit}', value=f'{i["price"]:,d}Ᵽ')
+                                embed.add_field(name=f'#{order}: {i["name"]} {baittotal}/{limit}', value=f'{i["price"]:,d}{MooseBot.currency}')
                             else:
-                                embed.add_field(name=f'#{order}: {i["name"]} 0/{i["limit"]}', value=f'{i["price"]:,d}Ᵽ')
+                                embed.add_field(name=f'#{order}: {i["name"]} 0/{i["limit"]}', value=f'{i["price"]:,d}{MooseBot.currency}')
                         else:
-                            embed.add_field(name=f'#{order}: {i["name"]} 0/{limit}', value=f'{i["price"]:,d}Ᵽ')
+                            embed.add_field(name=f'#{order}: {i["name"]} 0/{limit}', value=f'{i["price"]:,d}{MooseBot.currency}')
                 else:
-                    embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}Ᵽ')
+                    embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}{MooseBot.currency}')
             else:
-                embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}Ᵽ')
+                embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}{MooseBot.currency}')
 
             pagelength += 1
         curpage = 1
@@ -120,7 +120,7 @@ class Shop(Cog):
                         shoplist.sort('price', pymongo.ASCENDING).skip(skip)
                         for i in await shoplist.to_list(length=9):
                             order += 1
-                            embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}Ᵽ')
+                            embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}{MooseBot.currency}')
                             if curpage == pages:
                                 pagelength += 1
                             else:
@@ -144,7 +144,7 @@ class Shop(Cog):
                         shoplist.sort('price', pymongo.ASCENDING).skip(skip)
                         for i in await shoplist.to_list(length=9):
                             order += 1
-                            embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}Ᵽ')
+                            embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}{MooseBot.currency}')
                             pagelength += 1
                         await msg.edit(embed=embed)
                     await msg.remove_reaction(emoji='◀', member=ctx.author)
@@ -205,22 +205,22 @@ class Shop(Cog):
                     elif item['name'].endswith("Bait"):
                         await db.money.update_one({'userid': user}, {'$inc': {f'fish.bait.{item["name"]}': amount}})
                         await db.money.update_one({'userid': user}, {'$inc': {'balance': - (item['price'] * amount)}})
-                        await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price'] * amount}Ᵽ` has been deducted from your account.")
+                        await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price'] * amount}{MooseBot.currency}` has been deducted from your account.")
                     else:
                         await db.money.update_one({'userid': user}, {'$push': {'inventory': item['name']}})
                         await db.money.update_one({'userid': user}, {'$inc': {'balance': - item['price']}})
-                        await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+                        await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}{MooseBot.currency}` has been deducted from your account.")
 
                 elif person['balance'] < item['price']:
                     await ctx.send("You do not have enough money to buy this.")
                 elif item['name'].endswith("Bait"):
                     await db.money.update_one({'userid': user}, {'$inc': {f'fish.bait.{item["name"]}': 1}})
                     await db.money.update_one({'userid': user}, {'$inc': {'balance': - item['price']}})
-                    await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+                    await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}{MooseBot.currency}` has been deducted from your account.")
                 else:
                     await db.money.update_one({'userid': user}, {'$push': {'inventory': item['name']}})
                     await db.money.update_one({'userid': user}, {'$inc': {'balance': - item['price']}})
-                    await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+                    await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}{MooseBot.currency}` has been deducted from your account.")
             else:
                 inventory = person['inventory']
                 if item['name'].endswith("Bait"):
@@ -243,14 +243,14 @@ class Shop(Cog):
                                 else:
                                     await db.money.update_one({'userid': user}, {'$inc': {f'fish.bait.{item["name"]}': amount}})
                                     await db.money.update_one({'userid': user}, {'$inc': {'balance': - (item['price'] * amount)}})
-                                    await ctx.send(f"Congratulations on your new purchase of {amount} {item['name']}s! `{item['price'] * amount}Ᵽ` has been deducted from your account.")
+                                    await ctx.send(f"Congratulations on your new purchase of {amount} {item['name']}s! `{item['price'] * amount}{MooseBot.currency}` has been deducted from your account.")
                             else:
                                 if person['balance'] < item['price']:
                                     await ctx.send('You need more money to buy this.')
                                 else:
                                     await db.money.update_one({'userid': user}, {'$inc': {f'fish.bait.{item["name"]}': 1}})
                                     await db.money.update_one({'userid': user}, {'$inc': {'balance': - item['price']}})
-                                    await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+                                    await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}{MooseBot.currency}` has been deducted from your account.")
 
                         if totalbait > buylimit:
                             await ctx.send("Looks like you've already got the maximum amount of bait. Do some fishing to exhaust it, or buy a bait bucket to hold more.")
@@ -263,14 +263,14 @@ class Shop(Cog):
                                 else:
                                     await db.money.update_one({'userid': user}, {'$inc': {f'fish.bait.{item["name"]}': amount}})
                                     await db.money.update_one({'userid': user}, {'$inc': {'balance': - (item['price'] * amount)}})
-                                    await ctx.send(f"Congratulations on your new purchase of {amount} {item['name']}s! `{item['price'] * amount}Ᵽ` has been deducted from your account.")
+                                    await ctx.send(f"Congratulations on your new purchase of {amount} {item['name']}s! `{item['price'] * amount}{MooseBot.currency}` has been deducted from your account.")
                             else:
                                 if person['balance'] < item['price']:
                                     await ctx.send('You need more money to buy that much.')
                                 else:
                                     await db.money.update_one({'userid': user}, {'$inc': {f'fish.bait.{item["name"]}': 1}})
                                     await db.money.update_one({'userid': user}, {'$inc': {'balance': - item['price']}})
-                                    await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+                                    await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}{MooseBot.currency}` has been deducted from your account.")
                 elif item['name'] in inventory:
                     await ctx.send(f"You already own a {item['name']}")
                 elif person['balance'] < item['price']:
@@ -278,7 +278,7 @@ class Shop(Cog):
                 else:
                     await db.money.update_one({'userid': user}, {'$push': {'inventory': item['name']}})
                     await db.money.update_one({'userid': user}, {'$inc': {'balance': - item['price']}})
-                    await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}Ᵽ` has been deducted from your account.")
+                    await ctx.send(f"Congratulations on your new purchase of {item['name']}! `{item['price']}{MooseBot.currency}` has been deducted from your account.")
             # except Exception:
             #     await ctx.send("Something went wrong. Sorry. This is still WIP")
 

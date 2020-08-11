@@ -81,7 +81,7 @@ class Info(Cog):
 
     @commands.command(aliases=["fb"], help="Send feedback to the bot author. \n`>feedback what you want to send here`")
     async def feedback(self, ctx, *, arg):
-        user = ctx.bot.get_user(192519529417408512)
+        user = ctx.bot.get_user(int(MooseBot.owner))
         embed = discord.Embed(
             title=f"Feedback from {ctx.author.name}({ctx.author.id}) on {ctx.guild.name}({ctx.guild.id}):",
             description=arg, colour=0xb18dff)
@@ -131,7 +131,7 @@ class Info(Cog):
     @commands.command(pass_context=True, help="Returns information about this bot.")
     async def info(self, ctx):
         embed = discord.Embed(title="MooseBot", description="This bot a moose.", colour=0xb18dff)
-        embed.add_field(name="Author", value="<@192519529417408512>")
+        embed.add_field(name="Author", value=f"<@{MooseBot.owner}>")
         embed.add_field(name='Contributors', value='<@702226595670261851>')
         embed.add_field(name="Server count", value=f"{len(self.bot.client.guilds)}")
         embed.add_field(name="Invite me to your server!",
