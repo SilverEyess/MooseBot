@@ -36,7 +36,7 @@ class Economy(Cog):
         else:
             if chance < 10 and message.content.lower() != 'dab':
                 gen_message = await message.channel.send(
-                    f"`{amount}{MooseBot.currency}` has spawned! Type `dab` to collect it! You have 60 seconds")
+                    f"`{amount}{MooseBot.currency} has spawned! Type `dab` to collect it! You have 60 seconds")
 
                 def check(m):
                     return m.content.lower() == 'dab'or m.content.lower() == 'даб' and m.channel == message.channel
