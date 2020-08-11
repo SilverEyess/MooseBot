@@ -252,7 +252,7 @@ class MooseBot:
 
     @staticmethod
     async def is_owner(ctx):
-        if ctx.author.id in MooseBot.admins:
+        if str(ctx.author.id) in MooseBot.admins or ctx.author.id == int(MooseBot.owner):
             return True
         else:
             await ctx.send("You do not have permissions to use this command!")

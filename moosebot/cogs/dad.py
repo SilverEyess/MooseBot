@@ -40,10 +40,11 @@ class Dad(Cog):
             await self.doingreply(message)
 
     async def dad(self, message, ctx):
-        members = [m for m in ctx.guild.members if not m.bot and message.author.id != m.id]
+        members = [m for m in ctx.guild.members if not m.bot and ctx.author.id != m.id]
         # Avoid error if there are no other users. If this happens, use MooseBot himself.
         winner = random.choice(members) if members else self.bot.client.user
         winner_mention = winner.mention
+        print(ctx)
 
         im_list = ["A sissy", "Boring :sleeping:", "Lost", "Always confused", "Unemployed", "Spamming",
                    "A NEET", "A drongo", "Regretting my life decisions that have brought me to this point",
@@ -61,14 +62,18 @@ class Dad(Cog):
             winner2_mention = random.choice(other_winners).mention
             im_list.append(f"Cheating on {winner_mention} with {winner2_mention}")
 
-        auth = message.author.id
+        auth = ctx.author.id
         authname = ctx.author.display_name
         imlist = ["i'm", "im", "i am", "i m", "i’m", "(iam)", "(i'm)", "(im)", "(i am)"]
         lower = message.content.lower()
-
+        print(auth)
+        print(MooseBot.owner)
+        print(lower)
         for im in imlist:
             if lower.startswith(im + " dad") or lower.startswith(im + " father"):
+
                 if auth == int(MooseBot.owner):
+                    print("MATCH")
                     try:
                         await ctx.me.edit(nick=authname + "'s child")
                         await ctx.send("Hi daddy <:heart_eyes:447658820529946624>")
@@ -79,10 +84,10 @@ class Dad(Cog):
                     try:
                         await ctx.me.edit(nick=ctx.guild.name + "'s Dad")
                         await ctx.send(
-                            f"No {message.author.mention}, <@{MooseBot.owner}> is daddy <:heart_eyes:447658820529946624>.")
+                            f"No {ctx.author.mention}, <@{MooseBot.owner}> is daddy <:heart_eyes:447658820529946624>.")
                         await ctx.me.edit(nick=None)
                     except Exception:
-                        await ctx.send("No {0.author.mention}, I'm dad.".format(message))
+                        await ctx.send(f"No {ctx.author.mention}, I'm dad.")
             elif lower == im:
                 await ctx.send(random.choice(im_list))
             elif lower.startswith(im + " tler did nothing wrong"):
@@ -97,10 +102,10 @@ class Dad(Cog):
                     users_dad = authname + "'s dad"
                     try:
                         await ctx.me.edit(nick=users_dad)
-                        await ctx.send("Hi {}, I'm dad.".format(message.content[len(im) + 1:]))
+                        await ctx.send(f"Hi {ctx.content[len(im) + 1:]}, I'm dad.")
                         await ctx.me.edit(nick=None)
                     except Exception:
-                        await ctx.send("Hi {}, I'm dad.".format(message.content[len(im) + 1:]))
+                        await ctx.send(f"Hi {ctx.content[len(im) + 1:]}, I'm dad.")
                 finally:
                     try:
                         await ctx.me.edit(nick=None)

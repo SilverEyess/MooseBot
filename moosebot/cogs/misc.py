@@ -16,18 +16,11 @@ class Misc(Cog):
 
     @commands.command()
     @commands.check(MooseBot.is_owner)
-    async def calc(self, ctx, *, args):
-        dec = decimal.Context()
-        dec.prec = 100
-
-        def convert(f):
-            d1 = dec.create_decimal(repr(f))
-            return format(d1, 'f')
-
+    async def eval(self, ctx, *, args):
         args = args.split(',')
         args = ''.join(args)
-        e = int(float(convert(eval(args))))
-        await ctx.send(f'{e:,d}')
+        e = eval(args)
+        await ctx.send(e)
 
     @commands.command(help="Returns my gender.")
     async def gender(self, ctx):
@@ -64,7 +57,8 @@ class Misc(Cog):
         ogs = []
         for i in MooseBot.admins:
             ogs.append(i)
-        if message.author.id in ogs:
+        ogs.append(MooseBot.owner)
+        if str(message.author.id) in ogs:
             return
         elif message.content.lower() in wordlist:
             try:

@@ -10,12 +10,14 @@ with open('database/config.json') as json_file:
     token = data['config'][0]['token']
     MooseBot.prefix = data['config'][0]['prefix']
     MooseBot.admins.append(data['config'][0]['owner'])
+    MooseBot.owner = data['config'][0]['owner']
     admins = data['config'][0]['admins'].split(',')
     for i in admins:
         MooseBot.admins.append(i)
     print(MooseBot.admins)
     MooseBot.currency = data['config'][0]['currency']
     print(MooseBot.currency)
+    print(MooseBot.owner)
 
 # with open('database/token.txt') as f:
 #     token = f.readline().strip()
