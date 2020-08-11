@@ -1,0 +1,16 @@
+{
+    "config": [
+        {
+            "token": "",
+            "prefix": "",
+            "owner": "",
+            "admins": "",
+            "currency": "",
+            "Place your bots token in the empty quotations after token. Same for the prefix you wish your commands to have and the ID of the owner of the bot.": "ignore",
+			"To get user IDs, right click the user and click 'Copy ID'.": "ignore",
+			"Admins are treated as extra owners of the bot, therefore have all permissions to bot commands, however bot replies that have context to owner will only be for": "ignore",
+			"the owner id, eg. dad replies and trying to ban owner. Place admin IDs in the quotations, seperated by commas(,) with NO spaces.": "ignore",
+			"For currency, any unicode characters/symbols should work. If unsure, just try it and see if it works.": "ignore"
+        }
+    ]
+}
