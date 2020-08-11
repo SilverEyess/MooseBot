@@ -4,6 +4,7 @@ database/avatar
 database/economy
 database/experience
 database/token.txt
+database/config.json
 # Compiled files
 pip-log.txt
 *.py[cod]
