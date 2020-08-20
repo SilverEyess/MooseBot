@@ -107,14 +107,13 @@ class Info(Cog):
         member_date = datetime.date(member.created_at.year, member.created_at.month, member.created_at.day)
         age = datetime.date.today() - member_date
         roles = [f"`{i.name}`" for i in member.roles]
+        isowner = ""
         if member == ctx.guild.owner:
             isowner = "👑__**Guild owner**__👑\n"
-        else:
-            isowner = ""
         description = f"{isowner}▫**User ID**: `{member.id}`\n▫**Join Date**: {member.joined_at.strftime('%d/%m/%Y')}\n" \
                       f"▫**Account Created**: {member.created_at.strftime('%d/%m/%Y')}\n▫**Account Age**: {age.days} days" \
                       f"\n▫**Voice Channel**: {member.voice.channel.name if member.voice else 'None'}\n▫**Playing Now**: " \
-                      f"{member.activity.name if member.activity.name != None else member.activity}\n▫**Colour**: {str(member.colour).upper()}\n▫**Status**: {str(member.status).title()}"
+                      f"{'' if not member.activity else member.activity.name}\n▫**Colour**: {str(member.colour).upper()}\n▫**Status**: {str(member.status).title()}"
         embed = discord.Embed(title=f"User info for {member}", description=description,
                               colour=0xb18dff if member.colour == discord.Colour(000000) else member.colour)
         if len(member.roles) > 1:
