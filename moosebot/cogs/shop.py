@@ -70,7 +70,7 @@ class Shop(Cog):
             if 'inventory' in person:
                 inventory = person['inventory']
                 if i['name'] in inventory and limit == 1:
-                    embed.add_field(name=f'#{order}: {i["name"]} ✅', value=f'{i["price"]:,d}{symbol}')
+                    embed.add_field(name=f'#{order}: {i["name"]} ✅', value=f'{i["price"]:,d}{MooseBot.currency}')
                 elif limit > 1:
                     if 'Bait Bucket' in inventory:
                         limit = limit * 3
