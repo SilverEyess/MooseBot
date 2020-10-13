@@ -44,6 +44,7 @@ class Dad(Cog):
         # Avoid error if there are no other users. If this happens, use MooseBot himself.
         winner = random.choice(members) if members else self.bot.client.user
         winner_mention = winner.mention
+        print("HELLO")
         print(ctx)
 
         im_list = ["A sissy", "Boring :sleeping:", "Lost", "Always confused", "Unemployed", "Spamming",
@@ -71,7 +72,6 @@ class Dad(Cog):
         print(lower)
         for im in imlist:
             if lower.startswith(im + " dad") or lower.startswith(im + " father"):
-
                 if auth == int(MooseBot.owner):
                     print("MATCH")
                     try:
@@ -83,8 +83,7 @@ class Dad(Cog):
                 else:
                     try:
                         await ctx.me.edit(nick=ctx.guild.name + "'s Dad")
-                        await ctx.send(
-                            f"No {ctx.author.mention}, <@{MooseBot.owner}> is daddy <:heart_eyes:447658820529946624>.")
+                        await ctx.send(f"No {ctx.author.mention}, <@{MooseBot.owner}> is daddy <:heart_eyes:447658820529946624>.")
                         await ctx.me.edit(nick=None)
                     except Exception:
                         await ctx.send(f"No {ctx.author.mention}, I'm dad.")
@@ -102,15 +101,15 @@ class Dad(Cog):
                     users_dad = authname + "'s dad"
                     try:
                         await ctx.me.edit(nick=users_dad)
-                        await ctx.send(f"Hi {ctx.content[len(im) + 1:]}, I'm dad.")
+                        await ctx.send(f"Hi {ctx.message.content[len(im) + 1:]}, I'm dad.")
                         await ctx.me.edit(nick=None)
                     except Exception:
-                        await ctx.send(f"Hi {ctx.content[len(im) + 1:]}, I'm dad.")
+                        await ctx.send(f"Hi {ctx.message.content[len(im) + 1:]}, I'm dad.")
                 finally:
                     try:
                         await ctx.me.edit(nick=None)
                     except Exception:
-                        pass
+                        print(Exception)
 
     def dadload(self, path):
         dadjokes = []
