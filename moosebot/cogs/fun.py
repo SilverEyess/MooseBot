@@ -198,7 +198,7 @@ class Fun(Cog):
         await ctx.send(embed=embed)
 
     @commands.command(aliases=["randomnumber", "random", "number"],help="This command returns a random number between the 2 given numbers. Both numbers must be above"
-                           "0 and the second number must be greater than the first. \n `>rng num1 num2`")
+                           " 0 and the second number must be greater than the first. \n `>rng num1 num2`")
     async def rng(self, ctx, num1=None, num2=None):
         num1 = num1 or None
         num2 = num2 or None
