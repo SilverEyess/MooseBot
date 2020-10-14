@@ -197,7 +197,8 @@ class Fun(Cog):
         embed.set_image(url=meme.url)
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(aliases=["randomnumber", "random", "number"],help="This command returns a random number between the 2 given numbers. Both numbers must be above"
+                           "0 and the second number must be greater than the first. \n `rng num1 num2`")
     async def rng(self, ctx, num1=None, num2=None):
         num1 = num1 or None
         num2 = num2 or None
@@ -207,16 +208,24 @@ class Fun(Cog):
         else:
             try:
                 num1 = int(num1)
+                if num1 < 0:
+                    num1 = 0
+                    await ctx.send("Your first number was below 0. 0 was selected as minimum instead.")
             except Exception:
-                num1 = 1
+                num1 = 0
                 await ctx.send("Your first 'number' wasn't a number. 1 was selected as minimum instead.")
             try:
                 num2 = int(num2)
+                if num2 < 0:
+                    num2 = 100
+                    await ctx.send("Your second number was below 0. 100 was selected as minimum instead.")
+                elif num2 < num1:
+                    num2 = num1+(random.randint(1, 100))
+                    await ctx.send(f"Your second number was below your first. {num2} was selected instead.")
             except Exception:
                 num2 = 100
                 await ctx.send("Your second 'number' wasn't a number. 100 was selected as maximum instead.")
         await ctx.send(f"Your random number between {num1} and {num2} is: {random.randint(num1, num2)}")
-
 
     @commands.command(aliases=['trans', 'gt'], help="This command will translate text. Provide a language as the first "
                                                     "argument to translate **TO** that language. Otherwise just enter "
