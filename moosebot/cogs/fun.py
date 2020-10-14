@@ -197,6 +197,27 @@ class Fun(Cog):
         embed.set_image(url=meme.url)
         await ctx.send(embed=embed)
 
+    @commands.command()
+    async def rng(self, ctx, num1=None, num2=None):
+        num1 = num1 or None
+        num2 = num2 or None
+        if num1 is None or num2 is None:
+            num1 = 1
+            num2 = 100
+        else:
+            try:
+                num1 = int(num1)
+            except Exception:
+                num1 = 1
+                await ctx.send("Your first 'number' wasn't a number. 1 was selected as minimum instead.")
+            try:
+                num2 = int(num2)
+            except Exception:
+                num2 = 100
+                await ctx.send("Your second 'number' wasn't a number. 100 was selected as maximum instead.")
+        await ctx.send(f"Your random number between {num1} and {num2} is: {random.randint(num1, num2)}")
+
+
     @commands.command(aliases=['trans', 'gt'], help="This command will translate text. Provide a language as the first "
                                                     "argument to translate **TO** that language. Otherwise just enter "
                                                     "your text and it will translate to English. \n`>gt foreign text` \n`gt language text to translate to that language`")
