@@ -558,6 +558,9 @@ class Economy(Cog):
                                                          timeout=60)
                 datatype(message.content)
                 return message.content
+            except TimeoutError:
+                await ctx.send("You took too long to answer.")
+                return
             except Exception:
                 await ctx.send(error)
 
