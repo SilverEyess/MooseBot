@@ -551,63 +551,64 @@ class Economy(Cog):
                 else:
                     await ctx.send("You need to give me a number to gamble. Not whatever that was...")
 
-    async def get_input(self, ctx, datatype, error=''):
-        while True:
-            try:
-                message = await self.bot.client.wait_for('message', check=lambda message: message.author is ctx.author,
-                                                         timeout=60)
-                datatype(message.content)
-                return message.content
-            except TimeoutError:
-                await ctx.send("You took too long to answer.")
-                return
-            except Exception:
-                await ctx.send(error)
+    # async def get_input(self, ctx, datatype, error=''):
+    #     while True:
+    #         try:
+    #             message = await self.bot.client.wait_for('message', check=lambda msg: msg.author is ctx.author,
+    #                                                      timeout=60)
+    #             datatype(message.content)
+    #             return message.content
+    #         except TimeoutError:
+    #             await ctx.send("You took too long to answer.")
+    #             return
+    #         except Exception:
+    #             await ctx.send(error)
+    #
+    # async def gameover(self, ctx, funct):
+    #     await ctx.send("Do you want to play again? (**Yes**/**No**)")
+    #     self.message = await self.get_input(ctx, str)
+    #     self.message = self.message.lower()
+    #
+    #     if self.message == 'yes' or self.message == 'y':
+    #         await funct()
+    #     elif self.message == 'no' or self.message == 'n':
+    #         await ctx.send("Thanks for playing!")
+    #     else:
+    #         await self.gameover(ctx, funct)
+    #
+    # @commands.command(hidden=True)
+    # @commands.check(MooseBot.is_owner)
+    # async def work(self, ctx, game=None):
+    #     game = game or None
+    #     user = str(ctx.author.id)
+    #     binary = ['b', 'bin', 'binary']
+    #
+    #     if game is None:
+    #         await ctx.send('Please specify the type of work you want to do. (Binary/more to come)')
+    #
+    #     elif game.lower() in binary:
+    #
+    #         async def play():
+    #             choice = random.randint(1, 255)
+    #             await ctx.send(f'What is `{choice}` in binary?')
+    #             answer = await self.get_input(ctx, int, 'Enter a number, not that...')
+    #             if int(answer) == int(f'{choice:b}'):
+    #                 award = random.randint(20, 70)
+    #                 await ctx.send(
+    #                     f"Well done! That's correct, `{choice}` in binary is `{choice:b}`. You won `{award}{MooseBot.currency}`")
+    #                 await self.db.money.update_one({'userid': user}, {'$inc': {'balance': award}}, True)
+    #                 await self.gameover(ctx, play)
+    #             else:
+    #                 try:
+    #                     wrong = int(answer, 2)
+    #                 except ValueError:
+    #                     wrong = int(answer)
+    #                 await ctx.send(f"That was incorrect. `{choice}` in binary is `{choice:b}`. You entered `{wrong}`")
+    #                 await self.gameover(ctx, play)
+    #
+    #         await play()
 
-    async def gameover(self, ctx, funct):
-        await ctx.send("Do you want to play again? (**Yes**/**No**)")
-        self.message = await self.get_input(ctx, str)
-        self.message = self.message.lower()
-
-        if self.message == 'yes' or self.message == 'y':
-            await funct()
-        elif self.message == 'no' or self.message == 'n':
-            await ctx.send("Thanks for playing!")
-        else:
-            await self.gameover(ctx, funct)
-
-    @commands.command()
-    async def work(self, ctx, game=None):
-        game = game or None
-        user = str(ctx.author.id)
-        binary = ['b', 'bin', 'binary']
-
-        if game is None:
-            await ctx.send('Please specify the type of work you want to do. (Binary/more to come)')
-
-        elif game.lower() in binary:
-
-            async def play():
-                choice = random.randint(1, 255)
-                await ctx.send(f'What is `{choice}` in binary?')
-                answer = await self.get_input(ctx, int, 'Enter a number, not that...')
-                if int(answer) == int(f'{choice:b}'):
-                    award = random.randint(20, 70)
-                    await ctx.send(
-                        f"Well done! That's correct, `{choice}` in binary is `{choice:b}`. You won `{award}{MooseBot.currency}`")
-                    await self.db.money.update_one({'userid': user}, {'$inc': {'balance': award}}, True)
-                    await self.gameover(ctx, play)
-                else:
-                    try:
-                        wrong = int(answer, 2)
-                    except ValueError:
-                        wrong = int(answer)
-                    await ctx.send(f"That was incorrect. `{choice}` in binary is `{choice:b}`. You entered `{wrong}`")
-                    await self.gameover(ctx, play)
-
-            await play()
-
-    @commands.command()
+    @commands.command(hidden=True)
     @commands.check(MooseBot.is_owner)
     async def event(self, ctx, amount=None, time: int=None):
         amount = amount or None
