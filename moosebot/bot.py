@@ -88,7 +88,10 @@ class MooseBot:
             except Exception:
                 if member.guild.id == 768313287150141480:
                     welcome = client.get_channel(768313339926675486)
-                    await welcome.send(random.choice(choices).format(member.mention, winner))
+                    try:
+                        await welcome.send(random.choice(choices).format(member.mention, winner))
+                    except Exception:
+                        await welcome.send(random.choice(choices).format(member.mention))
             await asyncio.gather(generate(str(member.id)))
 
 
