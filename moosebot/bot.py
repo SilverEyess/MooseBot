@@ -78,18 +78,19 @@ class MooseBot:
                        "I thought {1} was lame, but now that {0} is here, I'm not sure.")
             try:
                 server = await self.db.server.find_one({'serverid': str(member.guild.id)})
+                if server is None:
+                    await self.db.server.update_one({'serverid': str(member.guild.id)})
+                elif 'welcomechannel' in server:
+                    welcome = client.get_channel(int(server['welcomechannel']))
+                    await welcome.send(random.choice(choices).format(member.mention, winner))
+                else:
+                    return
             except Exception:
                 if member.guild.id == 768313287150141480:
                     welcome = client.get_channel(768313339926675486)
                     await welcome.send(random.choice(choices).format(member.mention, winner))
-            #await asyncio.gather(generate(str(member.id)))
-            if server is None:
-                await self.db.server.update_one({'serverid': str(member.guild.id)})
-            elif 'welcomechannel' in server:
-                welcome = client.get_channel(int(server['welcomechannel']))
-                await welcome.send(random.choice(choices).format(member.mention, winner))
-            else:
-                return
+            await asyncio.gather(generate(str(member.id)))
+
 
         async def generate(user):
 
