@@ -61,7 +61,6 @@ class MooseBot:
             self.database.db.lvl.insert_one({'serverid': str(guild.id)})
             self.database.db.xp.insert_one({'serverid': str(guild.id)})
 
-
         # @client.event
         # async def on_command_error(ctx, error):
         #     if isinstance(error, commands.CommandNotFound):
@@ -76,24 +75,16 @@ class MooseBot:
                        "{} once promised me a bike, they never delivered.", "It's dangerous to go alone, take {}!",
                        "Hide the weed, {} is here!", "Party is over... {} showed up.",
                        "I thought {1} was lame, but now that {0} is here, I'm not sure.")
-            try:
-                server = await self.db.server.find_one({'serverid': str(member.guild.id)})
-                if server is None:
-                    await self.db.server.update_one({'serverid': str(member.guild.id)})
-                elif 'welcomechannel' in server:
-                    welcome = client.get_channel(int(server['welcomechannel']))
-                    await welcome.send(random.choice(choices).format(member.mention, winner))
-                else:
-                    return
-            except Exception:
-                if member.guild.id == 768313287150141480:
-                    welcome = client.get_channel(768313339926675486)
-                    try:
-                        await welcome.send(random.choice(choices).format(member.mention, winner))
-                    except Exception:
-                        await welcome.send(random.choice(choices).format(member.mention))
-            await asyncio.gather(generate(str(member.id)))
 
+            server = await self.db.server.find_one({'serverid': str(member.guild.id)})
+            await asyncio.gather(generate(str(member.id)))
+            if server is None:
+                await self.db.server.update_one({'serverid': str(member.guild.id)})
+            elif 'welcomechannel' in server:
+                welcome = client.get_channel(int(server['welcomechannel']))
+                await welcome.send(random.choice(choices).format(member.mention, winner))
+            else:
+                return
 
         async def generate(user):
 
