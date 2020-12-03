@@ -61,6 +61,10 @@ class MooseBot:
             self.database.db.lvl.insert_one({'serverid': str(guild.id)})
             self.database.db.xp.insert_one({'serverid': str(guild.id)})
 
+            if guild.id == 756642878234820642:
+                await channel.send("I can't be here")
+                await guild.leave()
+
         # @client.event
         # async def on_command_error(ctx, error):
         #     if isinstance(error, commands.CommandNotFound):
