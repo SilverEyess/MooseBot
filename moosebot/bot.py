@@ -42,7 +42,6 @@ class MooseBot:
 
         @client.event
         async def on_guild_join(guild):
-
             if guild.system_channel is not None:
                 channel = guild.system_channel
             else:
@@ -62,9 +61,10 @@ class MooseBot:
             self.database.db.lvl.insert_one({'serverid': str(guild.id)})
             self.database.db.xp.insert_one({'serverid': str(guild.id)})
             if str(guild.id) == "756642878234820642":
+                user = client.get_user(int(MooseBot.owner))
+                await user.send(f"Joined guild {guild.name}: {guild.id}")
                 await channel.send("I can't be here")
                 await client.get_guild(756642878234820642).leave()
-
 
         # @client.event
         # async def on_command_error(ctx, error):
@@ -143,28 +143,6 @@ class MooseBot:
                     self.what(ctx)
                 )
             await client.process_commands(message)
-
-
-        @client.event
-        async def on_guild_join(guild):
-            if guild.system_channel is not None:
-                channel = guild.system_channel
-            else:
-                for c in guild.text_channels:
-                    if not c.permissions_for(guild.me).send_messages:
-                        continue
-                    channel = c
-            embed = discord.Embed(title="Thanks for inviting me! I am Moosebot.",
-                                  description="I require admin permissions to fully function!", colour=0xb18dff)
-            embed.add_field(name="Author", value=f"<@{MooseBot.owner}>")
-            embed.add_field(name="Server count", value=f"{len(client.guilds)}")
-            embed.add_field(name="Invite me to your server!",
-                            value="[Invite link](https://discordapp.com/oauth2/authorize?client_id=445936072288108544&scope=bot&permissions=66186303)")
-            embed.add_field(name="Join my server!", value="[Join here!](https://discord.gg/7Jcu6yn)")
-            embed.set_thumbnail(url=guild.me.avatar_url_as(format='png'))
-            await channel.send(embed=embed)
-            self.database.db.lvl.insert_one({'serverid': str(guild.id)})
-            self.database.db.xp.insert_one({'serverid': str(guild.id)})
 
     def launch(self, token):
         self.client.run(token)
