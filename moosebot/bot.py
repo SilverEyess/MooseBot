@@ -60,11 +60,6 @@ class MooseBot:
             await channel.send(embed=embed)
             self.database.db.lvl.insert_one({'serverid': str(guild.id)})
             self.database.db.xp.insert_one({'serverid': str(guild.id)})
-            if str(guild.id) == "756642878234820642":
-                user = client.get_user(int(MooseBot.owner))
-                await user.send(f"Joined guild {guild.name}: {guild.id}")
-                await channel.send("I can't be here")
-                await client.get_guild(756642878234820642).leave()
 
         # @client.event
         # async def on_command_error(ctx, error):
@@ -90,6 +85,9 @@ class MooseBot:
                 await welcome.send(random.choice(choices).format(member.mention, winner))
             else:
                 return
+            if 'defaultrole' in server:
+                role = MooseBot.converters.Role(server['defaultrole'])
+                await member.edit(roles=role)
 
         async def generate(user):
 
@@ -132,8 +130,19 @@ class MooseBot:
 
         @client.event
         async def on_message(message):
+            serverid = str(message.guild.id)
+            server = await self.db.server.find_one({'serverid': serverid})
             if isinstance(message.channel, discord.abc.PrivateChannel):
                 await asyncio.gather(self.senddm(message))
+            elif server is not None:
+                if 'reactblacklist' not in server:
+                    await self.what(message.context)
+                elif serverid in server['reactblacklist']:
+                    return None
+                elif str(message.channel.id) in server['reactblacklist']:
+                    return None
+                else:
+                    await self.what(message.context)
             else:
                 ctx = await client.get_context(message)
                 await asyncio.gather(
@@ -216,6 +225,7 @@ class MooseBot:
 
     async def what(self, ctx):
         m = ctx.message.content.lower()
+
         whatlist = ["what", "wat", "wot", "wut", "scuseme"]
         for wat in whatlist:
             if m.strip(' ?!') == wat:

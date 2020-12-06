@@ -125,6 +125,27 @@ class Moderation(Cog):
             await self.db.server.update_one({'serverid': serverid}, {'$set': {'welcomechannel': channel}})
             await ctx.send("Welcome channel updated.")
 
+    @commands.command(aliases=['sdr'])
+    @commands.check(MooseBot.is_admin)
+    async def setdefaultrole(self, ctx, *, role: converters.Role):
+        role = role or None
+        serverid = str(ctx.guild.id)
+        server = await self.db.server.find_one({'serverid': serverid})
+        if role is None:
+            await ctx.send("Please specify a role to make the default role for this server.")
+
+        elif server is None:
+            await self.db.server.update_one({'serverid': serverid}, {'$set': {'defaultrole': role.name}})
+            await ctx.send("New default role set.")
+        elif 'defaultrole' not in server:
+            await self.db.server.update_one({'serverid': serverid}, {'$set': {'defaultrole': role.name}})
+            await ctx.send("New default role set.")
+        elif role.name == server['defaultrole']:
+            await ctx.send("This is already your default role")
+        else:
+            await self.db.server.update_one({'serverid': serverid}, {'$set': {'defaultrole': role.name}})
+            await ctx.send("New default role set.")
+
     @commands.command(help="Change the bots current game. BOT OWNER ONLY.", hidden=True)
     @commands.check(MooseBot.is_owner)
     async def botgame(self, ctx, *args):
