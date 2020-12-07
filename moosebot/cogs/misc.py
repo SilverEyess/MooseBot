@@ -39,15 +39,18 @@ class Misc(Cog):
             return
         if server is not None:
             if 'reactblacklist' not in server:
+                print("1")
                 await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message))
             elif serverid in server['reactblacklist']:
                 return None
             elif str(message.channel.id) in server['reactblacklist']:
                 return None
             else:
+                print("2")
                 await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message))
 
         elif message.author.id != 192519529417408512:
+            print("this")
             await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message))
 
     async def arrowreact(self, message):
@@ -57,11 +60,14 @@ class Misc(Cog):
             await message.channel.send(arrow)
 
     async def what(self, message):
+        print("what")
         m = message.content.lower()
-        channel = message.channel()
-        whatlist = ["what", "wat", "wot", "wut", "scuseme"]
+        channel = message.channel
+        whatlist = ["what", "wat", "wot", "wut", "scuseme", "sta", "sta bre", "molim"]
         for wat in whatlist:
+            print("here")
             if m.strip(' ?!') == wat:
+                print("here2")
                 message2 = await channel.history(before=message, limit=1).next()
                 if message2.author == message.author:
                     await channel.send("Are you dumb or something?")
@@ -76,14 +82,14 @@ class Misc(Cog):
                         await channel.send(message)
 
     async def oreact(self, message):
-        wordlist = ['o', '🇴', 'bet', 'k', "🇰"]
+        wordlist = ['o', '🇴', 'bet', 'k', "🇰", "au"]
         ogs = []
         for i in MooseBot.admins:
             ogs.append(i)
         ogs.append(MooseBot.owner)
         if str(message.author.id) in ogs:
             return
-        elif message.content.lower() in wordlist:
+        elif message.content.lower() in wordlist or message.content in wordlist:
             try:
                 hook = await message.channel.create_webhook(name='ohook', avatar=None)
                 await hook.send(
