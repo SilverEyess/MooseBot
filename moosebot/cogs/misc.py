@@ -1,6 +1,7 @@
 import asyncio
 import decimal
 import json
+import re
 
 import discord
 from discord.ext import commands
@@ -12,7 +13,11 @@ from moosebot import MooseBot
 class Misc(Cog):
 
     def __init__(self, bot: MooseBot):
+        from moosebot import MooseDb
+
         self.bot = bot
+        self.database = MooseDb()
+        self.db = self.database.db
 
     @commands.command()
     @commands.check(MooseBot.is_owner)
@@ -41,16 +46,48 @@ class Misc(Cog):
 
     @Cog.listener()
     async def on_message(self, message):
-        if message.author.id != 445936072288108544:
-            await asyncio.gather(self.oreact(message), self.arrowreact(message))
-        else:
-            return
+        serverid = str(message.guild.id)
+        try:
+            server = await self.db.server.find_one({'serverid': serverid})
+
+            if server is not None:
+                if 'reactblacklist' not in server:
+                    await asyncio.gather(self.oreact(message), self.what(message.context))
+                elif serverid in server['reactblacklist']:
+                    return None
+                elif str(message.channel.id) in server['reactblacklist']:
+                    return None
+                else:
+                    await asyncio.gather(self.oreact(message), self.what(message.context))
+
+        except Exception:
+            if message.author.id != 192519529417408512:
+                await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
 
     async def arrowreact(self, message):
         arrows = [">", "<", "^", "v"]
         arrow = message.content
         if arrow.lower() in arrows:
             await message.channel.send(arrow)
+
+    async def what(self, ctx):
+        m = ctx.message.content.lower()
+
+        whatlist = ["what", "wat", "wot", "wut", "scuseme"]
+        for wat in whatlist:
+            if m.strip(' ?!') == wat:
+                message2 = await ctx.channel.history(before=ctx.message, limit=1).next()
+                if message2.author == ctx.message.author:
+                    await ctx.send("Are you dumb or something?")
+                elif len(message2.embeds) >= 1:
+                    await ctx.send("Yeah I'm not sure what they said either.")
+                else:
+                    unbolded = re.sub(r"\*\*(.+?)\*\*", r"\1", message2.content)
+                    message = f"{message2.author.display_name} said: **{unbolded.upper()}**"
+                    if len(message) > 2000:
+                        await ctx.send("Yeah I'm not sure what they said either.")
+                    else:
+                        await ctx.send(message)
 
     async def oreact(self, message):
         wordlist = ['o', '🇴', 'bet', 'k', "🇰"]

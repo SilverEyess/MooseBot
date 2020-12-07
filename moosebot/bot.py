@@ -32,7 +32,6 @@ class MooseBot:
 
         client.remove_command('help')
 
-
         @client.event
         async def on_ready():
             print("Logged in as {}({})".format(client.user.name, client.user.id))
@@ -130,26 +129,14 @@ class MooseBot:
 
         @client.event
         async def on_message(message):
-            serverid = str(message.guild.id)
-            server = await self.db.server.find_one({'serverid': serverid})
             if isinstance(message.channel, discord.abc.PrivateChannel):
                 await asyncio.gather(self.senddm(message))
-            elif server is not None:
-                if 'reactblacklist' not in server:
-                    await self.what(message.context)
-                elif serverid in server['reactblacklist']:
-                    return None
-                elif str(message.channel.id) in server['reactblacklist']:
-                    return None
-                else:
-                    await self.what(message.context)
             else:
                 ctx = await client.get_context(message)
                 await asyncio.gather(
                     self.rad(message),
                     self.dar(message),
-                    self.mobile(ctx),
-                    self.what(ctx)
+                    self.mobile(ctx)
                 )
             await client.process_commands(message)
 
@@ -223,24 +210,24 @@ class MooseBot:
                                                                          ctx.message.author.discriminator,
                                                                          ctx.message.content))
 
-    async def what(self, ctx):
-        m = ctx.message.content.lower()
-
-        whatlist = ["what", "wat", "wot", "wut", "scuseme"]
-        for wat in whatlist:
-            if m.strip(' ?!') == wat:
-                message2 = await ctx.channel.history(before=ctx.message, limit=1).next()
-                if message2.author == ctx.message.author:
-                    await ctx.send("Are you dumb or something?")
-                elif len(message2.embeds) >= 1:
-                    await ctx.send("Yeah I'm not sure what they said either.")
-                else:
-                    unbolded = re.sub(r"\*\*(.+?)\*\*", r"\1", message2.content)
-                    message = f"{message2.author.display_name} said: **{unbolded.upper()}**"
-                    if len(message) > 2000:
-                        await ctx.send("Yeah I'm not sure what they said either.")
-                    else:
-                        await ctx.send(message)
+    # async def what(self, ctx):
+    #     m = ctx.message.content.lower()
+    #
+    #     whatlist = ["what", "wat", "wot", "wut", "scuseme"]
+    #     for wat in whatlist:
+    #         if m.strip(' ?!') == wat:
+    #             message2 = await ctx.channel.history(before=ctx.message, limit=1).next()
+    #             if message2.author == ctx.message.author:
+    #                 await ctx.send("Are you dumb or something?")
+    #             elif len(message2.embeds) >= 1:
+    #                 await ctx.send("Yeah I'm not sure what they said either.")
+    #             else:
+    #                 unbolded = re.sub(r"\*\*(.+?)\*\*", r"\1", message2.content)
+    #                 message = f"{message2.author.display_name} said: **{unbolded.upper()}**"
+    #                 if len(message) > 2000:
+    #                     await ctx.send("Yeah I'm not sure what they said either.")
+    #                 else:
+    #                     await ctx.send(message)
 
     @staticmethod
     async def is_owner(ctx):
