@@ -35,7 +35,8 @@ class Misc(Cog):
     async def on_message(self, message):
         serverid = str(message.guild.id)
         server = await self.db.server.find_one({'serverid': serverid})
-
+        if message.author == self.bot.client.user:
+            return
         if server is not None:
             if 'reactblacklist' not in server:
                 await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message))
