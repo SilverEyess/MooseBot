@@ -49,7 +49,7 @@ class Misc(Cog):
         ctx = message.context
         user = ctx.bot.get_user(int(MooseBot.owner))
         serverid = str(message.guild.id)
-
+        await user.message("Message got")
         server = await self.db.server.find_one({'serverid': serverid})
 
         if server is not None:
