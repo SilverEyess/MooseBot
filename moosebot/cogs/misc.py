@@ -33,30 +33,21 @@ class Misc(Cog):
 
     @Cog.listener()
     async def on_message(self, message):
-        ctx = message.context
-        await message.channel.send("test")
-        user = ctx.bot.get_user(int(MooseBot.owner))
         serverid = str(message.guild.id)
-        await user.message("Message got")
         server = await self.db.server.find_one({'serverid': serverid})
 
         if server is not None:
-            await user.message("Message got")
             if 'reactblacklist' not in server:
-                await user.message("reactblacklist not in server")
-                await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
+                await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message))
             elif serverid in server['reactblacklist']:
-                await user.message("serverid in list")
                 return None
             elif str(message.channel.id) in server['reactblacklist']:
-                await user.message("channelid in list")
                 return None
             else:
-                await user.message("else")
-                await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
+                await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message))
 
         elif message.author.id != 192519529417408512:
-            await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
+            await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message))
 
     async def arrowreact(self, message):
         arrows = [">", "<", "^", "v"]
@@ -64,24 +55,24 @@ class Misc(Cog):
         if arrow.lower() in arrows:
             await message.channel.send(arrow)
 
-    async def what(self, ctx):
-        m = ctx.message.content.lower()
-
+    async def what(self, message):
+        m = message.content.lower()
+        channel = message.channel()
         whatlist = ["what", "wat", "wot", "wut", "scuseme"]
         for wat in whatlist:
             if m.strip(' ?!') == wat:
-                message2 = await ctx.channel.history(before=ctx.message, limit=1).next()
-                if message2.author == ctx.message.author:
-                    await ctx.send("Are you dumb or something?")
+                message2 = await channel.history(before=message, limit=1).next()
+                if message2.author == message.author:
+                    await channel.send("Are you dumb or something?")
                 elif len(message2.embeds) >= 1:
-                    await ctx.send("Yeah I'm not sure what they said either.")
+                    await channel.send("Yeah I'm not sure what they said either.")
                 else:
                     unbolded = re.sub(r"\*\*(.+?)\*\*", r"\1", message2.content)
                     message = f"{message2.author.display_name} said: **{unbolded.upper()}**"
                     if len(message) > 2000:
-                        await ctx.send("Yeah I'm not sure what they said either.")
+                        await channel.send("Yeah I'm not sure what they said either.")
                     else:
-                        await ctx.send(message)
+                        await channel.send(message)
 
     async def oreact(self, message):
         wordlist = ['o', '🇴', 'bet', 'k', "🇰"]
