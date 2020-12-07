@@ -85,8 +85,8 @@ class MooseBot:
             else:
                 return
             if 'defaultrole' in server:
-                role = MooseBot.converters.Role(server['defaultrole'])
-                await member.edit(roles=role)
+                role = discord.utils.get(member.guild.roles, name=server['defaultrole'])
+                await member.add_roles(role, reason="Joined server")
 
         async def generate(user):
 

@@ -141,10 +141,36 @@ class Moderation(Cog):
             await self.db.server.update_one({'serverid': serverid}, {'$set': {'defaultrole': role.name}})
             await ctx.send("New default role set.")
         elif role.name == server['defaultrole']:
-            await ctx.send("This is already your default role")
+            await ctx.send("This is already your default role.")
         else:
             await self.db.server.update_one({'serverid': serverid}, {'$set': {'defaultrole': role.name}})
             await ctx.send("New default role set.")
+
+    @commands.command(alises=['gdr'])
+    @commands.check(MooseBot.is_admin)
+    async def getdefaultrole(self, ctx):
+        serverid = str(ctx.guild.id)
+        server = await self.db.server.find_one({'serverid': serverid})
+        if server is None:
+            await ctx.send("This server has no default role.")
+        elif 'defaultrole' not in server:
+            await ctx.send("This server has no default role.")
+        else:
+            role = discord.utils.get(ctx.guild.roles, name=server['defaultrole'])
+            await ctx.send(f"Default role is {role.name}.")
+
+    @commands.command(alises=['rdr'])
+    @commands.check(MooseBot.is_admin)
+    async def removedefaultrole(self, ctx):
+        serverid = str(ctx.guild.id)
+        server = await self.db.server.find_one({'serverid': serverid})
+        if server is None:
+            await ctx.send("This server has no default role.")
+        elif 'defaultrole' not in server:
+            await ctx.send("This server has no default role.")
+        else:
+            await self.db.server.update_one({'serverid': serverid}, {'$pull': {'defaultrole': server['defaultrole']}})
+            await ctx.send("Default role removed.")
 
     @commands.command(help="Change the bots current game. BOT OWNER ONLY.", hidden=True)
     @commands.check(MooseBot.is_owner)
