@@ -46,23 +46,28 @@ class Misc(Cog):
 
     @Cog.listener()
     async def on_message(self, message):
+        ctx = message.context
+        user = ctx.bot.get_user(int(MooseBot.owner))
         serverid = str(message.guild.id)
 
         server = await self.db.server.find_one({'serverid': serverid})
 
         if server is not None:
+            await user.message("Message got")
             if 'reactblacklist' not in server:
+                await user.message("reactblacklist not in server")
                 await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
             elif serverid in server['reactblacklist']:
+                await user.message("serverid in list")
                 return None
             elif str(message.channel.id) in server['reactblacklist']:
+                await user.message("channelid in list")
                 return None
             else:
+                await user.message("else")
                 await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
-        elif message.author.id != 192519529417408512:
-            await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
 
-        if message.author.id != 192519529417408512:
+        elif message.author.id != 192519529417408512:
             await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
 
     async def arrowreact(self, message):
