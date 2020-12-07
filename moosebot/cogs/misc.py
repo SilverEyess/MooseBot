@@ -59,6 +59,8 @@ class Misc(Cog):
                     return None
                 else:
                     await asyncio.gather(self.oreact(message), self.what(message.context))
+            else:
+                await asyncio.gather(self.oreact(message), self.what(message.context))
 
         except Exception:
             if message.author.id != 192519529417408512:
