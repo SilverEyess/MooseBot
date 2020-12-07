@@ -37,20 +37,19 @@ class Misc(Cog):
         server = await self.db.server.find_one({'serverid': serverid})
         if message.author == self.bot.client.user:
             return
+        if message.author.id == 192519529417408512:
+            return
         if server is not None:
             if 'reactblacklist' not in server:
-                print("1")
                 await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message))
             elif serverid in server['reactblacklist']:
                 return None
             elif str(message.channel.id) in server['reactblacklist']:
                 return None
             else:
-                print("2")
                 await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message))
 
         elif message.author.id != 192519529417408512:
-            print("this")
             await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message))
 
     async def arrowreact(self, message):
