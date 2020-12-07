@@ -31,22 +31,10 @@ class Misc(Cog):
     async def gender(self, ctx):
         await ctx.send("I'm a boy, how could you not tell?")
 
-    # @Cog.listener()
-    # async def on_member_update(self, before, after):
-    #     if after.guild.id == 377218458108035084:
-    #         if after.id == 488199047874740235:
-    #             if after.display_name != before.display_name:
-    #                 await after.edit(nick='The Best.')
-    #                 print('Ana tried to change her nickname.')
-    #             elif after.nick != before.nick:
-    #                 await after.edit(nick='The Best.')
-    #                 print('Ana tried to change her nickname.')
-    #     else:
-    #         return
-
     @Cog.listener()
     async def on_message(self, message):
         ctx = message.context
+        await message.channel.send("test")
         user = ctx.bot.get_user(int(MooseBot.owner))
         serverid = str(message.guild.id)
         await user.message("Message got")
