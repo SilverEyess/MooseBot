@@ -47,24 +47,23 @@ class Misc(Cog):
     @Cog.listener()
     async def on_message(self, message):
         serverid = str(message.guild.id)
-        try:
-            server = await self.db.server.find_one({'serverid': serverid})
 
-            if server is not None:
-                if 'reactblacklist' not in server:
-                    await asyncio.gather(self.oreact(message), self.what(message.context))
-                elif serverid in server['reactblacklist']:
-                    return None
-                elif str(message.channel.id) in server['reactblacklist']:
-                    return None
-                else:
-                    await asyncio.gather(self.oreact(message), self.what(message.context))
-            else:
-                await asyncio.gather(self.oreact(message), self.what(message.context))
+        server = await self.db.server.find_one({'serverid': serverid})
 
-        except Exception:
-            if message.author.id != 192519529417408512:
+        if server is not None:
+            if 'reactblacklist' not in server:
                 await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
+            elif serverid in server['reactblacklist']:
+                return None
+            elif str(message.channel.id) in server['reactblacklist']:
+                return None
+            else:
+                await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
+        elif message.author.id != 192519529417408512:
+            await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
+
+        if message.author.id != 192519529417408512:
+            await asyncio.gather(self.oreact(message), self.arrowreact(message), self.what(message.context))
 
     async def arrowreact(self, message):
         arrows = [">", "<", "^", "v"]
