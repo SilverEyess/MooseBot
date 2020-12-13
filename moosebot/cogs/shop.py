@@ -73,7 +73,7 @@ class Shop(Cog):
                     embed.add_field(name=f'#{order}: {i["name"]} ✅', value=f'{i["price"]:,d}{MooseBot.currency}')
                 elif limit > 1:
                     if 'Bait Bucket' in inventory:
-                        limit = limit * 3
+                        baitlimit = limit * 3
                     if i['name'].lower().endswith('bait'):
                         if 'fish' in person:
                             fishtable = person['fish']
@@ -82,11 +82,11 @@ class Shop(Cog):
                                 baittotal = 0
                                 for x in baittable:
                                     baittotal += int(baittable[x])
-                                embed.add_field(name=f'#{order}: {i["name"]} {baittotal}/{limit}', value=f'{i["price"]:,d}{MooseBot.currency}')
+                                embed.add_field(name=f'#{order}: {i["name"]} {baittotal}/{baitlimit}', value=f'{i["price"]:,d}{MooseBot.currency}')
                             else:
                                 embed.add_field(name=f'#{order}: {i["name"]} 0/{i["limit"]}', value=f'{i["price"]:,d}{MooseBot.currency}')
                         else:
-                            embed.add_field(name=f'#{order}: {i["name"]} 0/{limit}', value=f'{i["price"]:,d}{MooseBot.currency}')
+                            embed.add_field(name=f'#{order}: {i["name"]} 0/{baitlimit}', value=f'{i["price"]:,d}{MooseBot.currency}')
                 else:
                     embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}{MooseBot.currency}')
             else:
@@ -119,8 +119,38 @@ class Shop(Cog):
                         shoplist = shop.find()
                         shoplist.sort('price', pymongo.ASCENDING).skip(skip)
                         for i in await shoplist.to_list(length=9):
+                            limit = i['limit']
                             order += 1
-                            embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}{MooseBot.currency}')
+                            if 'inventory' in person:
+                                inventory = person['inventory']
+                                if i['name'] in inventory and limit == 1:
+                                    embed.add_field(name=f'#{order}: {i["name"]} ✅',
+                                                    value=f'{i["price"]:,d}{MooseBot.currency}')
+                                elif limit > 1:
+                                    if 'Bait Bucket' in inventory:
+                                        baitlimit = limit * 3
+                                    if i['name'].lower().endswith('bait'):
+                                        if 'fish' in person:
+                                            fishtable = person['fish']
+                                            if 'bait' in fishtable:
+                                                baittable = fishtable['bait']
+                                                baittotal = 0
+                                                for x in baittable:
+                                                    baittotal += int(baittable[x])
+                                                embed.add_field(name=f'#{order}: {i["name"]} {baittotal}/{baitlimit}',
+                                                                value=f'{i["price"]:,d}{MooseBot.currency}')
+                                            else:
+                                                embed.add_field(name=f'#{order}: {i["name"]} 0/{i["limit"]}',
+                                                                value=f'{i["price"]:,d}{MooseBot.currency}')
+                                        else:
+                                            embed.add_field(name=f'#{order}: {i["name"]} 0/{baitlimit}',
+                                                            value=f'{i["price"]:,d}{MooseBot.currency}')
+                                else:
+                                    embed.add_field(name=f'#{order}: {i["name"]}',
+                                                    value=f'{i["price"]:,d}{MooseBot.currency}')
+                            else:
+                                embed.add_field(name=f'#{order}: {i["name"]}',
+                                                value=f'{i["price"]:,d}{MooseBot.currency}')
                             if curpage == pages:
                                 pagelength += 1
                             else:
@@ -143,11 +173,42 @@ class Shop(Cog):
                         shoplist = shop.find()
                         shoplist.sort('price', pymongo.ASCENDING).skip(skip)
                         for i in await shoplist.to_list(length=9):
+                            limit = i['limit']
                             order += 1
-                            embed.add_field(name=f'#{order}: {i["name"]}', value=f'{i["price"]:,d}{MooseBot.currency}')
+                            if 'inventory' in person:
+                                inventory = person['inventory']
+                                if i['name'] in inventory and limit == 1:
+                                    embed.add_field(name=f'#{order}: {i["name"]} ✅',
+                                                    value=f'{i["price"]:,d}{MooseBot.currency}')
+                                elif limit > 1:
+                                    if 'Bait Bucket' in inventory:
+                                        baitlimit = limit * 3
+                                    if i['name'].lower().endswith('bait'):
+                                        if 'fish' in person:
+                                            fishtable = person['fish']
+                                            if 'bait' in fishtable:
+                                                baittable = fishtable['bait']
+                                                baittotal = 0
+                                                for x in baittable:
+                                                    baittotal += int(baittable[x])
+                                                embed.add_field(name=f'#{order}: {i["name"]} {baittotal}/{baitlimit}',
+                                                                value=f'{i["price"]:,d}{MooseBot.currency}')
+                                            else:
+                                                embed.add_field(name=f'#{order}: {i["name"]} 0/{i["limit"]}',
+                                                                value=f'{i["price"]:,d}{MooseBot.currency}')
+                                        else:
+                                            embed.add_field(name=f'#{order}: {i["name"]} 0/{baitlimit}',
+                                                            value=f'{i["price"]:,d}{MooseBot.currency}')
+                                else:
+                                    embed.add_field(name=f'#{order}: {i["name"]}',
+                                                    value=f'{i["price"]:,d}{MooseBot.currency}')
+                            else:
+                                embed.add_field(name=f'#{order}: {i["name"]}',
+                                                value=f'{i["price"]:,d}{MooseBot.currency}')
                             pagelength += 1
                         await msg.edit(embed=embed)
                     await msg.remove_reaction(emoji='◀', member=ctx.author)
+
 
     @commands.command()
     async def buy(self, ctx, amount, *, item=None):
