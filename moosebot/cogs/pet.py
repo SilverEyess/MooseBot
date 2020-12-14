@@ -12,7 +12,7 @@ class Pet(Cog):
     def __init__(self, bot: MooseBot):
         self.bot = bot
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def train(self, ctx, pet=None):
         pets = ['dog', 'cat', 'custom pet']
 
