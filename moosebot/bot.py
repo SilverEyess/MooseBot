@@ -16,6 +16,7 @@ class MooseBot:
     owner = ""
     admins = []
     currency = ""
+    tarkovKey = ""
 
     def __init__(self, token):
         from moosebot import MooseDb

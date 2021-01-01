@@ -1,5 +1,7 @@
 import datetime
 from collections import OrderedDict
+import json
+import requests
 
 import discord
 from discord.ext import commands
@@ -100,6 +102,34 @@ class Info(Cog):
     @inrole.error
     async def inrole_error(self, ctx, error):
         await ctx.send(error)
+
+    @commands.command(aliases=['p', 'flee', 'market', 'price'])
+    async def fleemarket(self, ctx, *, args):
+        url = 'https://tarkov-market.com/api/v1/item?q='
+        key = MooseBot.tarkovKey
+        request = url + args + key
+        try:
+            response = requests.get(request)
+            if response.status_code == 200:
+                data = response.text
+                if len(data) == 0:
+                    await ctx.send("Cannot find item by that search term, please type the item name exactly.")
+                    return
+                parsed = json.loads(data)[0]
+                date = datetime.datetime.strptime((parsed['updated']).replace('T', ' ').replace('Z', ''),
+                                                  '%Y-%m-%d %H:%M:%S.%f')
+                desc = f"**Price:** ₽{parsed['price']:,}\n" \
+                       f"**Last Updated:** {date}(unsure of timezone just yet)\n" \
+                       f"**Average 24h price:** ₽{parsed['avg24hPrice']:,}\n" \
+                       f"**Price per slot:** ₽{parsed['price']/parsed['slots']:,}\n" \
+                       f"**Wiki link:** {parsed['wikiLink']}"
+                embed = discord.Embed(title=f"{parsed['name']} flee market information.", description=desc, colour=0xb18dff)
+                embed.set_thumbnail(url=parsed['icon'])
+                await ctx.send(embed=embed)
+
+        except Exception:
+            await ctx.send("Unable to process this request right now. Please try again.")
+
 
     @commands.command(aliases=['user', 'ui'], help="Provides information about a user. \n`>ui user`")
     async def userinfo(self, ctx, *, member: converters.FullMember = None):
