@@ -12,7 +12,6 @@ with open('database/config.json') as json_file:
     MooseBot.admins.append(data['config'][0]['owner'])
     MooseBot.owner = data['config'][0]['owner']
     admins = data['config'][0]['admins'].split(',')
-    MooseBot.tarkovKey = data['config'][0]['tarkovKey']
     for i in admins:
         MooseBot.admins.append(i)
     print(MooseBot.admins)
