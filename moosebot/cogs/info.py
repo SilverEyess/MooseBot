@@ -116,21 +116,20 @@ class Info(Cog):
                     await ctx.send("Cannot find item by that search term, please type the item name exactly.")
                     return
                 parsed = json.loads(data)[0]
-                date = datetime.datetime.strptime((parsed['updated']).replace('T', ' ').replace('Z', ''),
-                                                  '%Y-%m-%d %H:%M:%S.%f')
+                date = datetime.datetime.strptime((parsed['updated']).replace('T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S.%f')
                 newdate = date + datetime.timedelta(hours=10)
                 timesince = datetime.datetime.now() - newdate
                 seconds = timesince.total_seconds()
                 minutes = int((seconds % 3600) // 60)
                 hours = int(seconds // 3600)
                 lastupdated = f"Last updated {f'{hours} hours, ' if hours != 0 else ''}{minutes} minutes and {int(seconds % 60)} seconds ago."
-                desc = f"🟪**Price:** ₽{parsed['price']:,}₽\n" \
-                       f"🟪**Trader Price:** {parsed['traderPrice']:,}{parsed['traderPriceCur']} ({parsed['traderName']})\n" \
-                       f"🟪**Last Updated:** {lastupdated}\n" \
-                       f"🟪**Average 24h Price:** ₽{parsed['avg24hPrice']:,}\n" \
-                       f"🟪**Average 7day Price:** ₽{parsed['avg7daysPrice']:,}\n" \
-                       f"🟪**Price Per Slot:** ₽{parsed['price'] / parsed['slots']:,}\n" \
-                       f"🟪**Wiki Link:** {parsed['wikiLink']}"
+                desc = f"🔹**Price:** {parsed['price']:,}₽\n" \
+                       f"🔹**Trader Price:** {parsed['traderPrice']:,}{parsed['traderPriceCur']} ({parsed['traderName']})\n" \
+                       f"🔹**Last Updated:** {lastupdated}\n" \
+                       f"🔹**Average 24h Price:** ₽{parsed['avg24hPrice']:,}\n" \
+                       f"🔹**Average 7day Price:** ₽{parsed['avg7daysPrice']:,}\n" \
+                       f"🔹**Price Per Slot:** ₽{parsed['price'] / parsed['slots']:,}\n" \
+                       f"🔹**Wiki Link:** {parsed['wikiLink']}"
                 embed = discord.Embed(title=f"{parsed['name']} flee market information.", description=desc,
                                       colour=0xb18dff)
                 embed.set_thumbnail(url=parsed['icon'])
