@@ -117,8 +117,8 @@ class Info(Cog):
                     return
                 parsed = json.loads(data)[0]
                 date = datetime.datetime.strptime((parsed['updated']).replace('T', ' ').replace('Z', ''), '%Y-%m-%d %H:%M:%S.%f')
-                newdate = date + datetime.timedelta(hours=10)
-                timesince = datetime.datetime.now() - newdate
+                #newdate = date + datetime.timedelta(hours=10)
+                timesince = datetime.datetime.now() - date
                 seconds = timesince.total_seconds()
                 minutes = int((seconds % 3600) // 60)
                 hours = int(seconds // 3600)
