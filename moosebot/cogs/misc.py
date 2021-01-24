@@ -32,6 +32,18 @@ class Misc(Cog):
         await ctx.send("I'm a boy, how could you not tell?")
 
     @Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if not member.id == 192519529417408512:
+            return
+        if after.channel:
+            if after.channel.id == 768313529559154700:
+                waiting = self.bot.client.get_channel(768313568902119434)
+                await waiting.set_permissions(member.guild.default_role, view_channel=True)
+        elif after.channel is None:
+            waiting = self.bot.client.get_channel(768313568902119434)
+            await waiting.set_permissions(member.guild.default_role, view_channel=False)
+
+    @Cog.listener()
     async def on_message(self, message):
         serverid = str(message.guild.id)
         server = await self.db.server.find_one({'serverid': serverid})
